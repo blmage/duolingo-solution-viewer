@@ -1,0 +1,27 @@
+{
+  "name": "Duolingo Solution Viewer",
+  "version": "1.0.0",
+  "description": "Provides access to the complete lists of accepted solutions for Duolingo's translation challenges.",
+  "permissions": [
+    "activeTab",
+    "https://*.duolingo.com/"
+  ],
+  "content_scripts": [
+    {
+      "matches": [ "https://*.duolingo.com/*" ],
+      "js": [ "src/content.js" ],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    "src/page.js"
+  ],
+  "icons": {
+    "16": "icons/icon_16.png",
+    "48": "icons/icon_48.png",
+    "128": "icons/icon_128.png",
+    "256": "icons/icon_256.png",
+    "512": "icons/icon_512.png"
+  },
+  "manifest_version": 2
+}
