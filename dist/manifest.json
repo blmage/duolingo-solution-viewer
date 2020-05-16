@@ -1,6 +1,6 @@
 {
   "name": "Duolingo Solution Viewer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Provides access to the complete lists of accepted solutions for Duolingo's translation challenges.",
   "permissions": [
     "activeTab",
