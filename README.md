@@ -11,7 +11,7 @@ A browser extension providing access to the complete lists of **accepted solutio
 * [Tested courses](#tested-courses)
 * [Contributions](#contributions)
     * [Translations](#translations)
-    * [Bug reports and feature requests](##bug-reports-and-feature-requests)
+    * [Bug reports and feature requests](#bug-reports-and-feature-requests)
 
 ### Download
 
@@ -22,36 +22,36 @@ A browser extension providing access to the complete lists of **accepted solutio
 
 After an answer has been submitted, provides a link to the corresponding list of solutions:
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/master/screenshots/base_correct_answer_solution_list_link.png" width="500" />
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/base_correct_answer_solution_list_link.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/master/screenshots/base_incorrect_answer_solution_list_link.png" width="500" />
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/base_incorrect_answer_solution_list_link.png" width="500" />
 
 This link opens a window with a summary of the challenge, including all the accepted solutions:
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/master/screenshots/base_correct_answer_solution_list_modal.png" width="500" />
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/base_correct_answer_solution_list_modal.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/master/screenshots/base_incorrect_answer_solution_list_modal.png" width="500" />
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/base_incorrect_answer_solution_list_modal.png" width="500" />
 
 Those solutions can be sorted on their similarity with the given answer, rather than alphabetically:
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/master/screenshots/base_correct_answer_solution_list_modal_similarity.png" width="500" />
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/base_correct_answer_solution_list_modal_similarity.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/master/screenshots/base_incorrect_answer_solution_list_modal_similarity.png" width="500" />
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/base_incorrect_answer_solution_list_modal_similarity.png" width="500" />
 
 When an incorrect response is submitted, the closest correct solution is displayed:
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/master/screenshots/base_incorrect_answer_closest_solution.png" width="500" />
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/base_incorrect_answer_closest_solution.png" width="500" />
 
 The extension strives to blend seamlessly in [Duolingo](https://www.duolingo.com)'s UI, and to be compatible with
 custom themes such as [Darklingo++](https://userstyles.org/styles/169205/darklingo):
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/master/screenshots/dark_correct_answer_solution_list_link_dark.png" width="500" />
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/dark_correct_answer_solution_list_link_dark.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/master/screenshots/dark_correct_answer_solution_list_modal_dark.png" width="500" />
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/dark_correct_answer_solution_list_modal_dark.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/master/screenshots/dark_incorrect_answer_solution_list_link_errror_dark.png" width="500" />
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/dark_incorrect_answer_solution_list_link_errror_dark.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/master/screenshots/dark_incorrect_answer_solution_list_modal_error_dark.png" width="500" />
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/dark_incorrect_answer_solution_list_modal_error_dark.png" width="500" />
 
 ### Limitations
 
