@@ -111,11 +111,11 @@ The currently supported languages are:
 
 <table>
   <tr>
-    <td>:us:</td>
+    <td><img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/flags/US.svg" width="30" /></td>
     <td>English</td>
   </tr>
   <tr>
-    <td>:fr:</td>
+    <td><img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/flags/FR.svg" width="30" /></td>
     <td>French</td>
   </tr>
 </table>
@@ -128,3 +128,7 @@ If you wish to contribute a new language, or to improve on existing translations
 
 If you encounter a bug, or if you have a suggestion regarding a new feature, don't hesitate to post a
 [new issue](https://github.com/blmage/duolingo-solution-viewer/issues/new)!
+\
+\
+\
+_The country flags on this page were taken from this project: https://yammadev.github.io/flag-icons/ (MIT license)._
