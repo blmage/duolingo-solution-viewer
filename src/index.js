@@ -104,7 +104,7 @@ const CHALLENGE_FOOTER_SELECTOR = '._1obm2';
  * A CSS selector for the result wrapper of the current challenge screen.
  * @type {string}
  */
-const RESULT_WRAPPER_SELECTOR = '._3yGet._1Ag8k';
+const RESULT_WRAPPER_SELECTOR = '._1Ag8k';
 
 /**
  * The class name which is applied to the result wrapper when the user has given a correct answer.
