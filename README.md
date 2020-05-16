@@ -76,16 +76,24 @@ The extension should already be **compatible with most courses**, but has only b
 
 <table>
   <tr>
-    <th colspan="2">Speaking</th>
-    <th colspan="2">Learning</th>
+    <th>Speaking</th>
+    <th>Learning</th>
   </tr>
   <tr>
-    <td>:us:</td>
-    <td>English</td>
-    <td>:vietnam:</td>
+    <td rowspan="3">English</td>
+    <td>French</td>
+  </tr>
+  <tr>
+    <td>Klingon</td>
+  </tr>
+  <tr>
     <td>Vietnamese</td>
   </tr>
-</table>​
+  <tr>
+    <td rowspan="1">French</td>
+    <td>English</td>
+  </tr>
+</table>
 
 If you have tested the extension with a course that is not listed above, and:
 * _it works well_: please let me know in the
