@@ -15,7 +15,8 @@ A browser extension providing access to the complete lists of **accepted solutio
 
 ### Download
 
-Available soon.
+* [**Chrome** extension](https://chrome.google.com/webstore/detail/duolingo-solution-viewer/idffaipgnlkhfhibgnodeiogpgojcmfm)
+* [**Firefox** add-on](https://addons.mozilla.org/fr/firefox/addon/duolingo-solution-viewer/)
 
 ### Features
 
