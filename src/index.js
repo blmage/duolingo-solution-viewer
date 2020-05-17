@@ -67,8 +67,10 @@ XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
           ? this.response
           : JSON.parse(this.responseText);
 
-        if (lodash.isPlainObject(data) && lodash.isArray(data.challenges)) {
-          handleNewChallenges(data.challenges);
+        if (lodash.isPlainObject(data)) {
+          const baseChallenges = lodash.isArray(data.challenges) ? data.challenges : [];
+          const adaptiveChallenges = lodash.isArray(data.adaptiveChallenges) ? data.adaptiveChallenges : [];
+          handleNewChallenges(baseChallenges.concat(adaptiveChallenges));
         }
       } catch (error) {
         logError(error, 'Could not prepare the translation challenges for the new practice session: ');
