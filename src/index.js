@@ -263,7 +263,11 @@ function handleChallengeResult(resultWrapper) {
       challenge.solutions.forEach(item => lodash.set(item, 'score', solution.matchAgainstAnswer(item, userAnswer)));
     }
 
-    if (userAnswer && (RESULT_INCORRECT === result)) {
+    if (
+      userAnswer
+      && (RESULT_INCORRECT === result)
+      && (challenge.solutions.length > 1)
+    ) {
       renderClosestSolution(lodash.maxBy(challenge.solutions, 'score'), result);
     }
 
