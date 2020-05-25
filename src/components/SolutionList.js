@@ -45,7 +45,7 @@ const STYLE_SHEETS = {
     },
     [SOLUTION]: {
       padding: '0.4em 0.5em 0.3em',
-      ':nth-child(even)': {
+      ':nth-child(odd)': {
         background: 'rgba(0, 0, 0, 0.125)',
       },
     },
