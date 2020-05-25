@@ -59,7 +59,7 @@ export const getStylesByClassNames = moize(
     document.body.appendChild(element);
 
     const computedStyle = getComputedStyle(element);
-    const styles = lodash.fromPairs(styleNames.map(name => [name, computedStyle.getPropertyValue(name) || '']));
+    const styles = lodash.fromPairs(styleNames.map(name => [ name, computedStyle.getPropertyValue(name) || '' ]));
 
     element.remove();
 
@@ -85,7 +85,7 @@ export const getImageCdnBaseUrl = moize(
  */
 export const getSentenceIconUrl = moize(
   () => {
-    return getStylesByClassNames(SENTENCE_ICON_CLASS_NAMES, ['background-image'])['background-image'] || null;
+    return getStylesByClassNames(SENTENCE_ICON_CLASS_NAMES, [ 'background-image' ])['background-image'] || null;
   }
 );
 
@@ -94,7 +94,7 @@ export const getSentenceIconUrl = moize(
  * @returns {string}
  */
 export function getUiLocale() {
-  return lodash.get(window || {}, ['duo', 'uiLanguage']) || DEFAULT_LOCALE;
+  return lodash.get(window || {}, [ 'duo', 'uiLanguage' ]) || DEFAULT_LOCALE;
 }
 
 /**
@@ -141,6 +141,18 @@ export function mergeMapsWith(merge, base, ...maps) {
 }
 
 /**
+ * Inverts a comparison function.
+ * @param {function} compare
+ * @returns {function}
+ */
+export function invertComparison(compare) {
+  return (x, y) => {
+    const result = compare(x, y);
+    return (result < 0) ? 1 : ((result > 0) ? -1 : 0);
+  };
+}
+
+/**
  * A single vertex from a solution graph.
  * @typedef {Object} Vertex
  * @property {?number} to The index of the next vertex, if there is any.
@@ -168,7 +180,7 @@ export function mergeMapsWith(merge, base, ...maps) {
  * @typedef {Object} Solution
  * @property {string} locale The tag of the language in which the solution is written.
  * @property {string} reference The reference sentence of the solution, usable e.g. for sorting.
- * @property {List} tokens The list of tokens building up all the possible sentences of the solution.
+ * @property {List<Token>} tokens The list of tokens building up all the possible sentences of the solution.
  * @property {boolean} hasAutomatic Whether the solution contains at least one token with one automatic value.
  * @property {boolean} isAutomatic Whether the solution contains at least one token with only automatic values.
  * @property {boolean} isComplex Whether the solution contains at least one token with multiple values.
@@ -223,8 +235,8 @@ function hasRelevantDifferences(x, y, locale) {
   y = y.toLocaleLowerCase(locale);
 
   if (x !== y) {
-    x = (XRegExp.exec(x, TRIMMED_WORDS_REGEXP) || [''])[0];
-    y = (XRegExp.exec(y, TRIMMED_WORDS_REGEXP) || [''])[0];
+    x = (XRegExp.exec(x, TRIMMED_WORDS_REGEXP) || [ '' ])[0];
+    y = (XRegExp.exec(y, TRIMMED_WORDS_REGEXP) || [ '' ])[0];
     return (x !== y);
   }
 
@@ -240,7 +252,8 @@ function hasRelevantDifferences(x, y, locale) {
 function getVertexTokenValues(vertex, locale) {
   const isAutomatic = !!vertex.auto;
 
-  if (lodash.isString(vertex.orig)
+  if (
+    lodash.isString(vertex.orig)
     && lodash.isString(vertex.lenient)
     && hasRelevantDifferences(vertex.lenient, vertex.orig, locale)
   ) {
@@ -256,10 +269,12 @@ function getVertexTokenValues(vertex, locale) {
     ];
   }
 
-  return [{
-    isAutomatic,
-    value: String(vertex.orig || vertex.lenient || ''),
-  }]
+  return [
+    {
+      isAutomatic,
+      value: String(vertex.orig || vertex.lenient || ''),
+    }
+  ];
 }
 
 /**
@@ -351,14 +366,15 @@ function prependTokenVertices(vertices, solution) {
  * @returns {Solution[]}
  */
 function fromVerticesGroups(verticesGroups, startIndex, locale) {
-  if (!verticesGroups[startIndex]
+  if (
+    !verticesGroups[startIndex]
     || !lodash.isPlainObject(verticesGroups[startIndex])
     || lodash.isEmpty(verticesGroups[startIndex])
   ) {
     return [];
   }
 
-  return Object.entries(verticesGroups[startIndex]).flatMap(([key, group]) => {
+  return Object.entries(verticesGroups[startIndex]).flatMap(([ key, group ]) => {
     const index = Number(key);
     const subSolutions = fromVerticesGroups(verticesGroups, index, locale);
 
@@ -392,6 +408,63 @@ export function fromVertices(vertices, includeAutomatic, locale) {
       it.to
     )
   ), 0, locale);
+}
+
+/**
+ * Builds a list of all the possible solutions based on a list of correct naming solutions.
+ * @param {string[]} solutions
+ * @param {string} locale
+ * @returns {Solution[]}
+ */
+export function fromNamingSolutions(solutions, locale) {
+  return solutions
+    .filter(lodash.isString)
+    .map(solution => {
+      const reference = solution.normalize().trim();
+
+      const tokens = reference
+        .split(SENTENCE_WORDS_REGEXP)
+        .map(value => [ { value, isAutomatic: false } ]);
+
+      return {
+        locale,
+        reference,
+        tokens: List(tokens),
+        hasAutomatic: false,
+        isAutomatic: false,
+        isComplex: false,
+      };
+    });
+}
+
+/**
+ * Builds a list of all the possible solutions based on a list of correct tokens from a word bank.
+ * @param {string[]} wordTokens
+ * @param {string} locale
+ * @returns {Solution[]}
+ */
+export function fromWordBankTokens(wordTokens, locale) {
+  const words = wordTokens
+    .filter(lodash.isString)
+    .map(token => token.normalize());
+
+  const reference = words.join(' ').trim();
+
+  if ('' !== reference) {
+    const spaceToken = [ { value: ' ', isAutomatic: false } ];
+    const tokens = words.map(value => [ { value, isAutomatic: false } ]);
+
+    return [ {
+      locale,
+      reference,
+      tokens: List(tokens).interpose(spaceToken),
+      hasAutomatic: false,
+      isAutomatic: false,
+      isComplex: false,
+    } ];
+  }
+
+  return [];
 }
 
 /**
@@ -538,7 +611,7 @@ function mergeMatchingData(data) {
 
 /**
  * The (unique) key under which similarity matching data is consolidated in a solution.
- * @type {Symbol}
+ * @type {symbol}
  */
 const MATCHING_DATA = Symbol('matching_data');
 

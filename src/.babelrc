@@ -1,12 +1,22 @@
 {
   "presets": [
-    ["@babel/env", {"modules": false}]
+    [
+      "@babel/env",
+      {
+        "modules": false
+      }
+    ]
   ],
   "plugins": [
-    ["babel-plugin-macros"],
-    ["@babel/plugin-transform-react-jsx", {
+    [
+      "babel-plugin-macros"
+    ],
+    [
+      "@babel/plugin-transform-react-jsx",
+      {
         "pragma": "h",
         "pragmaFrag": "Fragment"
-    }]
+      }
+    ]
   ]
 }

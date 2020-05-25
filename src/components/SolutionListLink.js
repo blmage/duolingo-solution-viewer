@@ -2,30 +2,29 @@ import { h } from 'preact';
 import { IntlProvider, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import moize from 'moize';
-import { it } from 'param.macro';
-import { BASE, BaseComponent } from './BaseComponent';
+import { BASE, useStyles } from './base';
 import { RESULT_CORRECT, RESULT_INCORRECT, DEFAULT_RESULT_COLORS } from '../constants';
-import * as solution from '../functions';
 import { discardEvent, getSentenceIconUrl, getStylesByClassNames } from '../functions';
+import * as solution from '../functions';
 
 const WRAPPER = 'wrapper';
 const ICON = 'icon';
 const TITLE = 'title';
 
 const CLASS_NAMES = {
-  [WRAPPER]: {
-    [BASE]: ['_2KzUW'],
-    [RESULT_CORRECT]: ['_11OI0'],
-    [RESULT_INCORRECT]: ['_1uM9m']
+  [BASE]: {
+    [WRAPPER]: [ '_2KzUW' ],
+    [ICON]: [ '_2wZWI' ],
+    [TITLE]: [ '_1kYcS', '_1BWZU' ]
   },
-  [ICON]: {
-    [BASE]: ['_2wZWI'],
-    [RESULT_CORRECT]: ['_1vlYi'],
-    [RESULT_INCORRECT]: ['_1uM9m']
+  [RESULT_CORRECT]: {
+    [WRAPPER]: [ '_11OI0' ],
+    [ICON]: [ '_1vlYi' ],
   },
-  [TITLE]: {
-    [BASE]: ['_1kYcS', '_1BWZU']
-  }
+  [RESULT_INCORRECT]: {
+    [WRAPPER]: [ '_1uM9m' ],
+    [ICON]: [ '_1uM9m' ],
+  },
 };
 
 /**
@@ -35,9 +34,9 @@ const CLASS_NAMES = {
  * @returns {Object}
  */
 const getResultStyleSheet = moize(
-  (result) => {
+  result => {
     const iconStyles = getStylesByClassNames(
-      CLASS_NAMES[ICON][BASE].concat(CLASS_NAMES[ICON][result] || []),
+      CLASS_NAMES[BASE][ICON].concat(CLASS_NAMES[result][ICON] || []),
       [
         'background-image',
         'background-origin',
@@ -48,8 +47,8 @@ const getResultStyleSheet = moize(
     );
 
     const wrapperStyles = getStylesByClassNames(
-      CLASS_NAMES[WRAPPER][BASE].concat(CLASS_NAMES[WRAPPER][result] || []),
-      ['color']
+      CLASS_NAMES[BASE][WRAPPER].concat(CLASS_NAMES[result][WRAPPER] || []),
+      [ 'color' ]
     );
 
     return StyleSheet.create({
@@ -65,40 +64,32 @@ const getResultStyleSheet = moize(
   }
 );
 
-/**
- * A component for displaying a link to a list of solutions.
- */
-export default class SolutionListLink extends BaseComponent {
-  getComponentStateKey() {
-    return this.props.result || RESULT_CORRECT;
+const SolutionListLink = ({ solutions = [], result = RESULT_CORRECT, onClick = discardEvent }) => {
+  if (0 === solutions.length) {
+    return null;
   }
 
-  getAllElementClassNames() {
-    return CLASS_NAMES;
-  }
+  const STYLE_SHEETS = {
+    [RESULT_CORRECT]: getResultStyleSheet(RESULT_CORRECT),
+    [RESULT_INCORRECT]: getResultStyleSheet(RESULT_INCORRECT),
+  };
 
-  getAllElementStyles() {
-    return getResultStyleSheet(this.getComponentStateKey());
-  }
+  const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, result);
 
-  render({ solutions = [], onClick = discardEvent }) {
-    if (0 === solutions.length) {
-      return null;
-    }
+  const counts = solution.getI18nCounts(solutions);
 
-    const baseCounts = solution.getI18nCounts(solutions.filter(!it.isAutomatic));
-
-    return (
-      <IntlProvider scope="solution.list.link">
-        <a className={this.getElementClassNames(WRAPPER)} onClick={onClick}>
-          <div className={this.getElementClassNames(ICON)}/>
-          <span className={this.getElementClassNames(TITLE)}>
-            <Text id="solutions" plural={baseCounts.plural} fields={{ count: baseCounts.display }}>
-              Solutions ({baseCounts.display})
+  return (
+    <IntlProvider scope="solution.list.link">
+      <a className={getElementClassNames(WRAPPER)} onClick={onClick}>
+        <div className={getElementClassNames(ICON)}/>
+        <span className={getElementClassNames(TITLE)}>
+            <Text id="solutions" plural={counts.plural} fields={{ count: counts.display }}>
+              Solutions ({counts.display})
             </Text>
           </span>
-        </a>
-      </IntlProvider>
-    );
-  }
-}
+      </a>
+    </IntlProvider>
+  );
+};
+
+export default SolutionListLink;

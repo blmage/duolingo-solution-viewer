@@ -1,61 +1,52 @@
 import { h } from 'preact';
 import { IntlProvider, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
-import { BASE, BaseComponent } from './BaseComponent';
+import { BASE, useStyles } from './base';
 import { RESULT_CORRECT, RESULT_INCORRECT } from '../constants';
 
 const WRAPPER = 'wrapper';
 const VALUE = 'value';
 
 const CLASS_NAMES = {
-  [WRAPPER]: {
-    [BASE]: ['_36Uyg'],
-    [RESULT_CORRECT]: ['_11xjL '],
-    [RESULT_INCORRECT]: ['_2QxbX'],
+  [BASE]: {
+    [WRAPPER]: [ '_36Uyg' ],
+    [VALUE]: [ 'TnCw3' ],
   },
-  [VALUE]: {
-    [BASE]: ['TnCw3'],
+  [RESULT_CORRECT]: {
+    [WRAPPER]: [ '_11xjL ' ],
+  },
+  [RESULT_INCORRECT]: {
+    [WRAPPER]: [ '_2QxbX' ],
   },
 };
 
-const STYLES = StyleSheet.create({
-  [WRAPPER]: {
-    marginBottom: '10px'
-  }
-});
-
-/**
- * A component for displaying the closest solution to a user answer.
- */
-export default class ClosestSolution extends BaseComponent {
-  getComponentStateKey() {
-    return this.props.result || RESULT_CORRECT;
-  }
-
-  getAllElementClassNames() {
-    return CLASS_NAMES;
-  }
-
-  getAllElementStyles() {
-    return STYLES;
-  }
-
-  render({ solution = '' }) {
-    if (!solution) {
-      return null;
+const STYLE_SHEETS = {
+  [BASE]: StyleSheet.create({
+    [WRAPPER]: {
+      marginBottom: '10px',
     }
+  }),
+};
 
-    return (
-      <IntlProvider scope="solution.closest">
-        <h2 className={this.getElementClassNames(WRAPPER)}>
-          <Text id="closest_solution">Closest solution:</Text>
-          <div className={this.getElementClassNames(VALUE)}>
+const ClosestSolution = ({ solution = '', result = RESULT_CORRECT }) => {
+  if (solution.trim() === '') {
+    return null;
+  }
+
+  const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, result);
+
+  return (
+    <IntlProvider scope="solution.closest">
+      <h2 className={getElementClassNames(WRAPPER)}>
+        <Text id="closest_solution">Closest solution:</Text>
+        <div className={getElementClassNames(VALUE)}>
             <span>
               <span>{solution}</span>
             </span>
-          </div>
-        </h2>
-      </IntlProvider>
-    );
-  }
+        </div>
+      </h2>
+    </IntlProvider>
+  );
 }
+
+export default ClosestSolution;

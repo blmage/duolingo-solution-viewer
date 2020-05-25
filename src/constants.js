@@ -21,19 +21,45 @@ export const DEFAULT_LOCALE = 'en';
  * @type {string[]}
  */
 export const TRANSLATION_CHALLENGE_TYPES = [
+  'name',
   'translate',
   'completeReverseTranslation',
 ];
 
 /**
+ * The internal types identifying listening challenges.
+ * @type {string[]}
+ */
+export const LISTENING_CHALLENGE_TYPES = [
+  'listen',
+  'listenTap',
+];
+
+/**
+ * The internal types identifying naming challenges.
+ * @type {string[]}
+ */
+export const NAMING_CHALLENGE_TYPES = [
+  'name',
+];
+
+/**
+ * The internal types identifying challenges providing word banks.
+ * @type {string[]}
+ */
+export const WORD_BANK_CHALLENGE_TYPES = [
+  'listenTap',
+];
+
+/**
  * A unique constant for the type of correct challenge results.
- * @type {Symbol}
+ * @type {symbol}
  */
 export const RESULT_CORRECT = Symbol('correct');
 
 /**
  * A unique constant for the type of incorrect challenge results.
- * @type {Symbol}
+ * @type {symbol}
  */
 export const RESULT_INCORRECT = Symbol('incorrect');
 
@@ -62,7 +88,7 @@ export const MENU_ICON_SELECTOR = 'img.iZYCc';
  * The class names used by the original sentence icon element.
  * @type {string[]}
  */
-export const SENTENCE_ICON_CLASS_NAMES = ['FtLT3'];
+export const SENTENCE_ICON_CLASS_NAMES = [ 'FtLT3' ];
 
 /**
  * The path of the close icon on the image CDN.
