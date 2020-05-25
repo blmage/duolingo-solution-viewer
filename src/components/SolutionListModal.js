@@ -1,9 +1,9 @@
 import { Fragment, h } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { IntlProvider, Text } from 'preact-i18n';
+import { IntlProvider, Localizer, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import { noop } from 'lodash';
-import { BASE, useStyles } from './base';
+import { BASE, useLocalStorageList, useStyles } from './base';
 import SolutionList from './SolutionList';
 import { CLOSE_ICON_CDN_PATH } from '../constants';
 import { discardEvent, getImageCdnBaseUrl } from '../functions';
@@ -11,6 +11,7 @@ import { discardEvent, getImageCdnBaseUrl } from '../functions';
 const OVERLAY = 'overlay';
 const WRAPPER = 'wrapper';
 const CLOSE_BUTTON = 'close_button';
+const SIZE_BUTTON = 'size_button';
 const CONTENT = 'content';
 
 const STATE_PENDING = Symbol('pending');
@@ -19,11 +20,28 @@ const STATE_OPENED = Symbol('opened');
 const STATE_CLOSING = Symbol('closing');
 const STATE_CLOSED = Symbol('closed');
 
+const MODAL_SIZE_DEFAULT = 'normal';
+const MODAL_SIZE_FIT_TO_CONTENT = 'large';
+
+const MODAL_SIZES = {
+  [MODAL_SIZE_DEFAULT]: {
+    actionLabel: '↑',
+    actionTitleId: 'minimize',
+    defaultActionTitle: 'Minimize',
+  },
+  [MODAL_SIZE_FIT_TO_CONTENT]: {
+    actionLabel: '↓',
+    actionTitleId: 'fit_to_content',
+    defaultActionTitle: 'Fit to content',
+  },
+};
+
 const CLASS_NAMES = {
   [BASE]: {
     [OVERLAY]: [ '_16E8f', '_18rH6', '_3wo9p' ],
     [WRAPPER]: [ '_3Xf7y', 'w4pY4', '_1qa4z', '_3wo9p' ],
     [CLOSE_BUTTON]: [ '_2YJA9' ],
+    [SIZE_BUTTON]: [ '_2YJA9' ],
     [CONTENT]: [ '_2vnDy' ],
   },
   [STATE_PENDING]: {
@@ -53,7 +71,24 @@ const STYLE_SHEETS = {
       maxHeight: 'calc(90vh - 60px)',
       overflowY: 'auto',
       paddingRight: '0.5em',
-    }
+    },
+    [SIZE_BUTTON]: {
+      top: 'auto',
+      bottom: '1px',
+      left: 'auto',
+      right: '1px',
+      transform: 'rotate(-45deg)',
+      border: 0,
+      borderRadius: '100%',
+    },
+  }),
+  [MODAL_SIZE_FIT_TO_CONTENT]: StyleSheet.create({
+    [WRAPPER]: {
+      maxWidth: '90vw',
+    },
+    [CONTENT]: {
+      maxWidth: '100%',
+    },
   }),
 };
 
@@ -66,7 +101,17 @@ const SolutionListModal =
       return null;
     }
 
-    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, modalState);
+    const {
+      state: modalSize,
+      nextState: nextModalSize,
+      next: setNextModalSize,
+    } = useLocalStorageList(
+      'modal-size',
+      Object.keys(MODAL_SIZES),
+      MODAL_SIZE_DEFAULT
+    );
+
+    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ modalState, modalSize ]);
 
     const closeModal = useCallback(() => {
       if ([ STATE_CLOSING, STATE_CLOSED ].indexOf(modalState) === -1) {
@@ -109,6 +154,17 @@ const SolutionListModal =
             <div className={getElementClassNames(CLOSE_BUTTON)} onClick={closeModal}>
               <img src={getImageCdnBaseUrl() + CLOSE_ICON_CDN_PATH}/>
             </div>
+            <Localizer>
+              <div onClick={setNextModalSize}
+                   className={getElementClassNames(SIZE_BUTTON)}
+                   title={
+                     <Text id={MODAL_SIZES[nextModalSize].actionTitleId}>
+                       {MODAL_SIZES[nextModalSize].defaultActionTitle}
+                     </Text>
+                   }>
+                {MODAL_SIZES[nextModalSize].actionLabel}
+              </div>
+            </Localizer>
             <div className={getElementClassNames(CONTENT)}>
               {statement && (
                 <Fragment>

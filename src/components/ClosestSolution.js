@@ -33,7 +33,7 @@ const ClosestSolution = ({ solution = '', result = RESULT_CORRECT }) => {
     return null;
   }
 
-  const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, result);
+  const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ result ]);
 
   return (
     <IntlProvider scope="solution.closest">

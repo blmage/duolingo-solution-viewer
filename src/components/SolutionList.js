@@ -15,6 +15,22 @@ const SORT_LINK = 'sort_link';
 const SOLUTION = 'solution';
 const PAGINATION = 'pagination';
 
+const SORT_DIRECTION_ASC = 'asc';
+const SORT_DIRECTION_DESC = 'desc';
+
+const SORT_DIRECTIONS = {
+  [SORT_DIRECTION_ASC]: {
+    label: '↑',
+    actionLabelId: 'sort_ascending',
+    defaultActionLabel: 'Sort in ascending order',
+  },
+  [SORT_DIRECTION_DESC]: {
+    label: '↓',
+    actionLabelId: 'sort_descending',
+    defaultActionLabel: 'Sort in descending order',
+  },
+};
+
 const CLASS_NAMES = {
   [BASE]: {
     [LINK]: [ '_2rA41' ],
@@ -72,22 +88,6 @@ const SORT_TYPES = {
     defaultLabel: 'Similarity sort',
     actionLabelId: 'sort_by_similarity',
     defaultActionLabel: 'Sort by similarity',
-  },
-};
-
-const SORT_DIRECTION_ASC = 'asc';
-const SORT_DIRECTION_DESC = 'desc';
-
-const SORT_DIRECTIONS = {
-  [SORT_DIRECTION_ASC]: {
-    label: '↑',
-    actionLabelId: 'sort_ascending',
-    defaultActionLabel: 'Sort in ascending order',
-  },
-  [SORT_DIRECTION_DESC]: {
-    label: '↓',
-    actionLabelId: 'sort_descending',
-    defaultActionLabel: 'Sort in descending order',
   },
 };
 

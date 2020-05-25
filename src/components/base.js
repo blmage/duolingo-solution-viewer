@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'preact/hooks';
 import { useLocalStorage as useRawLocalStorage, useStateList } from 'preact-use';
 import { css } from 'aphrodite';
+import { isArray } from 'lodash';
 import { EXTENSION_PREFIX } from '../constants';
 
 /**
@@ -14,10 +15,10 @@ export const BASE = Symbol('base');
  * A hook for getting all the class names of an element based on the current state of a component.
  * @param {Object} classNames
  * @param {Object} styleSheets
- * @param {string?} stateKey
+ * @param {string[]} stateKeys
  * @returns {function}
  */
-export const useStyles = (classNames, styleSheets = {}, stateKey) => {
+export const useStyles = (classNames, styleSheets = {}, stateKeys = []) => {
   return useCallback(elementKey => {
     const allClassNames = [];
 
@@ -25,20 +26,22 @@ export const useStyles = (classNames, styleSheets = {}, stateKey) => {
       allClassNames.push(css(styleSheets[BASE][elementKey]));
     }
 
-    if (stateKey && styleSheets[stateKey] && styleSheets[stateKey][elementKey]) {
-      allClassNames.push(css(styleSheets[stateKey][elementKey]));
-    }
-
     if (classNames[BASE] && classNames[BASE][elementKey]) {
       allClassNames.push(...classNames[BASE][elementKey]);
     }
 
-    if (stateKey && classNames[stateKey] && classNames[stateKey][elementKey]) {
-      allClassNames.push(...classNames[stateKey][elementKey]);
-    }
+    stateKeys.forEach(stateKey => {
+      if (stateKey && styleSheets[stateKey] && styleSheets[stateKey][elementKey]) {
+        allClassNames.push(css(styleSheets[stateKey][elementKey]));
+      }
+
+      if (stateKey && classNames[stateKey] && classNames[stateKey][elementKey]) {
+        allClassNames.push(...classNames[stateKey][elementKey]);
+      }
+    });
 
     return allClassNames.join(' ');
-  }, stateKey && [ stateKey ] || []);
+  }, isArray(stateKeys) ? stateKeys : []);
 };
 
 /**

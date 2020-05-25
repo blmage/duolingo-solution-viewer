@@ -74,7 +74,7 @@ const SolutionListLink = ({ solutions = [], result = RESULT_CORRECT, onClick = d
     [RESULT_INCORRECT]: getResultStyleSheet(RESULT_INCORRECT),
   };
 
-  const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, result);
+  const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ result ]);
 
   const counts = solution.getI18nCounts(solutions);
 

@@ -15,6 +15,8 @@ const TRANSLATIONS = {
         modal: {
           statement: "Statement:",
           your_answer: "Your answer:",
+          minimize: 'Minimize',
+          fit_to_content: 'Fit to content',
         },
         alphabetical_sort: "Alphabetical sort",
         correct_solutions: "Correct solutions:",
@@ -38,6 +40,8 @@ const TRANSLATIONS = {
         modal: {
           statement: "Énoncé :",
           your_answer: "Votre réponse :",
+          minimize: 'Minimiser',
+          fit_to_content: 'Adapter au contenu',
         },
         alphabetical_sort: "Tri alphabétique",
         correct_solutions: "Solutions correctes :",
