@@ -185,13 +185,25 @@ const CHALLENGE_STATEMENT_HINT_SELECTOR = '[data-test=hint-popover]';
 const CHALLENGE_TRANSLATED_SOLUTION_SELECTOR = '.vpbSG > *:last-child > .TnCw3';
 
 /**
- * A CSS selector for all the possible kinds of answer input.
+ * A CSS selector for all the different kinds of answer input which are not based on the word bank.
  * @type {string}
  */
 const ANSWER_INPUT_SELECTOR = [
   'input[data-test=challenge-text-input]',
   'textarea[data-test=challenge-translate-input]',
 ].join(', ');
+
+/**
+ * A CSS selector for the container of the answer tokens selected from the word bank.
+ * @type {string}
+ */
+const ANSWER_SELECTED_TOKEN_CONTAINER_SELECTOR = '._3vVWl';
+
+/**
+ * A CSS selector for an answer token selected from the word bank.
+ * @type {string}
+ */
+const ANSWER_SELECTED_TOKEN_SELECTOR = '[data-test=challenge-tap-token]';
 
 /**
  * A CSS selector for the footer of the current challenge screen, holding the result and actions elements.
@@ -369,9 +381,18 @@ function handleChallengeResult(key, challenges, resultWrapper) {
       : RESULT_INCORRECT;
 
     const answerInput = document.querySelector(ANSWER_INPUT_SELECTOR);
-    const userAnswer = (answerInput && answerInput.value && String(answerInput.value).trim()) || '';
+    let userAnswer = (answerInput && answerInput.value && String(answerInput.value).trim()) || '';
 
-    if (!userAnswer) {
+    if ('' === userAnswer) {
+      const tokenContainer = document.querySelector(ANSWER_SELECTED_TOKEN_CONTAINER_SELECTOR)
+
+      if (tokenContainer) {
+        const tokens = Array.from(tokenContainer.querySelectorAll(ANSWER_SELECTED_TOKEN_SELECTOR));
+        userAnswer = tokens.map(token => token.innerText.trim()).join(' ').normalize().trim();
+      }
+    }
+
+    if ('' === userAnswer) {
       challenge.solutions.forEach(lodash.set(_, 'score', 0));
     } else {
       challenge.solutions.forEach(item => lodash.set(item, 'score', solution.matchAgainstAnswer(item, userAnswer)));
