@@ -20,8 +20,9 @@ const STATE_OPENED = Symbol('opened');
 const STATE_CLOSING = Symbol('closing');
 const STATE_CLOSED = Symbol('closed');
 
-const MODAL_SIZE_DEFAULT = 'normal';
-const MODAL_SIZE_FIT_TO_CONTENT = 'large';
+const MODAL_SIZE_DEFAULT = 'default';
+const MODAL_SIZE_FIT_TO_CONTENT = 'fit_to_content';
+const MODAL_SIZE_MAXIMIZED = 'maximized';
 
 const MODAL_SIZES = {
   [MODAL_SIZE_DEFAULT]: {
@@ -33,6 +34,11 @@ const MODAL_SIZES = {
     actionLabel: '↓',
     actionTitleId: 'fit_to_content',
     defaultActionTitle: 'Fit to content',
+  },
+  [MODAL_SIZE_MAXIMIZED]: {
+    actionLabel: '↕',
+    actionTitleId: 'maximize',
+    defaultActionTitle: 'Maximize',
   },
 };
 
@@ -85,6 +91,17 @@ const STYLE_SHEETS = {
   [MODAL_SIZE_FIT_TO_CONTENT]: StyleSheet.create({
     [WRAPPER]: {
       maxWidth: '90vw',
+    },
+    [CONTENT]: {
+      maxWidth: '100%',
+    },
+  }),
+  [MODAL_SIZE_MAXIMIZED]: StyleSheet.create({
+    [WRAPPER]: {
+      width: '95vw',
+      height: 'calc(95vh - 30px)',
+      maxWidth: 'none',
+      maxHeight: 'none',
     },
     [CONTENT]: {
       maxWidth: '100%',

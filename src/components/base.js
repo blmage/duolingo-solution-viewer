@@ -64,7 +64,15 @@ export const useLocalStorage = (key, initialValue, options) => {
  */
 export const useLocalStorageList = (key, stateSet, initial) => {
   const [ storedState, storeState ] = useLocalStorage(key, initial);
-  const { state, nextState, next } = useStateList(stateSet, storedState);
+
+  const { state, nextState, next } = useStateList(
+    stateSet,
+    (initial !== storedState) && (stateSet.indexOf(storedState) === -1)
+      ? initial
+      : storedState
+  );
+
   useEffect(() => storeState(state), [ state ]);
+
   return { state, nextState, next };
 };
