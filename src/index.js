@@ -84,14 +84,13 @@ function handleNewChallenges(newChallenges) {
 
   newChallenges.forEach(challenge => {
     const solutions = getChallengeSolutions(challenge);
+    const statement = String(challenge.prompt.normalize()).trim();
 
     if (solutions.length > 0) {
       if (
         (TRANSLATION_CHALLENGE_TYPES.indexOf(challenge.type) >= 0)
         && ('' !== String(challenge.prompt || '').trim())
       ) {
-        const statement = String(challenge.prompt.normalize()).trim();
-
         currentTranslationChallenges[statement] = {
           statement,
           solutions: lodash.uniqWith(solutions, lodash.isEqual),
@@ -104,6 +103,7 @@ function handleNewChallenges(newChallenges) {
         const solutionTranslation = String(challenge.solutionTranslation.normalize()).trim();
 
         currentListeningChallenges[solutionTranslation] = {
+          statement,
           solutionTranslation,
           solutions: lodash.uniqWith(solutions, lodash.isEqual),
         };
