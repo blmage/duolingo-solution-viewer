@@ -187,14 +187,16 @@ const SolutionList = ({ solutions = [] }) => {
           </div>
         </h3>
         <ul>{solutionItems}</ul>
-        <div className={getElementClassNames(PAGINATION)}>
-          <Pagination
-            activePage={page}
-            itemCountPerPage={PAGE_SIZE}
-            totalItemCount={solutions.length}
-            onChange={setPage}
-          />
-        </div>
+        {(solutions.length > PAGE_SIZE) && (
+          <div className={getElementClassNames(PAGINATION)}>
+            <Pagination
+              activePage={page}
+              itemCountPerPage={PAGE_SIZE}
+              totalItemCount={solutions.length}
+              onChange={setPage}
+            />
+          </div>
+        )}
       </div>
     </IntlProvider>
   );
