@@ -44,7 +44,7 @@ const Pagination =
   ({
      activePage = 1,
      totalItemCount = 0,
-     itemCountPerPage = 2,
+     itemCountPerPage = 20,
      displayedPageCount = 5,
      onChange = noop,
    }) => {
