@@ -173,6 +173,12 @@ const CHALLENGE_HEADER_SELECTOR = '[data-test=challenge-header]';
 const CHALLENGE_STATEMENT_SELECTOR = '[data-test=hint-sentence]';
 
 /**
+ * A CSS selector for the hints added to the statement of the current challenge.
+ * @type {string}
+ */
+const CHALLENGE_STATEMENT_HINT_SELECTOR = '[data-test=hint-popover]';
+
+/**
  * A CSS selector for the translated solution of the current challenge.
  * @type {string}
  */
@@ -408,7 +414,14 @@ function handleTranslationChallengeResult(resultWrapper) {
     return false;
   }
 
-  const statement = statementWrapper.innerText.normalize().trim();
+  const cleanWrapper = statementWrapper.cloneNode(true);
+  const elementHints = cleanWrapper.querySelectorAll(CHALLENGE_STATEMENT_HINT_SELECTOR);
+
+  if (elementHints.length > 0) {
+    elementHints.forEach(hint => hint.parentNode.removeChild(hint));
+  }
+
+  const statement = cleanWrapper.innerText.normalize().trim();
 
   let result = handleChallengeResult(
     statement,
