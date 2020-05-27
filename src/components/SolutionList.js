@@ -1,19 +1,24 @@
 import { h } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useCallback, useEffect, useState } from 'preact/hooks';
 import { IntlProvider, Localizer, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import lodash from 'lodash';
-import { BASE, useLocalStorageList, useStyles } from './base';
+import { BASE, useLocalStorage, useLocalStorageList, useStyles } from './base';
 import Pagination from './Pagination';
 import { invertComparison } from '../functions';
 import * as solution from '../functions';
 
 const TITLE = 'title';
 const TITLE_TEXT = 'title_text';
-const LINK = 'link';
 const SORT_LINK = 'sort_link';
+const DIRECTION_LABEL = 'direction_label';
 const SOLUTION = 'solution';
-const PAGINATION = 'pagination';
+const PAGINATION_WRAPPER = 'pagination';
+const PAGINATION_FOOTER = 'pagination_footer';
+const PAGINATION_STATE = 'pagination_state';
+const PAGINATION_SIZES = 'pagination_sizes';
+const CURRENT_PAGE_SIZE = 'current_page_size';
+const PAGE_SIZE_LINK = 'page_size_link';
 
 const SORT_DIRECTION_ASC = 'asc';
 const SORT_DIRECTION_DESC = 'desc';
@@ -33,8 +38,9 @@ const SORT_DIRECTIONS = {
 
 const CLASS_NAMES = {
   [BASE]: {
-    [LINK]: [ '_2rA41' ],
-    [PAGINATION]: [ '_1qa4z' ],
+    [SORT_LINK]: [ '_2rA41' ],
+    [PAGINATION_WRAPPER]: [ '_1qa4z' ],
+    [PAGE_SIZE_LINK]: [ '_2rA41' ],
   },
 };
 
@@ -48,14 +54,14 @@ const STYLE_SHEETS = {
     [TITLE_TEXT]: {
       marginRight: '1em',
     },
-    [LINK]: {
-      fontSize: '0.7em',
+    [SORT_LINK]: {
+      fontSize: '0.75em',
       marginRight: '0.5em',
       whiteSpace: 'nowrap',
       cursor: 'pointer',
       userSelect: 'none',
     },
-    [SORT_LINK]: {
+    [DIRECTION_LABEL]: {
       fontSize: '1.2em',
       fontWeight: '900',
     },
@@ -65,10 +71,31 @@ const STYLE_SHEETS = {
         background: 'rgba(0, 0, 0, 0.125)',
       },
     },
-    [PAGINATION]: {
+    [PAGINATION_WRAPPER]: {
       position: 'sticky',
       bottom: '0',
       paddingTop: '0.1em',
+      userSelect: 'none',
+    },
+    [PAGINATION_FOOTER]: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: '1em',
+    },
+    [PAGINATION_STATE]: {
+      margin: '0 0.6em',
+    },
+    [PAGINATION_SIZES]: {
+      margin: '0 0.6em',
+      fontSize: '0.85em',
+    },
+    [CURRENT_PAGE_SIZE]: {
+      margin: '0 0.25em',
+    },
+    [PAGE_SIZE_LINK]: {
+      margin: '0 0.25em',
+      cursor: 'pointer',
     },
   })
 };
@@ -91,11 +118,9 @@ const SORT_TYPES = {
   },
 };
 
-/**
- * The maximum number of solutions to display on a single page.
- * @type {number}
- */
-const PAGE_SIZE = 20;
+const PAGE_SIZE_ALL = 'all';
+const DEFAULT_PAGE_SIZE = 20;
+const PAGE_SIZES = [ 10, 20, 50, 200, PAGE_SIZE_ALL ];
 
 const SolutionList = ({ solutions = [] }) => {
   if (0 === solutions.length) {
@@ -105,6 +130,21 @@ const SolutionList = ({ solutions = [] }) => {
   const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS);
 
   const [ page, setPage ] = useState(1);
+  const [ pageSize, setRawPageSize ] = useLocalStorage('page_size', DEFAULT_PAGE_SIZE);
+
+  const setPageSize = useCallback(size => {
+    setRawPageSize(size);
+
+    if (PAGE_SIZE_ALL === size) {
+      setPage(1);
+    } else {
+      const oldSize = (PAGE_SIZE_ALL === pageSize)
+        ? solutions.length
+        : Math.min(pageSize, solutions.length);
+
+      setPage(Math.ceil(((page - 1) * oldSize + 1) / size));
+    }
+  }, [ page, pageSize ]);
 
   const {
     state: sortType,
@@ -145,12 +185,26 @@ const SolutionList = ({ solutions = [] }) => {
   const [ solutionItems, setSolutionItems ] = useState([]);
 
   useEffect(() => {
-    setSolutionItems(
-      sortedSolutions
-        .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-        .map(renderSolutionItem)
-    );
-  }, [ sortedSolutions, sortType, sortDirection, page ]);
+    const pageSolutions = (PAGE_SIZE_ALL === pageSize)
+      ? sortedSolutions
+      : sortedSolutions.slice((page - 1) * pageSize, page * pageSize);
+
+    setSolutionItems(pageSolutions.map(renderSolutionItem));
+  }, [ sortedSolutions, sortType, sortDirection, page, pageSize ]);
+
+  const renderSizeLink = useCallback(size => {
+    const sizeLabel = (PAGE_SIZE_ALL !== size)
+      ? '' + size
+      : <Text id="all">all</Text>;
+
+    return (size === pageSize)
+      ? <span className={getElementClassNames(CURRENT_PAGE_SIZE)}>{sizeLabel}</span>
+      : <a onClick={() => setPageSize(size)} className={getElementClassNames(PAGE_SIZE_LINK)}>{sizeLabel}</a>;
+  }, [ pageSize, setPageSize ]);
+
+  const [ firstIndex, lastIndex ] = (PAGE_SIZE_ALL === pageSize)
+    ? [ 1, solutions.length ]
+    : [ (page - 1) * pageSize + 1, Math.min(solutions.length, page * pageSize) ];
 
   return (
     <IntlProvider scope="solution.list">
@@ -161,7 +215,7 @@ const SolutionList = ({ solutions = [] }) => {
           </span>
           <div>
             <Localizer>
-              <a className={getElementClassNames(LINK)}
+              <a className={getElementClassNames(SORT_LINK)}
                  onClick={setNextSortType}
                  title={
                    <Text id={SORT_TYPES[nextSortType].actionLabelId}>
@@ -172,14 +226,14 @@ const SolutionList = ({ solutions = [] }) => {
                   {SORT_TYPES[sortType].defaultLabel}
                 </Text>
               </a>
-              <a className={getElementClassNames(LINK)}
+              <a className={getElementClassNames(SORT_LINK)}
                  onClick={setNextSortDirection}
                  title={
                    <Text id={SORT_DIRECTIONS[nextSortDirection].actionLabelId}>
                      {SORT_DIRECTIONS[nextSortDirection].defaultActionLabel}
                    </Text>
                  }>
-                <span className={getElementClassNames(SORT_LINK)}>
+                <span className={getElementClassNames(DIRECTION_LABEL)}>
                   {SORT_DIRECTIONS[sortDirection].label}
                 </span>
               </a>
@@ -187,16 +241,23 @@ const SolutionList = ({ solutions = [] }) => {
           </div>
         </h3>
         <ul>{solutionItems}</ul>
-        {(solutions.length > PAGE_SIZE) && (
-          <div className={getElementClassNames(PAGINATION)}>
+        <div className={getElementClassNames(PAGINATION_WRAPPER)}>
+          {(PAGE_SIZE_ALL !== pageSize) && (
             <Pagination
               activePage={page}
-              itemCountPerPage={PAGE_SIZE}
+              itemCountPerPage={pageSize}
               totalItemCount={solutions.length}
               onChange={setPage}
-            />
+            />)}
+          <div className={getElementClassNames(PAGINATION_FOOTER)}>
+            <div className={getElementClassNames(PAGINATION_STATE)}>
+              {firstIndex} - {lastIndex} / {solutions.length}
+            </div>
+            <div className={getElementClassNames(PAGINATION_SIZES)}>
+              (<Text id="per_page">per page:</Text> {PAGE_SIZES.map(renderSizeLink)})
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </IntlProvider>
   );
