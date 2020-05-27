@@ -84,9 +84,10 @@ function handleNewChallenges(newChallenges) {
 
   newChallenges.forEach(challenge => {
     const solutions = getChallengeSolutions(challenge);
-    const statement = String(challenge.prompt.normalize()).trim();
 
     if (solutions.length > 0) {
+      const statement = String(challenge.prompt.normalize()).trim();
+
       if (
         (TRANSLATION_CHALLENGE_TYPES.indexOf(challenge.type) >= 0)
         && ('' !== String(challenge.prompt || '').trim())
