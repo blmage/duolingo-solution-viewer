@@ -4,7 +4,7 @@ import { StyleSheet } from 'aphrodite';
 import moize from 'moize';
 import { BASE, useStyles } from './base';
 import { RESULT_CORRECT, RESULT_INCORRECT, DEFAULT_RESULT_COLORS } from '../constants';
-import { discardEvent, getSentenceIconUrl, getStylesByClassNames } from '../functions';
+import { discardEvent, getSolutionIconCssUrl, getStylesByClassNames } from '../functions';
 import * as solution from '../functions';
 
 const WRAPPER = 'wrapper';
@@ -54,7 +54,7 @@ const getResultStyleSheet = moize(
     return StyleSheet.create({
       [ICON]: {
         backgroundColor: wrapperStyles['color'] || DEFAULT_RESULT_COLORS[result] || '',
-        maskImage: getSentenceIconUrl() || '',
+        maskImage: getSolutionIconCssUrl() || '',
         maskOrigin: iconStyles['background-origin'],
         maskPosition: iconStyles['background-position'],
         maskRepeat: iconStyles['background-repeat'],

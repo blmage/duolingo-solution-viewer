@@ -8,6 +8,7 @@ import { List, Map } from 'immutable';
 import {
   DEFAULT_LOCALE,
   EXTENSION_CODE,
+  EXTENSION_PREFIX,
   IMAGE_CDN_DEFAULT_BASE_URL,
   MENU_ICON_SELECTOR,
   SENTENCE_ICON_CLASS_NAMES,
@@ -79,13 +80,18 @@ export const getImageCdnBaseUrl = moize(
 );
 
 /**
- * Returns the URL of the sentence icon, if it can be determined.
+ * Returns the CSS URL of the solution icon, if it can be determined.
  * @function
  * @returns {string|null}
  */
-export const getSentenceIconUrl = moize(
+export const getSolutionIconCssUrl = moize(
   () => {
-    return getStylesByClassNames(SENTENCE_ICON_CLASS_NAMES, [ 'background-image' ])['background-image'] || null;
+    const solutionIconMeta = document.querySelector(`meta[name="${EXTENSION_PREFIX}-solution-icon-url"]`);
+    const solutionIconUrl = (solutionIconMeta && solutionIconMeta.getAttribute('content') || '').trim();
+
+    return (solutionIconUrl && `url(${solutionIconUrl})`)
+      || getStylesByClassNames(SENTENCE_ICON_CLASS_NAMES, [ 'background-image' ])['background-image']
+      || null;
   }
 );
 

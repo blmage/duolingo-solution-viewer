@@ -14,7 +14,8 @@
     }
   ],
   "web_accessible_resources": [
-    "src/page.js"
+    "src/page.js",
+    "assets/icon_solution.svg"
   ],
   "icons": {
     "16": "icons/icon_16.png",
