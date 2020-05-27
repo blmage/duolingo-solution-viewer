@@ -32,7 +32,14 @@ const plugins = [
 ];
 
 if (PRODUCTION) {
-  plugins.push(terser());
+  plugins.push(terser({
+    // Preserve the names of the components, which are used for various purposes.
+    keep_fnames: new RegExp([
+      'ClosestSolution',
+      'SolutionListLink',
+      'SolutionListModal',
+    ].join('|'))
+  }));
 }
 
 export default {
