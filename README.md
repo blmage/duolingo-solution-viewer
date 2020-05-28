@@ -80,11 +80,18 @@ The extension should already be **compatible with most courses**, but has only b
     <th>Learning</th>
   </tr>
   <tr>
-    <td rowspan="3">English</td>
+    <td rowspan="1">Dutch</td>
+    <td>German</td>
+  </tr>
+  <tr>
+    <td rowspan="4">English</td>
     <td>French</td>
   </tr>
   <tr>
     <td>Klingon</td>
+  </tr>
+  <tr>
+    <td>Norwegian</td>
   </tr>
   <tr>
     <td>Vietnamese</td>
@@ -96,9 +103,9 @@ The extension should already be **compatible with most courses**, but has only b
 </table>
 
 If you have tested the extension with a course that is not listed above, and:
-* _it works well_: please let me know in the
+* _it works well_: let me know in the
   [dedicated issue](https://github.com/blmage/duolingo-solution-viewer/issues/1)!
-* _you encountered some problems_: please report those in
+* _you encountered some problems_: report those in
   [a new issue](https://github.com/blmage/duolingo-solution-viewer/issues/new) (including as much details as possible).
 
 ## Contributions
