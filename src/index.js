@@ -22,34 +22,37 @@ import { getTranslations } from './translations';
 
 /**
  * A translation challenge.
- * @typedef {Object} Challenge
+ *
+ * @typedef {object} Challenge
  * @property {string} statement The sentence to translate.
- * @property {Solution[]} solutions The accepted translations.
+ * @property {solution.Solution[]} solutions The accepted translations.
  * @property {boolean} isNamingChallenge Whether the challenge is a naming challenge.
  */
 
 /**
  * The translation challenges of the current practice session, arranged by statements.
- * @type {Object.<string, Challenge>}
+ *
+ * @type {object.<string, Challenge>}
  */
 let currentTranslationChallenges = {};
 
 /**
  * The naming challenges of the current practice session, arranged by statements.
- * @type {Object.<string, Challenge>}
+ *
+ * @type {Array<Challenge>}
  */
-let currentNamingChallenges = {};
+let currentNamingChallenges = [];
 
 /**
  * The listening challenges of the current practice session, arranged by translations.
- * @type {Object.<string, Challenge>}
+ *
+ * @type {object.<string, Challenge>}
  */
 let currentListeningChallenges = {};
 
 /**
- * Returns the list of solutions for a challenge.
- * @param {Object} challenge
- * @returns {Solution[]}
+ * @param {object} challenge A challenge.
+ * @returns {solution.Solution[]} The corresponding list of solutions.
  */
 function getChallengeSolutions(challenge) {
   const grader = lodash.isPlainObject(challenge.grader) ? challenge.grader : {};
@@ -76,11 +79,12 @@ function getChallengeSolutions(challenge) {
 
 /**
  * Prepares the different challenges for a freshly started practice session.
- * @param {Array} newChallenges
+ *
+ * @param {Array} newChallenges A set of raw challenge data.
  */
 function handleNewChallenges(newChallenges) {
   currentTranslationChallenges = {};
-  currentNamingChallenges = {};
+  currentNamingChallenges = [];
   currentListeningChallenges = {};
 
   newChallenges.forEach(challenge => {
@@ -118,6 +122,7 @@ function handleNewChallenges(newChallenges) {
 
 /**
  * A RegExp for the URL that is used by Duolingo to start a new practice session.
+ *
  * @type {RegExp}
  */
 const NEW_SESSION_URL_REGEXP = /\/[\d]{4}-[\d]{2}-[\d]{2}\/sessions/g;
@@ -148,6 +153,7 @@ XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
 
 /**
  * A CSS selector for the wrapper of the current translation challenge.
+ *
  * @type {string}
  */
 const TRANSLATION_CHALLENGE_WRAPPER = TRANSLATION_CHALLENGE_TYPES
@@ -156,6 +162,7 @@ const TRANSLATION_CHALLENGE_WRAPPER = TRANSLATION_CHALLENGE_TYPES
 
 /**
  * A CSS selector for the wrapper of the current listening challenge.
+ *
  * @type {string}
  */
 const LISTENING_CHALLENGE_WRAPPER = LISTENING_CHALLENGE_TYPES
@@ -164,30 +171,35 @@ const LISTENING_CHALLENGE_WRAPPER = LISTENING_CHALLENGE_TYPES
 
 /**
  * A CSS selector for the header of the current challenge.
+ *
  * @type {string}
  */
 const CHALLENGE_HEADER_SELECTOR = '[data-test=challenge-header]';
 
 /**
  * A CSS selector for the statement of the current challenge, holding the sentence to translate.
+ *
  * @type {string}
  */
 const CHALLENGE_STATEMENT_SELECTOR = '[data-test=hint-sentence]';
 
 /**
  * A CSS selector for the hints added to the statement of the current challenge.
+ *
  * @type {string}
  */
 const CHALLENGE_STATEMENT_HINT_SELECTOR = '[data-test=hint-popover]';
 
 /**
  * A CSS selector for the translated solution of the current challenge.
+ *
  * @type {string}
  */
 const CHALLENGE_TRANSLATED_SOLUTION_SELECTOR = '.vpbSG > *:last-child > .TnCw3';
 
 /**
  * A CSS selector for all the different kinds of answer input which are not based on the word bank.
+ *
  * @type {string}
  */
 const ANSWER_INPUT_SELECTOR = [
@@ -197,62 +209,69 @@ const ANSWER_INPUT_SELECTOR = [
 
 /**
  * A CSS selector for the container of the answer tokens selected from the word bank.
+ *
  * @type {string}
  */
 const ANSWER_SELECTED_TOKEN_CONTAINER_SELECTOR = '._3vVWl';
 
 /**
- * A CSS selector for an answer token selected from the word bank.
+ * A CSS selector for a answer token selected from the word bank.
+ *
  * @type {string}
  */
 const ANSWER_SELECTED_TOKEN_SELECTOR = '[data-test=challenge-tap-token]';
 
 /**
- * A CSS selector for the footer of the current challenge screen, holding the result and actions elements.
+ * A CSS selector for the footer of the current challenge screen, holding the result and action elements.
+ *
  * @type {string}
  */
 const CHALLENGE_FOOTER_SELECTOR = '._1obm2';
 
 /**
  * A CSS selector for the result wrapper of the current challenge screen.
+ *
  * @type {string}
  */
 const RESULT_WRAPPER_SELECTOR = '._1Ag8k';
 
 /**
  * The class name which is applied to the result wrapper when the user has given a correct answer.
+ *
  * @type {string}
  */
 const RESULT_WRAPPER_CORRECT_CLASS_NAME = '_1WH_r';
 
 /**
  * A CSS selector for the solution wrapper of the current challenge screen, holding the answer key to the challenge.
+ *
  * @type {string}
  */
 const SOLUTION_WRAPPER_SELECTOR = '.vpbSG';
 
 /**
  * A CSS selector for the list of action links of the current challenge screen.
+ *
  * @type {string}
  */
 const ACTION_LINK_LIST_SELECTOR = '._1Xpok';
 
 /**
  * The UI elements used to wrap the different components rendered by the extension.
- * @type {Object.<string, Element>}
+ *
+ * @type {object.<string, Element>}
  */
 const componentWrappers = {};
 
 /**
- * Returns a wrapper element for a component of the extension.
- * @param {Function} component
- * @param {Element} parentElement
- * @returns {Element}
+ * @param {Function} component A UI component from the extension.
+ * @param {Element} parentElement The parent element to which the wrapper should be appended.
+ * @returns {Element} A wrapper element for the given UI component.
  */
 function getComponentWrapper(component, parentElement) {
   if (!componentWrappers[component.name] || !componentWrappers[component.name].isConnected) {
     const wrapper = document.createElement('div');
-    wrapper.id = getUniqueElementId(EXTENSION_PREFIX + component.name + '-');
+    wrapper.id = getUniqueElementId(`${EXTENSION_PREFIX}${component.name}-`);
     componentWrappers[component.name] = wrapper;
   }
 
@@ -262,9 +281,8 @@ function getComponentWrapper(component, parentElement) {
 }
 
 /**
- * Renders a solution that comes closest to an user answer in the challenge screen.
- * @param {Solution} closestSolution
- * @param {Symbol} result
+ * @param {solution.Solution} closestSolution A solution that came closest to a user answer.
+ * @param {symbol} result The result of the corresponding challenge.
  */
 function renderClosestSolution(closestSolution, result) {
   try {
@@ -273,7 +291,7 @@ function renderClosestSolution(closestSolution, result) {
     if (solutionWrapper) {
       render(
         <IntlProvider definition={getTranslations(getUiLocale())}>
-          <ClosestSolution solution={solution.toDisplayableString(closestSolution, false)} result={result}/>
+          <ClosestSolution solution={solution.toDisplayableString(closestSolution, false)} result={result} />
         </IntlProvider>,
         getComponentWrapper(ClosestSolution, solutionWrapper)
       );
@@ -286,15 +304,15 @@ function renderClosestSolution(closestSolution, result) {
 }
 
 /**
- * Whether the solution list modal is currently displayed.
+ * Whether a solution list modal is currently displayed.
+ *
  * @type {boolean}
  */
 let isSolutionListModalDisplayed = false;
 
 /**
- * Renders a solution list modal in the challenge screen.
- * @param {Challenge} challenge
- * @param {string} userAnswer
+ * @param {Challenge} challenge A challenge.
+ * @param {string} userAnswer The user's answer to the challenge.
  */
 function renderSolutionListModal(challenge, userAnswer) {
   try {
@@ -313,7 +331,7 @@ function renderSolutionListModal(challenge, userAnswer) {
                            userAnswer={userAnswer}
                            onClose={() => {
                              isSolutionListModalDisplayed = false;
-                           }}/>
+                           }} />
       </IntlProvider>,
       getComponentWrapper(SolutionListModal, document.body)
     );
@@ -323,10 +341,9 @@ function renderSolutionListModal(challenge, userAnswer) {
 }
 
 /**
- * Renders a solution list link in the challenge screen.
- * @param {Challenge} challenge
- * @param {Symbol} result
- * @param {string} userAnswer
+ * @param {Challenge} challenge A challenge.
+ * @param {symbol} result The result of the challenge.
+ * @param {string} userAnswer The user's answer to the challenge.
  */
 function renderSolutionListLink(challenge, result, userAnswer) {
   try {
@@ -337,7 +354,7 @@ function renderSolutionListLink(challenge, result, userAnswer) {
         <IntlProvider definition={getTranslations(getUiLocale())}>
           <SolutionListLink result={result}
                             solutions={challenge.solutions}
-                            onClick={() => renderSolutionListModal(challenge, userAnswer)}/>
+                            onClick={() => renderSolutionListModal(challenge, userAnswer)} />
         </IntlProvider>,
         getComponentWrapper(SolutionListLink, actionLinkList)
       );
@@ -351,27 +368,29 @@ function renderSolutionListLink(challenge, result, userAnswer) {
 
 /**
  * The last seen challenge footer element.
+ *
  * @type {Element|null}
  */
 let challengeFooter = null;
 
 /**
  * The last seen result wrapper element.
+ *
  * @type {Element|null}
  */
 let resultWrapper = null;
 
 /**
  * The last completed challenge.
+ *
  * @type {object|null}
  */
 let completedChallenge = null;
 
 /**
- * Handles the result of the current challenge.
- * @param {Object} challenge
- * @param {Element} resultWrapper
- * @returns {boolean}
+ * @param {object} challenge A challenge.
+ * @param {Element} resultWrapper The UI result wrapper.
+ * @returns {boolean} Whether the result of the challenge could be handled.
  */
 function handleChallengeResult(challenge, resultWrapper) {
   if (lodash.isPlainObject(challenge)) {
@@ -416,9 +435,8 @@ function handleChallengeResult(challenge, resultWrapper) {
 }
 
 /**
- * Handles the result of the current translation challenge.
- * @param {Element} resultWrapper
- * @returns {boolean}
+ * @param {Element} resultWrapper The UI result wrapper.
+ * @returns {boolean} Whether the result of a translation challenge could be handled.
  */
 function handleTranslationChallengeResult(resultWrapper) {
   const challengeWrapper = document.querySelector(TRANSLATION_CHALLENGE_WRAPPER);
@@ -463,9 +481,8 @@ function handleTranslationChallengeResult(resultWrapper) {
 }
 
 /**
- * Handles the result of the current listening challenge.
- * @param {Element} resultWrapper
- * @returns {boolean}
+ * @param {Element} resultWrapper The UI result wrapper.
+ * @returns {boolean} Whether the result of a listening challenge could be handled.
  */
 function handleListeningChallengeResult(resultWrapper) {
   const challengeWrapper = document.querySelector(LISTENING_CHALLENGE_WRAPPER);
@@ -490,6 +507,7 @@ function handleListeningChallengeResult(resultWrapper) {
 
 /**
  * A mutation observer for the footer of the challenge screen, detecting and handling challenge results.
+ *
  * @type {MutationObserver}
  */
 const mutationObserver = new MutationObserver(() => {

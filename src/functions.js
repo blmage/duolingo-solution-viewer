@@ -14,14 +14,14 @@ import {
 
 /**
  * The counter underlying the generation of unique element IDs.
+ *
  * @type {number}
  */
 let uniqueIdCounter = 1;
 
 /**
- * Returns a unique/unused element ID based on a prefix.
- * @param {string} prefix
- * @returns {string}
+ * @param {string} prefix The prefix to prepend to the generated ID.
+ * @returns {string} A unique/unused element ID.
  */
 export function getUniqueElementId(prefix) {
   let elementId;
@@ -34,8 +34,7 @@ export function getUniqueElementId(prefix) {
 }
 
 /**
- * A convenience function for completely discarding a UI event.
- * @param {Event} event
+ * @param {Event} event The UI event to completely discard.
  */
 export function discardEvent(event) {
   event.preventDefault();
@@ -43,11 +42,10 @@ export function discardEvent(event) {
 }
 
 /**
- * Returns a subset of the computed style values applied by a set of class names.
  * @function
- * @param {string[]} classNames
- * @param {string[]} styleNames
- * @returns {Object}
+ * @param {string[]} classNames A set of class names.
+ * @param {string[]} styleNames The names of the styles whose values should be returned.
+ * @returns {object} A subset of the computed style values applied by the given set of class names.
  */
 export const getStylesByClassNames = moize(
   (classNames, styleNames) => {
@@ -67,20 +65,19 @@ export const getStylesByClassNames = moize(
 );
 
 /**
- * Returns the base URL of the image CDN.
  * @function
+ * @returns {string} The base URL of the image CDN.
  */
 export const getImageCdnBaseUrl = moize(
   () => {
     const menuIcon = document.querySelector(MENU_ICON_SELECTOR);
-    return new URL(menuIcon && menuIcon.src || IMAGE_CDN_DEFAULT_BASE_URL).origin + '/';
+    return `${new URL(menuIcon && menuIcon.src || IMAGE_CDN_DEFAULT_BASE_URL).origin}/`;
   }
 );
 
 /**
- * Returns the CSS URL of the solution icon, if it can be determined.
  * @function
- * @returns {string|null}
+ * @returns {string|null} The CSS URL of the solution icon, if it can be determined.
  */
 export const getSolutionIconCssUrl = moize(
   () => {
@@ -94,8 +91,7 @@ export const getSolutionIconCssUrl = moize(
 );
 
 /**
- * Returns the tag of the current language used for the UI.
- * @returns {string}
+ * @returns {string} The tag of the current language used for the UI.
  */
 export function getUiLocale() {
   return lodash.get(window || {}, [ 'duo', 'uiLanguage' ]) || DEFAULT_LOCALE;
@@ -103,14 +99,14 @@ export function getUiLocale() {
 
 /**
  * The iframe element used to access working logging functions.
+ *
  * @type {HTMLIFrameElement|null}
  */
 let loggingIframe = null;
 
 /**
- * Logs an extension-related error to the console.
- * @param {*} error
- * @param {?string} prefix
+ * @param {*} error The extension-related error to log to the console.
+ * @param {?string} prefix A prefix to prepend to the error.
  */
 export function logError(error, prefix) {
   if (process.env.NODE_ENV === 'development') {
@@ -120,34 +116,31 @@ export function logError(error, prefix) {
       document.body.appendChild(loggingIframe);
     }
 
-    loggingIframe.contentWindow.console.error('[' + EXTENSION_CODE + '] ' + (prefix || ''), error);
+    loggingIframe.contentWindow.console.error(`[${EXTENSION_CODE}] ${prefix || ''}`, error);
   }
 }
 
 /**
- * Initializes an immutable Map with a series of mutations.
- * @param {Function} mutator
- * @returns {Map}
+ * @param {Function} mutator A function applying a series of mutations to a given map. 
+ * @returns {Map} A new map initialized using the given mutator.
  */
 export function newMapWith(mutator) {
   return Map().withMutations(mutator);
 }
 
 /**
- * Merges two or more immutable Maps, using the given function to resolve key conflicts.
- * @param {Function} merge
- * @param {Map} base
- * @param {Map[]} maps
- * @returns {Map}
+ * @param {Function} merge The function usable to resolve key conflicts.
+ * @param {Map} base The base map.
+ * @param {Map[]} maps A list of maps to merge into the base map.
+ * @returns {Map} The union of all the given maps.
  */
 export function mergeMapsWith(merge, base, ...maps) {
   return (maps.length > 0) ? base.mergeWith(merge, ...maps) : base;
 }
 
 /**
- * Inverts a comparison function.
- * @param {function} compare
- * @returns {function}
+ * @param {Function} compare A comparison function.
+ * @returns {Function} The inverse of the given comparison function.
  */
 export function invertComparison(compare) {
   return (x, y) => {

@@ -123,10 +123,6 @@ const DEFAULT_PAGE_SIZE = 20;
 const PAGE_SIZES = [ 10, 20, 50, 200, PAGE_SIZE_ALL ];
 
 const SolutionList = ({ solutions = [] }) => {
-  if (0 === solutions.length) {
-    return null;
-  }
-
   const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS);
 
   const [ page, setPage ] = useState(1);
@@ -144,7 +140,7 @@ const SolutionList = ({ solutions = [] }) => {
 
       setPage(Math.ceil(((page - 1) * oldSize + 1) / size));
     }
-  }, [ page, pageSize ]);
+  }, [ page, pageSize, solutions.length, setRawPageSize ]);
 
   const {
     state: sortType,
@@ -176,11 +172,11 @@ const SolutionList = ({ solutions = [] }) => {
     setSortedSolutions(solutions.sort(compareSolutions));
   }, [ solutions, sortType, sortDirection ]);
 
-  const renderSolutionItem = value => (
+  const renderSolutionItem = useCallback(value => (
     <li className={getElementClassNames(SOLUTION)}>
       {solution.toDisplayableString(value, false)}
     </li>
-  );
+  ), [ getElementClassNames ]);
 
   const [ solutionItems, setSolutionItems ] = useState([]);
 
@@ -190,17 +186,21 @@ const SolutionList = ({ solutions = [] }) => {
       : sortedSolutions.slice((page - 1) * pageSize, page * pageSize);
 
     setSolutionItems(pageSolutions.map(renderSolutionItem));
-  }, [ sortedSolutions, sortType, sortDirection, page, pageSize ]);
+  }, [ sortedSolutions, sortType, sortDirection, page, pageSize, renderSolutionItem ]);
 
   const renderSizeLink = useCallback(size => {
     const sizeLabel = (PAGE_SIZE_ALL !== size)
-      ? '' + size
+      ? `${size}`
       : <Text id="all">all</Text>;
 
     return (size === pageSize)
       ? <span className={getElementClassNames(CURRENT_PAGE_SIZE)}>{sizeLabel}</span>
       : <a onClick={() => setPageSize(size)} className={getElementClassNames(PAGE_SIZE_LINK)}>{sizeLabel}</a>;
-  }, [ pageSize, setPageSize ]);
+  }, [ pageSize, setPageSize, getElementClassNames ]);
+
+  if (0 === solutions.length) {
+    return null;
+  }
 
   const [ firstIndex, lastIndex ] = (PAGE_SIZE_ALL === pageSize)
     ? [ 1, solutions.length ]

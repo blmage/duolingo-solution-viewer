@@ -29,9 +29,10 @@ const CLASS_NAMES = {
 
 /**
  * Returns the applicable stylesheet for a given result type.
+ *
  * @function
- * @param {Symbol} result
- * @returns {Object}
+ * @param {symbol} result
+ * @returns {object}
  */
 const getResultStyleSheet = moize(
   result => {
@@ -65,10 +66,6 @@ const getResultStyleSheet = moize(
 );
 
 const SolutionListLink = ({ solutions = [], result = RESULT_CORRECT, onClick = discardEvent }) => {
-  if (0 === solutions.length) {
-    return null;
-  }
-
   const STYLE_SHEETS = {
     [RESULT_CORRECT]: getResultStyleSheet(RESULT_CORRECT),
     [RESULT_INCORRECT]: getResultStyleSheet(RESULT_INCORRECT),
@@ -76,12 +73,16 @@ const SolutionListLink = ({ solutions = [], result = RESULT_CORRECT, onClick = d
 
   const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ result ]);
 
+  if (0 === solutions.length) {
+    return null;
+  }
+
   const counts = solution.getI18nCounts(solutions);
 
   return (
     <IntlProvider scope="solution.list.link">
       <a className={getElementClassNames(WRAPPER)} onClick={onClick}>
-        <div className={getElementClassNames(ICON)}/>
+        <div className={getElementClassNames(ICON)} />
         <span className={getElementClassNames(TITLE)}>
             <Text id="solutions" plural={counts.plural} fields={{ count: counts.display }}>
               Solutions ({counts.display})

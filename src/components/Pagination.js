@@ -48,10 +48,6 @@ const Pagination =
      displayedPageCount = 5,
      onChange = noop,
    }) => {
-    if (totalItemCount <= itemCountPerPage) {
-      return null;
-    }
-
     const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS);
 
     const paginator = new Paginator(itemCountPerPage, displayedPageCount);
@@ -67,7 +63,7 @@ const Pagination =
           onChange(paginationData.previous_page);
         }
       }
-    }, [ paginationData, isControlPressed ]);
+    }, [ paginationData, isControlPressed, onChange ]);
 
     const onNext = useCallback(() => {
       if (paginationData.has_next_page) {
@@ -77,10 +73,14 @@ const Pagination =
           onChange(paginationData.next_page);
         }
       }
-    }, [ paginationData, isControlPressed ]);
+    }, [ paginationData, isControlPressed, onChange ]);
 
     useKeyPressEvent('ArrowLeft', onPrevious);
     useKeyPressEvent('ArrowRight', onNext);
+
+    if (totalItemCount <= itemCountPerPage) {
+      return null;
+    }
 
     const renderButton = ({ key, label, disabled, onClick }) => {
       return (
@@ -110,7 +110,7 @@ const Pagination =
     for (let page = paginationData.first_page; page <= paginationData.last_page; page++) {
       pageButtons.push(
         renderButton({
-          key: 'page-' + page,
+          key: `page-${page}`,
           label: page,
           disabled: paginationData.current_page === page,
           onClick: () => onChange(page),

@@ -8,7 +8,8 @@ import { SENTENCE_WORDS_REGEXP, TRIMMED_WORDS_REGEXP } from './constants';
 
 /**
  * A single vertex from a solution graph.
- * @typedef {Object} Vertex
+ *
+ * @typedef {object} Vertex
  * @property {?number} to The index of the next vertex, if there is any.
  * @property {string} lenient The reference value of the vertex.
  * @property {?string} orig The original value of the vertex (if different from its lenient value).
@@ -18,7 +19,8 @@ import { SENTENCE_WORDS_REGEXP, TRIMMED_WORDS_REGEXP } from './constants';
 
 /**
  * A single choice from a solution token.
- * @typedef {Object} TokenValue
+ *
+ * @typedef {object} TokenValue
  * @property {boolean} isAutomatic Whether the token value was automatically derived from another value.
  * @property {string} value The actual value.
  */
@@ -26,12 +28,14 @@ import { SENTENCE_WORDS_REGEXP, TRIMMED_WORDS_REGEXP } from './constants';
 /**
  * A single element from a solution.
  * A token can hold multiple values, in which case each represents a possible choice.
+ *
  * @typedef {TokenValue[]} Token
  */
 
 /**
  * A possible solution to a challenge.
- * @typedef {Object} Solution
+ *
+ * @typedef {object} Solution
  * @property {string} locale The tag of the language in which the solution is written.
  * @property {string} reference The reference sentence of the solution, usable e.g. for sorting.
  * @property {List<Token>} tokens The list of tokens building up all the possible sentences of the solution.
@@ -43,7 +47,8 @@ import { SENTENCE_WORDS_REGEXP, TRIMMED_WORDS_REGEXP } from './constants';
 
 /**
  * A set of statistics about one or more words, used for similarity matching.
- * @typedef {Object} MatchingData
+ *
+ * @typedef {object} MatchingData
  * @property {number} charCount The total number of characters across the matched words.
  * @property {number} wordCount The total number of matched words.
  * @property {Map} bigramMap A map from bigrams to their number of occurrences in the matched words.
@@ -51,26 +56,27 @@ import { SENTENCE_WORDS_REGEXP, TRIMMED_WORDS_REGEXP } from './constants';
 
 /**
  * Compares two strings using a pre-defined set of collation rules.
- * @param {string} x
- * @param {string} y
- * @param {string} locale
+ *
+ * @param {string} x A string.
+ * @param {string} y Another string.
+ * @param {string} locale The locale to use for the comparison.
  * @returns {number}
+ * A negative value if x comes before y, a positive value if x comes before y, and 0 if both strings are equivalent. 
  */
 function compareStrings(x, y, locale) {
   return x.localeCompare(y, locale, {
     ignorePunctuation: true,
     numeric: true,
     sensitivity: 'accent',
-    usage: 'sort'
+    usage: 'sort',
   });
 }
 
 /**
- * Checks whether two vertex values are relevantly different (meaning whether both can/should be displayed to the user).
- * @param {string} x
- * @param {string} y
- * @param {string} locale
- * @returns {boolean}
+ * @param {string} x A token string.
+ * @param {string} y Another token string.
+ * @param {string} locale The locale to use for the comparison.
+ * @returns {boolean} Whether the two token strings are significantly different.
  */
 function hasVertexRelevantDifferences(x, y, locale) {
   x = x.toLocaleLowerCase(locale);
@@ -86,10 +92,9 @@ function hasVertexRelevantDifferences(x, y, locale) {
 }
 
 /**
- * Returns the token values corresponding to a vertex taken from a solution graph.
- * @param {Vertex} vertex
- * @param {string} locale
- * @returns {TokenValue[]}
+ * @param {Vertex} vertex A vertex taken from a solution graph.
+ * @param {string} locale The locale to use for comparing token strings.
+ * @returns {TokenValue[]} The token values corresponding to the given vertex.
  */
 function getVertexTokenValues(vertex, locale) {
   const isAutomatic = !!vertex.auto;
@@ -120,11 +125,12 @@ function getVertexTokenValues(vertex, locale) {
 }
 
 /**
- * Compares two token values by relevance.
- * @param {TokenValue} x
- * @param {TokenValue} y
- * @param {string} locale
+ * @param {TokenValue} x A token value.
+ * @param {TokenValue} y Another token value.
+ * @param {string} locale The locale to use for comparing the token strings.
  * @returns {number}
+ * A negative value if x is more relevant than y, a positive value if x is less relevant than y, and 0 if both token
+ * values are equally relevant.
  */
 function compareTokenValues(x, y, locale) {
   const result = compareStrings(x.value, y.value, locale);
@@ -132,11 +138,10 @@ function compareTokenValues(x, y, locale) {
 }
 
 /**
- * Parses a list of vertices taken from a solution graph and corresponding to a single token.
- * Returns the parsed token, and the corresponding solution values.
- * @param {Vertex[]} vertices
- * @param {string} locale
+ * @param {Vertex[]} vertices A list of vertices taken from a solution graph, and corresponding to a single token.
+ * @param {string} locale The locale to use for comparing token strings.
  * @returns {{hasAutomatic: boolean, isAutomatic: boolean, isComplex: boolean, reference: string, token: Token}}
+ * The parsed token, and the corresponding solution values.
  */
 function parseTokenVertices(vertices, locale) {
   let hasAutomatic;
@@ -169,10 +174,9 @@ function parseTokenVertices(vertices, locale) {
 }
 
 /**
- * Initializes a solution from a list of vertices taken from a solution graph and corresponding to a single token.
- * @param {Vertex[]} vertices
- * @param {string} locale
- * @returns {Solution}
+ * @param {Vertex[]} vertices A list of vertices taken from a solution graph, and corresponding to a single token
+ * @param {string} locale The locale to use for comparing token strings.
+ * @returns {Solution} A solution.
  */
 function fromTokenVertices(vertices, locale) {
   const { token, ...result } = parseTokenVertices(vertices, locale);
@@ -182,11 +186,9 @@ function fromTokenVertices(vertices, locale) {
 }
 
 /**
- * Prepends to an existing solution a list of vertices taken from a solution graph and corresponding to a single token.
- * Returns a new solution.
- * @param {Vertex[]} vertices
- * @param {Solution} solution
- * @returns {Solution}
+ * @param {Vertex[]} vertices A list of vertices taken from a solution graph, and corresponding to a single token
+ * @param {Solution} solution An existing solution.
+ * @returns {Solution} A new solution, completed with the given vertices.
  */
 function prependTokenVertices(vertices, solution) {
   const { token, ...result } = parseTokenVertices(vertices, solution.locale);
@@ -200,12 +202,11 @@ function prependTokenVertices(vertices, solution) {
 }
 
 /**
- * Builds a list of all possible (sub) solutions that start from a given index, based on a flattened list of vertices
- * taken from a solution graph, with vertices been grouped by their next index.
- * @param {Array.<Object.<number, Vertex[]>>} groupedVertices
- * @param {number} startIndex
- * @param {string} locale
- * @returns {Solution[]}
+ * @param {Array.<object.<number, Vertex[]>>} groupedVertices
+ * A flattened list of groups of vertices taken from a solution graph, arranged by the corresponding next indices.
+ * @param {number} startIndex The index where to start building the sub solutions.
+ * @param {string} locale The locale to use for comparing token strings.
+ * @returns {Solution[]} A set of sub solutions.
  */
 function fromGroupedVertices(groupedVertices, startIndex, locale) {
   if (
@@ -228,21 +229,19 @@ function fromGroupedVertices(groupedVertices, startIndex, locale) {
 }
 
 /**
- * Returns whether a vertex is relevant and should be displayed to the user.
- * @param {Vertex} vertex
- * @param {boolean} allowAutomatic
- * @return {boolean}
+ * @param {Vertex} vertex A vertex from a solution graph.
+ * @param {boolean} allowAutomatic Whether automatically derived vertices are allowed.
+ * @returns {boolean} Whether the vertex is considered to be relevant.
  */
 function isRelevantVertex(vertex, allowAutomatic) {
   return ('typo' !== vertex.type) && (allowAutomatic || !vertex.auto);
 }
 
 /**
- * Builds a list of all the possible solutions based on a flattened list of vertices taken from a solution graph.
- * @param {Vertex[][]} vertices
- * @param {boolean} includeAutomatic
- * @param {string} locale
- * @returns {Solution[]}
+ * @param {Vertex[][]} vertices A flattened list of vertices taken from a solution graph.
+ * @param {boolean} includeAutomatic Whether automatically derived vertices should be included in the solutions.
+ * @param {string} locale The locale to use for comparing token strings.
+ * @returns {Solution[]} A set of solutions.
  */
 export function fromVertices(vertices, includeAutomatic, locale) {
   return fromGroupedVertices(vertices.map(
@@ -254,10 +253,9 @@ export function fromVertices(vertices, includeAutomatic, locale) {
 }
 
 /**
- * Builds a list of all the possible solutions based on a list of correct naming solutions.
- * @param {string[]} solutions
- * @param {string} locale
- * @returns {Solution[]}
+ * @param {string[]} solutions A list of correct solutions for a naming challenge.
+ * @param {string} locale The locale of the challenge.
+ * @returns {Solution[]} A set of solutions.
  */
 export function fromNamingSolutions(solutions, locale) {
   return solutions
@@ -281,10 +279,9 @@ export function fromNamingSolutions(solutions, locale) {
 }
 
 /**
- * Builds a list of all the possible solutions based on a list of correct tokens from a word bank.
- * @param {string[]} wordTokens
- * @param {string} locale
- * @returns {Solution[]}
+ * @param {string[]} wordTokens A list of correct tokens from a word bank.
+ * @param {string} locale The locale of the corresponding challenge.
+ * @returns {Solution[]} A set of solutions.
  */
 export function fromWordBankTokens(wordTokens, locale) {
   const words = wordTokens
@@ -311,10 +308,9 @@ export function fromWordBankTokens(wordTokens, locale) {
 }
 
 /**
- * Returns a user-friendly string summarizing a solution.
- * @param {Solution} solution
- * @param {boolean} includeAutomatic
- * @returns {string}
+ * @param {Solution} solution A solution.
+ * @param {boolean} includeAutomatic Whether automatically derived tokens should be included in the summary.
+ * @returns {string} A user-friendly string summarizing the given solution.
  */
 export function toDisplayableString(solution, includeAutomatic) {
   return solution.tokens.reduce((result, token) => {
@@ -322,17 +318,18 @@ export function toDisplayableString(solution, includeAutomatic) {
 
     const choice = (1 === choices.length)
       ? choices[0].value
-      : ('[' + choices.map(it.value).join(' / ') + ']');
+      : (`[${choices.map(it.value).join(' / ')}]`);
 
     return result + choice;
   }, '');
 }
 
 /**
- * Compares two solutions by their reference sentence.
- * @param {Solution} x
- * @param {Solution} y
+ * @param {Solution} x A solution.
+ * @param {Solution} y Another solution.
  * @returns {number}
+ * The result of the alphabetical comparison between the solution references. A negative value if x comes before y,
+ * a positive value if x comes after y, and 0 if both solutions have equivalent references.
  */
 export function compareValues(x, y) {
   let result = compareStrings(x.reference, y.reference, x.locale);
@@ -349,10 +346,11 @@ export function compareValues(x, y) {
 }
 
 /**
- * Compares two solutions by their similarity scores.
- * @param {Solution} x
- * @param {Solution} y
+ * @param {Solution} x A solution.
+ * @param {Solution} y Another solution.
  * @returns {number}
+ * The result of the comparison between the similarity scores of the solutions. A negative value if x comes before y,
+ * a positive value if x comes after y, and 0 if both solutions are similar.
  */
 export function compareScores(x, y) {
   const result = (y.score || 0) - (x.score || 0);
@@ -360,9 +358,9 @@ export function compareScores(x, y) {
 }
 
 /**
- * Returns i18n-related counts for a list of solutions.
- * @param {Solution[]} solutions
+ * @param {Solution[]} solutions A set of solutions.
  * @returns {{display: string, plural: number}}
+ * An object holding a displayable count and a number usable for pluralization.
  */
 export function getI18nCounts(solutions) {
   let plural = solutions.length;
@@ -377,19 +375,17 @@ export function getI18nCounts(solutions) {
 }
 
 /**
- * Returns whether a token is empty.
- * @param {Token} token
- * @returns {boolean}
+ * @param {Token} token A solution token.
+ * @returns {boolean} Whether the given token is empty.
  */
 function isEmptyToken(token) {
   return (1 === token.length) && ('' === token[0].value.trim());
 }
 
 /**
- * Adds the bigrams of a word to a map from bigrams to number of occurrences.
- * @param {Map} map
- * @param {string} word
- * @returns {Map}
+ * @param {Map} map A map from bigrams to the corresponding number of occurrences.
+ * @param {string} word A word.
+ * @returns {Map} A new map, updated with the bigrams of the given word.
  */
 function addWordBigramsToMap(map, word) {
   if (1 === word.length) {
@@ -414,11 +410,10 @@ const emptyMatchingData = {
 };
 
 /**
- * Returns the similarity matching data for a string.
  * @function
- * @param {string} string
- * @param {string} locale
- * @returns {MatchingData}
+ * @param {string} string A string.
+ * @param {string} locale The locale of the string.
+ * @returns {MatchingData} The similarity matching data of the given string.
  */
 const getStringMatchingData = moize(
   (string, locale) => {
@@ -438,9 +433,8 @@ const getStringMatchingData = moize(
 );
 
 /**
- * Merges together a list of similarity matching data.
- * @param {MatchingData[]} data
- * @returns {MatchingData}
+ * @param {MatchingData[]} data A set of similarity matching data.
+ * @returns {MatchingData} The union of all the given matching data.
  */
 function mergeMatchingData(data) {
   return (0 === data.length)
@@ -454,16 +448,17 @@ function mergeMatchingData(data) {
 
 /**
  * The (unique) key under which similarity matching data is consolidated in a solution.
+ *
  * @type {symbol}
  */
 const MATCHING_DATA = Symbol('matching_data');
 
 /**
- * Returns the similarity matching data for a solution, split into:
+ * @param {Solution} solution A solution.
+ * @returns {{ shared: MatchingData, paths: MatchingData }}
+ * The similarity matching data for the given solution, split into:
  * - "shared": the matching data for the words shared by all the possible sentences,
  * - "paths":  for each possible sentence, the matching data for their exclusive words.
- * @param {Solution} solution
- * @returns {{ shared: MatchingData, paths: MatchingData }}
  */
 function getSolutionMatchingData(solution) {
   if (!solution[MATCHING_DATA]) {
@@ -491,10 +486,10 @@ function getSolutionMatchingData(solution) {
 }
 
 /**
- * Returns the similarity score between a solution and a user answer (ranging from 0 to 1).
- * @param {Solution} solution
- * @param {string} answer
+ * @param {Solution} solution A solution.
+ * @param {string} answer A user answer.
  * @returns {number}
+ * The similarity score between the given solution and answer, ranging from 0 (100% different) to 1 (100% similar).
  */
 export function matchAgainstAnswer(solution, answer) {
   const solutionMatchingData = getSolutionMatchingData(solution);

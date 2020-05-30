@@ -1,6 +1,7 @@
 /**
  * The full set of translations.
- * @type {Object}
+ *
+ * @type {object}
  */
 const TRANSLATIONS = {
   en: {
@@ -62,9 +63,8 @@ const TRANSLATIONS = {
 };
 
 /**
- * Returns the available translations for a given language tag.
- * @param {string} languageTag
- * @returns {Object}
+ * @param {string} languageTag A language tag.
+ * @returns {object} The available translations for the given language tag.
  */
 export function getTranslations(languageTag) {
   return (

@@ -29,11 +29,11 @@ const STYLE_SHEETS = {
 };
 
 const ClosestSolution = ({ solution = '', result = RESULT_CORRECT }) => {
+  const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ result ]);
+
   if (solution.trim() === '') {
     return null;
   }
-
-  const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ result ]);
 
   return (
     <IntlProvider scope="solution.closest">

@@ -114,10 +114,6 @@ const SolutionListModal =
     const [ modalState, setModalState ] = useState(STATE_PENDING);
     const openedTimeout = useRef(null);
 
-    if ((STATE_CLOSED === modalState) || (0 === solutions.length)) {
-      return null;
-    }
-
     const {
       state: modalSize,
       nextState: nextModalSize,
@@ -143,7 +139,7 @@ const SolutionListModal =
           clearTimeout(openedTimeout.current);
         }
       }
-    }, [ modalState ]);
+    }, [ modalState, onClose ]);
 
     useEffect(() => {
       if ([ STATE_CLOSING, STATE_CLOSED ].indexOf(modalState) === -1) {
@@ -157,19 +153,25 @@ const SolutionListModal =
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
       }
-    }, [ modalState ]);
+    }, [ modalState, closeModal ]);
 
     useEffect(() => {
-      setTimeout(() => setModalState(STATE_OPENING), 1);
-      openedTimeout.current = setTimeout(() => setModalState(STATE_OPENED), 300);
-    }, []);
+      if (STATE_PENDING === modalState) {
+        setTimeout(() => setModalState(STATE_OPENING), 1);
+        openedTimeout.current = setTimeout(() => setModalState(STATE_OPENED), 300);
+      }
+    }, [ modalState ]);
+
+    if ((STATE_CLOSED === modalState) || (0 === solutions.length)) {
+      return null;
+    }
 
     return (
       <IntlProvider scope="solution.list.modal">
         <div className={getElementClassNames(OVERLAY)} onClick={closeModal}>
           <div className={getElementClassNames(WRAPPER)} role="dialog" tabIndex="-1" onClick={discardEvent}>
             <div className={getElementClassNames(CLOSE_BUTTON)} onClick={closeModal}>
-              <img src={getImageCdnBaseUrl() + CLOSE_ICON_CDN_PATH}/>
+              <img src={getImageCdnBaseUrl() + CLOSE_ICON_CDN_PATH} />
             </div>
             <Localizer>
               <div onClick={setNextModalSize}
@@ -199,7 +201,7 @@ const SolutionListModal =
                   <p>{userAnswer}</p>
                 </Fragment>
               )}
-              <SolutionList solutions={solutions}/>
+              <SolutionList solutions={solutions} />
             </div>
           </div>
         </div>
