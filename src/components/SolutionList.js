@@ -6,7 +6,7 @@ import lodash from 'lodash';
 import { BASE, useLocalStorage, useLocalStorageList, useStyles } from './base';
 import Pagination from './Pagination';
 import { invertComparison } from '../functions';
-import * as solution from '../functions';
+import * as solution from '../solutions';
 
 const TITLE = 'title';
 const TITLE_TEXT = 'title_text';

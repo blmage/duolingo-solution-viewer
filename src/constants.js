@@ -1,3 +1,5 @@
+import XRegExp from 'xregexp';
+
 /**
  * The code of the extension.
  * @type {string}
@@ -15,6 +17,18 @@ export const EXTENSION_PREFIX = '_duo-sv_';
  * @type {string}
  */
 export const DEFAULT_LOCALE = 'en';
+
+/**
+ * A regexp for capturing words in a sentence.
+ * @constant {RegExp}
+ */
+export const SENTENCE_WORDS_REGEXP = new XRegExp('([\\pL\\pN]+)', 'g');
+
+/**
+ * A regexp for trimming non-word characters from a string.
+ * @constant {RegExp}
+ */
+export const TRIMMED_WORDS_REGEXP = new XRegExp('([\\pL\\pN]+(.+[\\pL\\pN]+)*)', 'g');
 
 /**
  * The internal types identifying translation challenges.

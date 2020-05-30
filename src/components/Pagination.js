@@ -2,9 +2,9 @@ import { h } from 'preact';
 import { useCallback } from 'preact/hooks';
 import { useKeyPress, useKeyPressEvent } from 'preact-use';
 import { StyleSheet } from 'aphrodite';
-import { BASE, useStyles } from './base';
 import { noop } from 'lodash';
 import Paginator from 'paginator';
+import { BASE, useStyles } from './base';
 
 const WRAPPER = 'wrapper';
 const ITEM = 'item';

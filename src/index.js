@@ -16,7 +16,7 @@ import {
   WORD_BANK_CHALLENGE_TYPES,
 } from './constants';
 
-import * as solution from './functions';
+import * as solution from './solutions';
 import { discardEvent, getUiLocale, getUniqueElementId, logError } from './functions';
 import { getTranslations } from './translations';
 
@@ -25,6 +25,7 @@ import { getTranslations } from './translations';
  * @typedef {Object} Challenge
  * @property {string} statement The sentence to translate.
  * @property {Solution[]} solutions The accepted translations.
+ * @property {boolean} isNamingChallenge Whether the challenge is a naming challenge.
  */
 
 /**
@@ -74,7 +75,7 @@ function getChallengeSolutions(challenge) {
 }
 
 /**
- * Prepares the translation challenges for a freshly started practice session.
+ * Prepares the different challenges for a freshly started practice session.
  * @param {Array} newChallenges
  */
 function handleNewChallenges(newChallenges) {
@@ -86,11 +87,11 @@ function handleNewChallenges(newChallenges) {
     const solutions = getChallengeSolutions(challenge);
 
     if (solutions.length > 0) {
-      const statement = String(challenge.prompt.normalize()).trim();
+      const statement = String(challenge.prompt || '').normalize().trim();
 
       if (
-        (TRANSLATION_CHALLENGE_TYPES.indexOf(challenge.type) >= 0)
-        && ('' !== String(challenge.prompt || '').trim())
+        ('' !== statement)
+        && (TRANSLATION_CHALLENGE_TYPES.indexOf(challenge.type) >= 0)
       ) {
         currentTranslationChallenges[statement] = {
           statement,
@@ -105,8 +106,8 @@ function handleNewChallenges(newChallenges) {
 
         currentListeningChallenges[solutionTranslation] = {
           statement,
-          solutionTranslation,
           solutions: lodash.uniqWith(solutions, lodash.isEqual),
+          isNamingChallenge: false,
         };
       }
     }
@@ -231,13 +232,13 @@ const RESULT_WRAPPER_CORRECT_CLASS_NAME = '_1WH_r';
 const SOLUTION_WRAPPER_SELECTOR = '.vpbSG';
 
 /**
- * A CSS selector for the list of actions links of the current challenge screen.
+ * A CSS selector for the list of action links of the current challenge screen.
  * @type {string}
  */
 const ACTION_LINK_LIST_SELECTOR = '._1Xpok';
 
 /**
- * The UI elements whose purpose is to wrap some components from the extension.
+ * The UI elements used to wrap the different components rendered by the extension.
  * @type {Object.<string, Element>}
  */
 const componentWrappers = {};
@@ -261,7 +262,7 @@ function getComponentWrapper(component, parentElement) {
 }
 
 /**
- * Renders the closest possible solution to the user answer in the challenge screen.
+ * Renders a solution that comes closest to an user answer in the challenge screen.
  * @param {Solution} closestSolution
  * @param {Symbol} result
  */
@@ -291,7 +292,7 @@ function renderClosestSolution(closestSolution, result) {
 let isSolutionListModalDisplayed = false;
 
 /**
- * Renders the solution list modal in the challenge screen.
+ * Renders a solution list modal in the challenge screen.
  * @param {Challenge} challenge
  * @param {string} userAnswer
  */
@@ -322,7 +323,7 @@ function renderSolutionListModal(challenge, userAnswer) {
 }
 
 /**
- * Renders the solution list link in the challenge screen.
+ * Renders a solution list link in the challenge screen.
  * @param {Challenge} challenge
  * @param {Symbol} result
  * @param {string} userAnswer
@@ -368,15 +369,12 @@ let completedChallenge = null;
 
 /**
  * Handles the result of the current challenge.
- * @param {string} key
- * @param {Object} challenges
+ * @param {Object} challenge
  * @param {Element} resultWrapper
  * @returns {boolean}
  */
-function handleChallengeResult(key, challenges, resultWrapper) {
-  if (lodash.isPlainObject(challenges[key])) {
-    const challenge = challenges[key];
-
+function handleChallengeResult(challenge, resultWrapper) {
+  if (lodash.isPlainObject(challenge)) {
     const result = resultWrapper.classList.contains(RESULT_WRAPPER_CORRECT_CLASS_NAME)
       ? RESULT_CORRECT
       : RESULT_INCORRECT;
@@ -446,8 +444,7 @@ function handleTranslationChallengeResult(resultWrapper) {
   const statement = cleanWrapper.innerText.normalize().trim();
 
   let result = handleChallengeResult(
-    statement,
-    currentTranslationChallenges,
+    currentTranslationChallenges[statement],
     resultWrapper
   );
 
@@ -456,8 +453,7 @@ function handleTranslationChallengeResult(resultWrapper) {
 
     if (challenge) {
       result = handleChallengeResult(
-        challenge.statement,
-        currentTranslationChallenges,
+        currentTranslationChallenges[challenge.statement],
         resultWrapper
       );
     }
@@ -484,9 +480,10 @@ function handleListeningChallengeResult(resultWrapper) {
     return false;
   }
 
+  const solution = translatedSolutionWrapper.innerText.normalize().trim();
+
   return handleChallengeResult(
-    translatedSolutionWrapper.innerText.normalize().trim(),
-    currentListeningChallenges,
+    currentListeningChallenges[solution],
     resultWrapper
   );
 }

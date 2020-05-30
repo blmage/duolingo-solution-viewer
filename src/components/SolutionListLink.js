@@ -5,7 +5,7 @@ import moize from 'moize';
 import { BASE, useStyles } from './base';
 import { RESULT_CORRECT, RESULT_INCORRECT, DEFAULT_RESULT_COLORS } from '../constants';
 import { discardEvent, getSolutionIconCssUrl, getStylesByClassNames } from '../functions';
-import * as solution from '../functions';
+import * as solution from '../solutions';
 
 const WRAPPER = 'wrapper';
 const ICON = 'icon';
