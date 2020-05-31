@@ -1,5 +1,10 @@
 # Duolingo Solution Viewer
 
+[![DeepScan grade](https://deepscan.io/api/teams/9459/projects/11992/branches/180276/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=9459&pid=11992&bid=180276)
+![ESLint](https://github.com/blmage/duolingo-solution-viewer/workflows/ESLint/badge.svg)
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/idffaipgnlkhfhibgnodeiogpgojcmfm)](https://chrome.google.com/webstore/detail/duolingo-solution-viewer/idffaipgnlkhfhibgnodeiogpgojcmfm)
+[![Mozilla Add-on](https://img.shields.io/amo/v/duolingo-solution-viewer)](https://addons.mozilla.org/firefox/addon/duolingo-solution-viewer/)
+
 A browser extension providing access to the complete lists of **accepted solutions** for
 [Duolingo](https://www.duolingo.com)'s **translation challenges**.
 
