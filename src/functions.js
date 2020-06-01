@@ -1,7 +1,9 @@
 import lodash from 'lodash';
 import 'lodash.product';
+import { it } from 'param.macro';
 import moize from 'moize';
 import { Map } from 'immutable';
+import TextDiff from 'diff';
 
 import {
   DEFAULT_LOCALE,
@@ -121,7 +123,7 @@ export function logError(error, prefix) {
 }
 
 /**
- * @param {Function} mutator A function applying a series of mutations to a given map. 
+ * @param {Function} mutator A function applying a series of mutations to a given map.
  * @returns {Map} A new map initialized using the given mutator.
  */
 export function newMapWith(mutator) {
@@ -147,4 +149,45 @@ export function invertComparison(compare) {
     const result = compare(x, y);
     return (result < 0) ? 1 : ((result > 0) ? -1 : 0);
   };
+}
+
+/**
+ * @typedef {object} DiffToken
+ * @property {string} value The value of the token.
+ * @property {number} count The length of the token.
+ * @property {boolean} added Whether the token was added in the right string.
+ * @property {boolean} removed Whether the token was removed in the right string.
+ */
+
+/**
+ * @param {string} x A string.
+ * @param {string} y Another string.
+ * @returns {DiffToken[]|null}
+ * A list of tokens representing the similarities and differences between the two given strings (ignoring insignificant
+ * punctuation and spaces), or null if they are equivalent.
+ */
+export function diffStrings(x, y) {
+  const INSIGNIFICANT_CHARS = '.,;:?¿!¡()" \t\n\r\xA0';
+
+  const diffTokens = TextDiff.diffChars(
+    // diffChars is right-biased in that it will rather keep characters from the second string.
+    // We want to keep characters from the base string instead.
+    lodash.trim(y.normalize(), INSIGNIFICANT_CHARS),
+    lodash.trim(x.normalize(), INSIGNIFICANT_CHARS),
+    {
+      comparator: (left, right) =>
+        left.toLowerCase() === right.toLowerCase()
+        || INSIGNIFICANT_CHARS.includes(left) && INSIGNIFICANT_CHARS.includes(right)
+    }
+  );
+
+  if (!diffTokens.some(!!it.added || !!it.removed)) {
+    return null;
+  }
+
+  return diffTokens.map(token => ({
+    ...token,
+    added: !!token.removed,
+    removed: !!token.added,
+  }));
 }

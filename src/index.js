@@ -3,6 +3,7 @@ import { IntlProvider } from 'preact-i18n';
 import lodash from 'lodash';
 import { _, it } from 'param.macro';
 import ClosestSolution from './components/ClosestSolution';
+import CorrectedAnswer from './components/CorrectedAnswer';
 import SolutionListLink from './components/SolutionListLink';
 import SolutionListModal from './components/SolutionListModal';
 
@@ -17,7 +18,7 @@ import {
 } from './constants';
 
 import * as solution from './solutions';
-import { discardEvent, getUiLocale, getUniqueElementId, logError } from './functions';
+import { diffStrings, discardEvent, getUiLocale, getUniqueElementId, logError } from './functions';
 import { getTranslations } from './translations';
 
 /**
@@ -25,7 +26,7 @@ import { getTranslations } from './translations';
  *
  * @typedef {object} Challenge
  * @property {string} statement The sentence to translate.
- * @property {solution.Solution[]} solutions The accepted translations.
+ * @property {import('./solutions.js').Solution[]} solutions The accepted translations.
  * @property {boolean} isNamingChallenge Whether the challenge is a naming challenge.
  */
 
@@ -52,7 +53,7 @@ let currentListeningChallenges = {};
 
 /**
  * @param {object} challenge A challenge.
- * @returns {solution.Solution[]} The corresponding list of solutions.
+ * @returns {import('./solutions.js').Solution[]} The corresponding list of solutions.
  */
 function getChallengeSolutions(challenge) {
   const grader = lodash.isPlainObject(challenge.grader) ? challenge.grader : {};
@@ -281,7 +282,7 @@ function getComponentWrapper(component, parentElement) {
 }
 
 /**
- * @param {solution.Solution} closestSolution A solution that came closest to a user answer.
+ * @param {import('./solutions.js').Solution} closestSolution A solution that came closest to a user answer.
  * @param {symbol} result The result of the corresponding challenge.
  */
 function renderClosestSolution(closestSolution, result) {
@@ -300,6 +301,30 @@ function renderClosestSolution(closestSolution, result) {
     }
   } catch (error) {
     logError(error, 'Could not render the closest solution: ');
+  }
+}
+
+/**
+ * @param {import('./functions.js').Token} diffTokens
+ * A list of tokens representing the similarities and differences between a user answer and a solution.
+ * @param {symbol} result The result of the corresponding challenge.
+ */
+function renderCorrectedAnswer(diffTokens, result) {
+  try {
+    const solutionWrapper = document.querySelector(SOLUTION_WRAPPER_SELECTOR);
+
+    if (solutionWrapper) {
+      render(
+        <IntlProvider definition={getTranslations(getUiLocale())}>
+          <CorrectedAnswer diffTokens={diffTokens} result={result} />
+        </IntlProvider>,
+        getComponentWrapper(CorrectedAnswer, solutionWrapper)
+      );
+    } else {
+      throw new Error('Could not find the solution wrapper element.');
+    }
+  } catch (error) {
+    logError(error, 'Could not render the corrected answer: ');
   }
 }
 
@@ -389,10 +414,13 @@ let completedChallenge = null;
 
 /**
  * @param {object} challenge A challenge.
+ * @param {Function|null} getCorrectionBaseSolution
+ * A function from the current challenge to the solution the user answer should be compared to, or null if the
+ * corrected answer should not be displayed. 
  * @param {Element} resultWrapper The UI result wrapper.
  * @returns {boolean} Whether the result of the challenge could be handled.
  */
-function handleChallengeResult(challenge, resultWrapper) {
+function handleChallengeResult(challenge, getCorrectionBaseSolution, resultWrapper) {
   if (lodash.isPlainObject(challenge)) {
     const result = resultWrapper.classList.contains(RESULT_WRAPPER_CORRECT_CLASS_NAME)
       ? RESULT_CORRECT
@@ -418,12 +446,21 @@ function handleChallengeResult(challenge, resultWrapper) {
 
     completedChallenge = { challenge, result, userAnswer };
 
-    if (
-      userAnswer
-      && (RESULT_INCORRECT === result)
-      && (challenge.solutions.length > 1)
-    ) {
-      renderClosestSolution(lodash.maxBy(challenge.solutions, 'score'), result);
+    if (userAnswer) {
+      if (RESULT_INCORRECT === result) {
+        if (challenge.solutions.length > 1) {
+          renderClosestSolution(lodash.maxBy(challenge.solutions, 'score'), result);
+        }
+      } else if (
+        lodash.isFunction(getCorrectionBaseSolution)
+        && !challenge.solutions.some(it.score === 1)
+      ) {
+        const diffTokens = diffStrings(getCorrectionBaseSolution(challenge), userAnswer);
+
+        if (lodash.isArray(diffTokens)) {
+          renderCorrectedAnswer(diffTokens, result);
+        }
+      }
     }
 
     renderSolutionListLink(challenge, result, userAnswer);
@@ -463,6 +500,7 @@ function handleTranslationChallengeResult(resultWrapper) {
 
   let result = handleChallengeResult(
     currentTranslationChallenges[statement],
+    null,
     resultWrapper
   );
 
@@ -472,6 +510,7 @@ function handleTranslationChallengeResult(resultWrapper) {
     if (challenge) {
       result = handleChallengeResult(
         currentTranslationChallenges[challenge.statement],
+        null,
         resultWrapper
       );
     }
@@ -501,6 +540,7 @@ function handleListeningChallengeResult(resultWrapper) {
 
   return handleChallengeResult(
     currentListeningChallenges[solution],
+    challenge => challenge.statement,
     resultWrapper
   );
 }

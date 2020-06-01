@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "aphrodite": "^2.4.0",
+    "diff": "^4.0.2",
     "immutable": "^4.0.0-rc.12",
     "lodash": "^4.17.15",
     "lodash.product": "^18.9.19",

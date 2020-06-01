@@ -8,6 +8,7 @@ const TRANSLATIONS = {
     solution: {
       result: {
         closest_solution: 'Closest solution:',
+        corrected_answer: 'Corrected answer:',
       },
       list: {
         link: {
@@ -36,6 +37,7 @@ const TRANSLATIONS = {
     solution: {
       result: {
         closest_solution: 'Solution la plus proche :',
+        corrected_answer: 'Réponse corrigée:',
       },
       list: {
         link: {
