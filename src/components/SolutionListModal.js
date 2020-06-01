@@ -169,6 +169,13 @@ const SolutionListModal =
       }
     }, [ contentWrapper ]);
 
+    const onListChange = useCallback(() => {
+      if (contentWrapper.current) {
+        contentWrapper.current.focus();
+        contentWrapper.current.scrollTo({ top: 0, behavior: 'auto' });
+      }
+    }, [ contentWrapper ]);
+
     if ((STATE_CLOSED === modalState) || (0 === solutions.length)) {
       return null;
     }
@@ -208,7 +215,7 @@ const SolutionListModal =
                   <p>{userAnswer}</p>
                 </Fragment>
               )}
-              <SolutionList solutions={solutions} />
+              <SolutionList solutions={solutions} onPageChange={onListChange} />
             </div>
           </div>
         </div>

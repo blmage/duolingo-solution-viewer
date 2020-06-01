@@ -2,7 +2,7 @@ import { h } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import { IntlProvider, Localizer, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
-import lodash from 'lodash';
+import { identity, noop } from 'lodash';
 import { BASE, useLocalStorage, useLocalStorageList, useStyles } from './base';
 import Pagination from './Pagination';
 import { invertComparison } from '../functions';
@@ -122,23 +122,28 @@ const PAGE_SIZE_ALL = 'all';
 const DEFAULT_PAGE_SIZE = 20;
 const PAGE_SIZES = [ 10, 20, 50, 200, PAGE_SIZE_ALL ];
 
-const SolutionList = ({ solutions = [] }) => {
+const SolutionList = ({ solutions = [], onPageChange = noop }) => {
   const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS);
 
-  const [ page, setPage ] = useState(1);
+  const [ page, setRawPage ] = useState(1);
   const [ pageSize, setRawPageSize ] = useLocalStorage('page_size', DEFAULT_PAGE_SIZE);
+
+  const setPage = useCallback(page => {
+    setRawPage(page);
+    setTimeout(onPageChange);
+  }, [ setRawPage, onPageChange ]);
 
   const setPageSize = useCallback(size => {
     setRawPageSize(size);
 
     if (PAGE_SIZE_ALL === size) {
-      setPage(1);
+      setRawPage(1);
     } else {
       const oldSize = (PAGE_SIZE_ALL === pageSize)
         ? solutions.length
         : Math.min(pageSize, solutions.length);
 
-      setPage(Math.ceil(((page - 1) * oldSize + 1) / size));
+      setRawPage(Math.ceil(((page - 1) * oldSize + 1) / size));
     }
   }, [ page, pageSize, solutions.length, setRawPageSize ]);
 
@@ -166,8 +171,8 @@ const SolutionList = ({ solutions = [] }) => {
 
   useEffect(() => {
     const compareSolutions = SORT_TYPE_SIMILARITY === sortType
-      ? (SORT_DIRECTION_ASC === sortDirection ? invertComparison : lodash.identity)(solution.compareScores)
-      : (SORT_DIRECTION_DESC === sortDirection ? invertComparison : lodash.identity)(solution.compareValues);
+      ? (SORT_DIRECTION_ASC === sortDirection ? invertComparison : identity)(solution.compareScores)
+      : (SORT_DIRECTION_DESC === sortDirection ? invertComparison : identity)(solution.compareValues);
 
     setSortedSolutions(solutions.sort(compareSolutions));
   }, [ solutions, sortType, sortDirection ]);
