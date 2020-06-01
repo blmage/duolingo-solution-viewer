@@ -112,6 +112,7 @@ const STYLE_SHEETS = {
 const SolutionListModal =
   ({ statement = '', userAnswer = '', solutions = [], onClose = noop }) => {
     const [ modalState, setModalState ] = useState(STATE_PENDING);
+    const contentWrapper = useRef();
     const openedTimeout = useRef(null);
 
     const {
@@ -162,6 +163,12 @@ const SolutionListModal =
       }
     }, [ modalState ]);
 
+    useEffect(() => {
+      if (contentWrapper.current) {
+        contentWrapper.current.focus();
+      }
+    }, [ contentWrapper ]);
+
     if ((STATE_CLOSED === modalState) || (0 === solutions.length)) {
       return null;
     }
@@ -184,7 +191,7 @@ const SolutionListModal =
                 {MODAL_SIZES[nextModalSize].actionLabel}
               </div>
             </Localizer>
-            <div className={getElementClassNames(CONTENT)}>
+            <div ref={contentWrapper} className={getElementClassNames(CONTENT)} tabIndex="0">
               {statement && (
                 <Fragment>
                   <h3>
