@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'preact/hooks';
+import { useCallback, useEffect, useRef } from 'preact/hooks';
 import { useLocalStorage as useRawLocalStorage, useStateList } from 'preact-use';
 import { css } from 'aphrodite';
 import { EXTENSION_PREFIX } from '../constants';
@@ -79,4 +79,23 @@ export const useLocalStorageList = (key, stateSet, initialValue) => {
   useEffect(() => storeState(state), [ state, storeState ]);
 
   return { state, prevState, nextState, prev, next };
+};
+
+/**
+ * A hook for globally throttling a callback. The delay is never reset when dependencies change.
+ *
+ * @param {Function} callback The callback to throttle.
+ * @param {number} delay The delay during which any subsequent call will be ignored (in ms).
+ * @param {Array} args The arguments to the callback.
+ * @returns {Function} The throttled callback.
+ */
+export const useThrottledCallback = (callback, delay = 200, args) => {
+  const timeout = useRef();
+
+  return useCallback(() => {
+    if (!timeout.current) {
+      callback(...args);
+      timeout.current = setTimeout(() => (timeout.current = null), delay);
+    }
+  }, args.concat(callback, delay)); // eslint-disable-line react-hooks/exhaustive-deps
 };

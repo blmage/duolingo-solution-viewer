@@ -1,10 +1,9 @@
 import { h } from 'preact';
-import { useCallback } from 'preact/hooks';
-import { useKeyPress, useKeyPressEvent } from 'preact-use';
+import { useKey, useKeyPress } from 'preact-use';
 import { StyleSheet } from 'aphrodite';
 import { noop } from 'lodash';
 import Paginator from 'paginator';
-import { BASE, useStyles } from './base';
+import { BASE, useStyles, useThrottledCallback } from './base';
 
 const WRAPPER = 'wrapper';
 const ITEM = 'item';
@@ -55,28 +54,28 @@ const Pagination =
 
     const [ isControlPressed ] = useKeyPress('Control');
 
-    const onPrevious = useCallback(() => {
-      if (paginationData.has_previous_page) {
-        if (isControlPressed) {
-          onChange(1);
+    const onPrevious = useThrottledCallback((data, goToFirst, callback) => {
+      if (data.has_previous_page) {
+        if (goToFirst) {
+          callback(1);
         } else {
-          onChange(paginationData.previous_page);
+          callback(data.previous_page);
         }
       }
-    }, [ paginationData, isControlPressed, onChange ]);
+    }, 50, [ paginationData, isControlPressed, onChange ]);
 
-    const onNext = useCallback(() => {
-      if (paginationData.has_next_page) {
-        if (isControlPressed) {
-          onChange(paginationData.total_pages);
+    const onNext = useThrottledCallback((data, goToLast, callback) => {
+      if (data.has_next_page) {
+        if (goToLast) {
+          callback(data.total_pages);
         } else {
-          onChange(paginationData.next_page);
+          callback(data.next_page);
         }
       }
-    }, [ paginationData, isControlPressed, onChange ]);
+    }, 50, [ paginationData, isControlPressed, onChange ]);
 
-    useKeyPressEvent('ArrowLeft', onPrevious);
-    useKeyPressEvent('ArrowRight', onNext);
+    useKey('ArrowLeft', onPrevious, {}, [ onPrevious ]);
+    useKey('ArrowRight', onNext, {}, [ onNext ]);
 
     if (totalItemCount <= itemCountPerPage) {
       return null;
