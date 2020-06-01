@@ -36,6 +36,7 @@ if (PRODUCTION) {
     // Preserve the names of the components, which are used for various purposes.
     keep_fnames: new RegExp([
       'ClosestSolution',
+      'CorrectedAnswer',
       'SolutionListLink',
       'SolutionListModal',
     ].join('|'))
