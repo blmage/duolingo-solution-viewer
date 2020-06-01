@@ -1,13 +1,14 @@
 import { h } from 'preact';
 import { useKey, useKeyPress } from 'preact-use';
 import { StyleSheet } from 'aphrodite';
-import { noop } from 'lodash';
+import { isNumber, noop } from 'lodash';
 import Paginator from 'paginator';
 import { BASE, useStyles, useThrottledCallback } from './base';
 
 const WRAPPER = 'wrapper';
 const ITEM = 'item';
 const BUTTON = 'button';
+const INDEX_BUTTON = 'index_button';
 
 const CLASS_NAMES = {
   [BASE]: {
@@ -35,7 +36,15 @@ const STYLE_SHEETS = {
   [BASE]: StyleSheet.create({
     [WRAPPER]: {
       textAlign: 'center',
-    }
+      '@media (max-width: 699px)': {
+        display: 'block',
+      },
+    },
+    [INDEX_BUTTON]: {
+      '@media (max-width: 530px)': {
+        display: 'none',
+      },
+    },
   }),
 };
 
@@ -82,9 +91,15 @@ const Pagination =
     }
 
     const renderButton = ({ key, label, disabled, onClick }) => {
+      let buttonClassNames = getElementClassNames(BUTTON);
+
+      if (isNumber(label)) {
+        buttonClassNames += ` ${getElementClassNames(INDEX_BUTTON)}`;
+      }
+
       return (
         <div key={key} className={getElementClassNames(ITEM)}>
-          <button className={getElementClassNames(BUTTON)} disabled={disabled} onClick={onClick}>
+          <button className={buttonClassNames} disabled={disabled} onClick={onClick}>
             {label}
           </button>
         </div>

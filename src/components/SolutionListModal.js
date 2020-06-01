@@ -70,11 +70,16 @@ const CLASS_NAMES = {
 const STYLE_SHEETS = {
   [BASE]: StyleSheet.create({
     [WRAPPER]: {
-      maxHeight: '90%',
-      maxWidth: '90%',
+      maxWidth: 'calc(95vw - 30px)',
+      maxHeight: 'calc(95vh - 30px)',
+      '@media (max-width: 699px)': {
+        maxWidth: '95vw',
+        maxHeight: '95vh',
+      },
     },
     [CONTENT]: {
-      maxHeight: 'calc(90vh - 60px)',
+      position: 'relative',
+      maxHeight: 'calc(95vh - 90px)',
       overflowY: 'auto',
       paddingRight: '0.5em',
     },
@@ -86,25 +91,32 @@ const STYLE_SHEETS = {
       transform: 'rotate(-45deg)',
       border: 0,
       borderRadius: '100%',
+      '@media (max-width: 699px)': {
+        fontSize: '1.25em',
+      },
     },
   }),
   [MODAL_SIZE_FIT_TO_CONTENT]: StyleSheet.create({
-    [WRAPPER]: {
-      maxWidth: '90vw',
-    },
     [CONTENT]: {
       maxWidth: '100%',
     },
   }),
   [MODAL_SIZE_MAXIMIZED]: StyleSheet.create({
     [WRAPPER]: {
-      width: '95vw',
+      width: 'calc(95vw - 30px)',
       height: 'calc(95vh - 30px)',
       maxWidth: 'none',
       maxHeight: 'none',
+      '@media (max-width: 699px)': {
+        width: '95vw',
+        height: '95vh',
+      },
     },
     [CONTENT]: {
       maxWidth: '100%',
+      '@media (max-width: 699px)': {
+        maxHeight: '100%',
+      },
     },
   }),
 };
@@ -113,6 +125,7 @@ const SolutionListModal =
   ({ statement = '', userAnswer = '', solutions = [], onClose = noop }) => {
     const [ modalState, setModalState ] = useState(STATE_PENDING);
     const contentWrapper = useRef();
+    const listWrapper = useRef();
     const openedTimeout = useRef(null);
 
     const {
@@ -172,7 +185,12 @@ const SolutionListModal =
     const onListChange = useCallback(() => {
       if (contentWrapper.current) {
         contentWrapper.current.focus();
-        contentWrapper.current.scrollTo({ top: 0, behavior: 'auto' });
+
+        if (!listWrapper.current) {
+          contentWrapper.current.scrollTo({ top: 0, behavior: 'auto' });
+        } else {
+          contentWrapper.current.scrollTo({ top: listWrapper.current.offsetTop - 10, behavior: 'smooth' });
+        }
       }
     }, [ contentWrapper ]);
 
@@ -215,7 +233,9 @@ const SolutionListModal =
                   <p>{userAnswer}</p>
                 </Fragment>
               )}
-              <SolutionList solutions={solutions} onPageChange={onListChange} />
+              <div ref={listWrapper}>
+                <SolutionList solutions={solutions} onPageChange={onListChange} />
+              </div>
             </div>
           </div>
         </div>

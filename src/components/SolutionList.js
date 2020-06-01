@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useCallback, useEffect, useState } from 'preact/hooks';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { IntlProvider, Localizer, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import { identity, noop } from 'lodash';
@@ -11,14 +11,16 @@ import * as solution from '../solutions';
 const TITLE = 'title';
 const TITLE_TEXT = 'title_text';
 const SORT_LINK = 'sort_link';
-const DIRECTION_LABEL = 'direction_label';
+const SORT_TYPE_LABEL = 'sort_type_label';
+const SORT_DIRECTION_LABEL = 'sort_direction_label';
 const SOLUTION = 'solution';
 const PAGINATION_WRAPPER = 'pagination';
 const PAGINATION_FOOTER = 'pagination_footer';
 const PAGINATION_STATE = 'pagination_state';
-const PAGINATION_SIZES = 'pagination_sizes';
+const PAGINATION_SIZE_WRAPPER = 'pagination_size_wrapper';
 const CURRENT_PAGE_SIZE = 'current_page_size';
 const PAGE_SIZE_LINK = 'page_size_link';
+const PAGE_SIZE_SELECT = 'page_size_select';
 
 const SORT_DIRECTION_ASC = 'asc';
 const SORT_DIRECTION_DESC = 'desc';
@@ -53,6 +55,9 @@ const STYLE_SHEETS = {
     },
     [TITLE_TEXT]: {
       marginRight: '1em',
+      '@media (max-width: 699px)': {
+        marginBottom: '0.5em',
+      },
     },
     [SORT_LINK]: {
       fontSize: '0.75em',
@@ -60,8 +65,13 @@ const STYLE_SHEETS = {
       whiteSpace: 'nowrap',
       cursor: 'pointer',
       userSelect: 'none',
+      '@media (any-pointer: coarse)': {
+        padding: '0.5em 0.75em',
+        border: '1px solid currentColor',
+        borderRadius: '6px',
+      },
     },
-    [DIRECTION_LABEL]: {
+    [SORT_DIRECTION_LABEL]: {
       fontSize: '1.2em',
       fontWeight: '900',
     },
@@ -79,24 +89,48 @@ const STYLE_SHEETS = {
     },
     [PAGINATION_FOOTER]: {
       display: 'flex',
+      flexWrap: 'wrap',
       alignItems: 'center',
       justifyContent: 'center',
       marginTop: '1em',
     },
     [PAGINATION_STATE]: {
-      margin: '0 0.6em',
+      margin: '0 0.65em 0.5em',
     },
-    [PAGINATION_SIZES]: {
-      margin: '0 0.6em',
+    [PAGINATION_SIZE_WRAPPER]: {
+      display: 'flex',
+      alignItems: 'center',
+      margin: '0 0.65em 0.5em',
       fontSize: '0.85em',
     },
     [CURRENT_PAGE_SIZE]: {
       margin: '0 0.25em',
+      '@media (any-pointer: coarse)': {
+        display: 'none',
+      }
     },
     [PAGE_SIZE_LINK]: {
       margin: '0 0.25em',
       cursor: 'pointer',
+      '@media (any-pointer: coarse)': {
+        display: 'none',
+      }
     },
+    [PAGE_SIZE_SELECT]: {
+      display: 'none',
+      marginLeft: '0.5em',
+      padding: '0.5em 0.75em',
+      background: 'none',
+      border: '1px solid currentColor',
+      borderRadius: '6px',
+      fontWeight: 'bold',
+      appearance: 'none',
+      textAlign: 'center',
+      textAlignLast: 'center',
+      '@media (any-pointer: coarse)': {
+        display: 'block',
+      }
+    }
   })
 };
 
@@ -126,12 +160,13 @@ const SolutionList = ({ solutions = [], onPageChange = noop }) => {
   const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS);
 
   const [ page, setRawPage ] = useState(1);
+  const shouldTriggerPageChange = useRef();
   const [ pageSize, setRawPageSize ] = useLocalStorage('page_size', DEFAULT_PAGE_SIZE);
 
   const setPage = useCallback(page => {
     setRawPage(page);
-    setTimeout(onPageChange);
-  }, [ setRawPage, onPageChange ]);
+    shouldTriggerPageChange.current = true;
+  }, [ setRawPage ]);
 
   const setPageSize = useCallback(size => {
     setRawPageSize(size);
@@ -139,12 +174,20 @@ const SolutionList = ({ solutions = [], onPageChange = noop }) => {
     if (PAGE_SIZE_ALL === size) {
       setRawPage(1);
     } else {
+      const sizeValue = Number(size);
+
+      if (PAGE_SIZES.indexOf(sizeValue) === -1) {
+        return;
+      }
+
       const oldSize = (PAGE_SIZE_ALL === pageSize)
         ? solutions.length
         : Math.min(pageSize, solutions.length);
 
-      setRawPage(Math.ceil(((page - 1) * oldSize + 1) / size));
+      setRawPage(Math.ceil(((page - 1) * oldSize + 1) / sizeValue));
     }
+
+    shouldTriggerPageChange.current = true;
   }, [ page, pageSize, solutions.length, setRawPageSize ]);
 
   const {
@@ -193,15 +236,27 @@ const SolutionList = ({ solutions = [], onPageChange = noop }) => {
     setSolutionItems(pageSolutions.map(renderSolutionItem));
   }, [ sortedSolutions, sortType, sortDirection, page, pageSize, renderSolutionItem ]);
 
-  const renderSizeLink = useCallback(size => {
-    const sizeLabel = (PAGE_SIZE_ALL !== size)
-      ? `${size}`
-      : <Text id="all">all</Text>;
+  useEffect(() => {
+    if (shouldTriggerPageChange.current) {
+      setTimeout(onPageChange());
+      shouldTriggerPageChange.current = false;
+    }
+  }, [ solutionItems, onPageChange, shouldTriggerPageChange ]);
 
-    return (size === pageSize)
-      ? <span className={getElementClassNames(CURRENT_PAGE_SIZE)}>{sizeLabel}</span>
-      : <a onClick={() => setPageSize(size)} className={getElementClassNames(PAGE_SIZE_LINK)}>{sizeLabel}</a>;
-  }, [ pageSize, setPageSize, getElementClassNames ]);
+
+  const getSizeLabel = size => (PAGE_SIZE_ALL !== size)
+    ? `${size}`
+    : <Text id="all">all</Text>;
+
+  const renderSizeLink = useCallback(size => (size === pageSize)
+    ? <span className={getElementClassNames(CURRENT_PAGE_SIZE)}>{getSizeLabel(size)}</span>
+    : <a onClick={() => setPageSize(size)} className={getElementClassNames(PAGE_SIZE_LINK)}>{getSizeLabel(size)}</a>,
+    [ pageSize, setPageSize, getElementClassNames ]
+  );
+
+  const renderSizeOption = useCallback(size => (
+    <option selected={size === pageSize} value={size}>{getSizeLabel(size)}</option>
+  ), [ pageSize ]);
 
   if (0 === solutions.length) {
     return null;
@@ -227,9 +282,11 @@ const SolutionList = ({ solutions = [], onPageChange = noop }) => {
                      {SORT_TYPES[nextSortType].defaultActionLabel}
                    </Text>
                  }>
-                <Text id={SORT_TYPES[sortType].labelId}>
-                  {SORT_TYPES[sortType].defaultLabel}
-                </Text>
+                <span className={getElementClassNames(SORT_TYPE_LABEL)}>
+                  <Text id={SORT_TYPES[sortType].labelId}>
+                    {SORT_TYPES[sortType].defaultLabel}
+                  </Text>
+                </span>
               </a>
               <a className={getElementClassNames(SORT_LINK)}
                  onClick={setNextSortDirection}
@@ -238,7 +295,7 @@ const SolutionList = ({ solutions = [], onPageChange = noop }) => {
                      {SORT_DIRECTIONS[nextSortDirection].defaultActionLabel}
                    </Text>
                  }>
-                <span className={getElementClassNames(DIRECTION_LABEL)}>
+                <span className={getElementClassNames(SORT_DIRECTION_LABEL)}>
                   {SORT_DIRECTIONS[sortDirection].label}
                 </span>
               </a>
@@ -258,8 +315,13 @@ const SolutionList = ({ solutions = [], onPageChange = noop }) => {
             <div className={getElementClassNames(PAGINATION_STATE)}>
               {firstIndex} - {lastIndex} / {solutions.length}
             </div>
-            <div className={getElementClassNames(PAGINATION_SIZES)}>
-              (<Text id="per_page">per page:</Text> {PAGE_SIZES.map(renderSizeLink)})
+            <div className={getElementClassNames(PAGINATION_SIZE_WRAPPER)}>
+              <Text id="per_page">per page:</Text>
+              {PAGE_SIZES.map(renderSizeLink)}
+              <select onChange={event => setPageSize(event.target.value)}
+                      className={getElementClassNames(PAGE_SIZE_SELECT)}>
+                {PAGE_SIZES.map(renderSizeOption)}
+              </select>
             </div>
           </div>
         </div>
