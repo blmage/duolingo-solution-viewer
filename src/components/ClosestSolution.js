@@ -36,7 +36,7 @@ const ClosestSolution = ({ solution = '', result = RESULT_CORRECT }) => {
   }
 
   return (
-    <IntlProvider scope="solution.closest">
+    <IntlProvider scope="solution.result">
       <h2 className={getElementClassNames(WRAPPER)}>
         <Text id="closest_solution">Closest solution:</Text>
         <div className={getElementClassNames(VALUE)}>
