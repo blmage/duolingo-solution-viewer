@@ -90,7 +90,7 @@ The extension should already be **compatible with most courses**, but has only b
     <td>German</td>
   </tr>
   <tr>
-    <td rowspan="4">English</td>
+    <td rowspan="5">English</td>
     <td>French</td>
   </tr>
   <tr>
@@ -98,6 +98,9 @@ The extension should already be **compatible with most courses**, but has only b
   </tr>
   <tr>
     <td>Norwegian</td>
+  </tr>
+  <tr>
+    <td>Spanish</td>
   </tr>
   <tr>
     <td>Vietnamese</td>
