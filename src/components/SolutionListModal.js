@@ -70,27 +70,27 @@ const CLASS_NAMES = {
 const STYLE_SHEETS = {
   [BASE]: StyleSheet.create({
     [WRAPPER]: {
-      maxWidth: 'calc(95vw - 30px)',
       maxHeight: 'calc(95vh - 30px)',
+      maxWidth: 'calc(95vw - 30px)',
       '@media (max-width: 699px)': {
-        maxWidth: '95vw',
         maxHeight: '95vh',
+        maxWidth: '95vw',
       },
     },
     [CONTENT]: {
-      position: 'relative',
       maxHeight: 'calc(95vh - 90px)',
       overflowY: 'auto',
       paddingRight: '0.5em',
+      position: 'relative',
     },
     [SIZE_BUTTON]: {
-      top: 'auto',
+      border: 0,
+      borderRadius: '100%',
       bottom: '1px',
       left: 'auto',
       right: '1px',
+      top: 'auto',
       transform: 'rotate(-45deg)',
-      border: 0,
-      borderRadius: '100%',
       '@media (max-width: 699px)': {
         fontSize: '1.25em',
       },
@@ -103,13 +103,13 @@ const STYLE_SHEETS = {
   }),
   [MODAL_SIZE_MAXIMIZED]: StyleSheet.create({
     [WRAPPER]: {
-      width: 'calc(95vw - 30px)',
       height: 'calc(95vh - 30px)',
-      maxWidth: 'none',
       maxHeight: 'none',
+      maxWidth: 'none',
+      width: 'calc(95vw - 30px)',
       '@media (max-width: 699px)': {
-        width: '95vw',
         height: '95vh',
+        width: '95vw',
       },
     },
     [CONTENT]: {

@@ -12,11 +12,25 @@ import { EXTENSION_PREFIX } from '../constants';
 export const BASE = Symbol('base');
 
 /**
+ * The key under which to store the class names and styles of an element that are applicable when on a challenge page.
+ *
+ * @type {symbol}
+ */
+export const CONTEXT_CHALLENGE = Symbol('challenge');
+
+/**
+ * The key under which to store the class names and styles of an element that are applicable when on a forum page.
+ *
+ * @type {symbol}
+ */
+export const CONTEXT_FORUM = Symbol('forum');
+
+/**
  * A hook for getting all the class names of an element based on the current state of a component.
  *
  * @param {object} classNames Some nested maps from state and element keys to class names.
  * @param {object} styleSheets Some nested maps from state and element keys to style sheets.
- * @param {string[]} stateKeys A list of keys describing the current component state.
+ * @param {(string|symbol)[]} stateKeys A list of keys describing the current component state.
  * @returns {Function} A function which, given an element key, returns a list of the current corresponding class names.
  */
 export const useStyles = (classNames, styleSheets = {}, stateKeys = []) => {

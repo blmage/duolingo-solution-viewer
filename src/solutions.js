@@ -1,10 +1,9 @@
 import XRegExp from 'xregexp';
 import lodash from 'lodash';
+import 'lodash.product';
 import moize from 'moize';
-import { List, Map } from 'immutable';
 import { _, it, lift } from 'param.macro';
-import { mergeMapsWith, newMapWith } from './functions';
-import { SENTENCE_WORDS_REGEXP, TRIMMED_WORDS_REGEXP } from './constants';
+import { List, Map } from 'immutable';
 
 /**
  * A single vertex from a solution graph.
@@ -18,18 +17,10 @@ import { SENTENCE_WORDS_REGEXP, TRIMMED_WORDS_REGEXP } from './constants';
  */
 
 /**
- * A single choice from a solution token.
- *
- * @typedef {object} TokenValue
- * @property {boolean} isAutomatic Whether the token value was automatically derived from another value.
- * @property {string} value The actual value.
- */
-
-/**
- * A single element from a solution.
+ * A single part from a solution.
  * A token can hold multiple values, in which case each represents a possible choice.
  *
- * @typedef {TokenValue[]} Token
+ * @typedef {string[]} Token
  */
 
 /**
@@ -38,9 +29,7 @@ import { SENTENCE_WORDS_REGEXP, TRIMMED_WORDS_REGEXP } from './constants';
  * @typedef {object} Solution
  * @property {string} locale The tag of the language in which the solution is written.
  * @property {string} reference The reference sentence of the solution, usable e.g. for sorting.
- * @property {List<Token>} tokens The list of tokens building up all the possible sentences of the solution.
- * @property {boolean} hasAutomatic Whether the solution contains at least one token with one automatic value.
- * @property {boolean} isAutomatic Whether the solution contains at least one token with only automatic values.
+ * @property {Array<Token>} tokens The tokens building up all the possible sentences of the solution.
  * @property {boolean} isComplex Whether the solution contains at least one token with multiple values.
  * @property {?number} score The similarity score of the solution (only when matched against an answer).
  */
@@ -55,13 +44,38 @@ import { SENTENCE_WORDS_REGEXP, TRIMMED_WORDS_REGEXP } from './constants';
  */
 
 /**
+ * A regexp for capturing words in a sentence.
+ *
+ * @constant {RegExp}
+ */
+const SENTENCE_WORDS_REGEXP = new XRegExp('([\\pL\\pN]+)', 'g');
+
+/**
+ * @param {Function} mutator A function applying a series of mutations to a given map.
+ * @returns {Map} A new map initialized using the given mutator.
+ */
+function newMapWith(mutator) {
+  return Map().withMutations(mutator);
+}
+
+/**
+ * @param {Function} merge The function usable to resolve key conflicts.
+ * @param {Map} base The base map.
+ * @param {Map[]} maps A list of maps to merge into the base map.
+ * @returns {Map} The union of all the given maps.
+ */
+function mergeMapsWith(merge, base, ...maps) {
+  return (maps.length > 0) ? base.mergeWith(merge, ...maps) : base;
+}
+
+/**
  * Compares two strings using a pre-defined set of collation rules.
  *
  * @param {string} x A string.
  * @param {string} y Another string.
  * @param {string} locale The locale to use for the comparison.
  * @returns {number}
- * A negative value if x comes before y, a positive value if x comes before y, and 0 if both strings are equivalent. 
+ * A negative value if x comes before y, a positive value if x comes before y, and 0 if both strings are equivalent.
  */
 function compareStrings(x, y, locale) {
   return x.localeCompare(y, locale, {
@@ -73,132 +87,64 @@ function compareStrings(x, y, locale) {
 }
 
 /**
- * @param {string} x A token string.
- * @param {string} y Another token string.
- * @param {string} locale The locale to use for the comparison.
- * @returns {boolean} Whether the two token strings are significantly different.
- */
-function hasVertexRelevantDifferences(x, y, locale) {
-  x = x.toLocaleLowerCase(locale);
-  y = y.toLocaleLowerCase(locale);
-
-  if (x !== y) {
-    x = (XRegExp.exec(x, TRIMMED_WORDS_REGEXP) || [ '' ])[0];
-    y = (XRegExp.exec(y, TRIMMED_WORDS_REGEXP) || [ '' ])[0];
-    return (x !== y);
-  }
-
-  return false;
-}
-
-/**
- * @param {Vertex} vertex A vertex taken from a solution graph.
- * @param {string} locale The locale to use for comparing token strings.
- * @returns {TokenValue[]} The token values corresponding to the given vertex.
- */
-function getVertexTokenValues(vertex, locale) {
-  const isAutomatic = !!vertex.auto;
-
-  if (
-    lodash.isString(vertex.orig)
-    && lodash.isString(vertex.lenient)
-    && hasVertexRelevantDifferences(vertex.lenient, vertex.orig, locale)
-  ) {
-    return [
-      {
-        isAutomatic,
-        value: vertex.orig,
-      },
-      {
-        isAutomatic: true,
-        value: vertex.lenient,
-      }
-    ];
-  }
-
-  return [
-    {
-      isAutomatic,
-      value: String(vertex.orig || vertex.lenient || ''),
-    }
-  ];
-}
-
-/**
- * @param {TokenValue} x A token value.
- * @param {TokenValue} y Another token value.
- * @param {string} locale The locale to use for comparing the token strings.
- * @returns {number}
- * A negative value if x is more relevant than y, a positive value if x is less relevant than y, and 0 if both token
- * values are equally relevant.
- */
-function compareTokenValues(x, y, locale) {
-  const result = compareStrings(x.value, y.value, locale);
-  return (0 !== result) ? result : (x.isAutomatic - y.isAutomatic);
-}
-
-/**
  * @param {Vertex[]} vertices A list of vertices taken from a solution graph, and corresponding to a single token.
  * @param {string} locale The locale to use for comparing token strings.
- * @returns {{hasAutomatic: boolean, isAutomatic: boolean, isComplex: boolean, reference: string, token: Token}}
+ * @param {boolean} isWhitespaceDelimited Whether tokens are whitespace-delimited.
+ * @returns {{isComplex: boolean, reference: string, token: Token}}
  * The parsed token, and the corresponding solution values.
  */
-function parseTokenVertices(vertices, locale) {
-  let hasAutomatic;
-  let isAutomatic;
+function parseTokenVertices(vertices, locale, isWhitespaceDelimited) {
   let isComplex;
   let reference;
 
-  let values = Array.from(vertices).flatMap(getVertexTokenValues(_, locale));
+  let values = Array.from(vertices).map(value => String(value.orig || value.lenient || ''));
 
-  if (values.length > 1) {
-    hasAutomatic = values.some(it.isAutomatic);
-    isAutomatic = hasAutomatic && values.every(it.isAutomatic);
-    isComplex = true;
-    values = lodash.sortedUniqBy(values.sort(compareTokenValues(_, _, locale)), it.value);
-    reference = (hasAutomatic && values.find(!it.isAutomatic) || values[0]).value;
-  } else {
-    hasAutomatic = !!values[0].isAutomatic;
-    isAutomatic = hasAutomatic;
-    isComplex = false;
-    reference = values[0].value;
+  if (isWhitespaceDelimited) {
+    // Sometimes non-auto non-typo but still invalid tokens may occur in graphs (it seems to at least happen with some
+    // wrongly expanded contractions, such as "im" being replaced by "i am" in words like "him" or "important").
+    // We can/should at least filter out those which contain whitespaces when the corresponding language uses
+    // whitespace-delimited tokens, because they make for invalid solutions too, due to the tokenization.
+    values = values.filter(!/[^\s]\s+[^\s]/.test(_));
   }
 
-  return {
-    hasAutomatic,
-    isAutomatic,
-    isComplex,
-    reference,
-    token: values
-  };
+  if (values.length > 1) {
+    isComplex = true;
+    values = lodash.sortedUniqBy(values.sort(compareStrings(_, _, locale)), it);
+    reference = values[0];
+  } else {
+    isComplex = false;
+    reference = values[0] || '';
+  }
+
+  return { isComplex, reference, token: values, };
 }
 
 /**
  * @param {Vertex[]} vertices A list of vertices taken from a solution graph, and corresponding to a single token
  * @param {string} locale The locale to use for comparing token strings.
+ * @param {boolean} isWhitespaceDelimited Whether tokens are whitespace-delimited.
  * @returns {Solution} A solution.
  */
-function fromTokenVertices(vertices, locale) {
-  const { token, ...result } = parseTokenVertices(vertices, locale);
-  result.locale = locale;
-  result.tokens = List.of(token);
-  return result;
+function fromTokenVertices(vertices, locale, isWhitespaceDelimited) {
+  const { token, ...solution } = parseTokenVertices(vertices, locale, isWhitespaceDelimited);
+  solution.locale = locale;
+  solution.tokens = (token.length > 0) ? List.of(token) : List();
+  return solution;
 }
 
 /**
  * @param {Vertex[]} vertices A list of vertices taken from a solution graph, and corresponding to a single token
  * @param {Solution} solution An existing solution.
+ * @param {boolean} isWhitespaceDelimited Whether tokens are whitespace-delimited.
  * @returns {Solution} A new solution, completed with the given vertices.
  */
-function prependTokenVertices(vertices, solution) {
-  const { token, ...result } = parseTokenVertices(vertices, solution.locale);
-  result.hasAutomatic = result.hasAutomatic || solution.hasAutomatic;
-  result.isAutomatic = result.isAutomatic || solution.isAutomatic;
-  result.isComplex = result.isComplex || solution.isComplex;
-  result.reference = result.reference + solution.reference;
-  result.tokens = solution.tokens.unshift(token);
-  result.locale = solution.locale;
-  return result;
+function prependTokenVertices(vertices, solution, isWhitespaceDelimited) {
+  const { token, ...newSolution } = parseTokenVertices(vertices, solution.locale, isWhitespaceDelimited);
+  newSolution.isComplex = newSolution.isComplex || solution.isComplex;
+  newSolution.reference = newSolution.reference + solution.reference;
+  newSolution.tokens = solution.tokens.unshift(token);
+  newSolution.locale = solution.locale;
+  return newSolution;
 }
 
 /**
@@ -206,9 +152,10 @@ function prependTokenVertices(vertices, solution) {
  * A flattened list of groups of vertices taken from a solution graph, arranged by the corresponding next indices.
  * @param {number} startIndex The index where to start building the sub solutions.
  * @param {string} locale The locale to use for comparing token strings.
+ * @param {boolean} isWhitespaceDelimited Whether tokens are whitespace-delimited.
  * @returns {Solution[]} A set of sub solutions.
  */
-function fromGroupedVertices(groupedVertices, startIndex, locale) {
+function fromGroupedVertices(groupedVertices, startIndex, locale, isWhitespaceDelimited) {
   if (
     !groupedVertices[startIndex]
     || !lodash.isPlainObject(groupedVertices[startIndex])
@@ -220,36 +167,61 @@ function fromGroupedVertices(groupedVertices, startIndex, locale) {
   return Object.entries(groupedVertices[startIndex])
     .flatMap(([ key, group ]) => {
       const index = Number(key);
-      const subSolutions = fromGroupedVertices(groupedVertices, index, locale);
+
+      const subSolutions = fromGroupedVertices(
+        groupedVertices,
+        index,
+        locale,
+        isWhitespaceDelimited
+      );
 
       return (subSolutions.length > 0)
-        ? subSolutions.map(lift(prependTokenVertices(group, _)))
-        : ((index !== groupedVertices.length - 1) ? [] : fromTokenVertices(group, locale));
+        ? subSolutions.map(
+          lift(prependTokenVertices(group, _, isWhitespaceDelimited))
+        ) : (
+          (index !== groupedVertices.length - 1)
+            ? []
+            : fromTokenVertices(group, locale, isWhitespaceDelimited)
+        );
     });
 }
 
 /**
  * @param {Vertex} vertex A vertex from a solution graph.
- * @param {boolean} allowAutomatic Whether automatically derived vertices are allowed.
- * @returns {boolean} Whether the vertex is considered to be relevant.
+ * @returns {boolean} Whether the vertex is considered relevant (i.e., is not a typo nor was automatically derived).
  */
-function isRelevantVertex(vertex, allowAutomatic) {
-  return ('typo' !== vertex.type) && (allowAutomatic || !vertex.auto);
+function isRelevantVertex(vertex) {
+  return ('typo' !== vertex.type) && !vertex.auto;
 }
 
 /**
  * @param {Vertex[][]} vertices A flattened list of vertices taken from a solution graph.
- * @param {boolean} includeAutomatic Whether automatically derived vertices should be included in the solutions.
  * @param {string} locale The locale to use for comparing token strings.
+ * @param {boolean} isWhitespaceDelimited Whether tokens are whitespace-delimited.
  * @returns {Solution[]} A set of solutions.
  */
-export function fromVertices(vertices, includeAutomatic, locale) {
-  return fromGroupedVertices(vertices.map(
-    lodash.groupBy(
-      _.filter(isRelevantVertex(_, includeAutomatic)),
-      it.to
-    )
-  ), 0, locale);
+export function fromVertices(vertices, locale, isWhitespaceDelimited) {
+  let solutions = fromGroupedVertices(
+    vertices.map(lodash.groupBy(_.filter(isRelevantVertex(_)), it.to)),
+    0,
+    locale,
+    isWhitespaceDelimited
+  );
+
+  // Eliminate the most obvious duplicates. For performance reasons, this does not include:
+  // - duplicate complex solutions (sharing the same tokens)
+  // - duplicate solutions which do not share the same reference
+  solutions = Object.values(lodash.groupBy(solutions, it.reference))
+    .flatMap(similar => {
+      return (similar.length <= 1)
+        ? similar
+        : (similar.some(it.isComplex) ? similar.filter(it.isComplex) : similar.slice(-1))
+    });
+
+  // Convert the immutable Lists of tokens to Arrays because the former can't be passed around in messages.
+  solutions.forEach(lodash.update(_, 'tokens', lift(Array.from(_).filter(it.length > 0))));
+
+  return solutions;
 }
 
 /**
@@ -262,17 +234,12 @@ export function fromNamingSolutions(solutions, locale) {
     .filter(lodash.isString)
     .map(solution => {
       const reference = solution.normalize().trim();
-
-      const tokens = reference
-        .split(SENTENCE_WORDS_REGEXP)
-        .map(value => [ { value, isAutomatic: false } ]);
+      const tokens = reference.split(SENTENCE_WORDS_REGEXP).map([ it ]);
 
       return {
         locale,
         reference,
-        tokens: List(tokens),
-        hasAutomatic: false,
-        isAutomatic: false,
+        tokens,
         isComplex: false,
       };
     });
@@ -291,15 +258,13 @@ export function fromWordBankTokens(wordTokens, locale) {
   const reference = words.join(' ').trim();
 
   if ('' !== reference) {
-    const spaceToken = [ { value: ' ', isAutomatic: false } ];
-    const tokens = words.map(value => [ { value, isAutomatic: false } ]);
+    const tokens = words.flatMap(value => [ [ value ], [ ' ' ] ]);
+    tokens.pop();
 
     return [ {
       locale,
       reference,
-      tokens: List(tokens).interpose(spaceToken),
-      hasAutomatic: false,
-      isAutomatic: false,
+      tokens,
       isComplex: false,
     } ];
   }
@@ -309,18 +274,11 @@ export function fromWordBankTokens(wordTokens, locale) {
 
 /**
  * @param {Solution} solution A solution.
- * @param {boolean} includeAutomatic Whether automatically derived tokens should be included in the summary.
  * @returns {string} A user-friendly string summarizing the given solution.
  */
-export function toDisplayableString(solution, includeAutomatic) {
-  return solution.tokens.reduce((result, token) => {
-    const choices = includeAutomatic ? token : token.filter(!it.isAutomatic);
-
-    const choice = (1 === choices.length)
-      ? choices[0].value
-      : (`[${choices.map(it.value).join(' / ')}]`);
-
-    return result + choice;
+export function toDisplayableString(solution) {
+  return solution.tokens.reduce((result, choices) => {
+    return result + ((1 === choices.length) ? choices[0] : (`[${choices.join(' / ')}]`));
   }, '');
 }
 
@@ -335,11 +293,7 @@ export function compareValues(x, y) {
   let result = compareStrings(x.reference, y.reference, x.locale);
 
   if (0 === result) {
-    result = x.isAutomatic - y.isAutomatic;
-
-    if (0 === result) {
-      result = x.isComplex - y.isComplex;
-    }
+    result = y.isComplex - x.isComplex;
   }
 
   return result;
@@ -354,7 +308,8 @@ export function compareValues(x, y) {
  */
 export function compareScores(x, y) {
   const result = (y.score || 0) - (x.score || 0);
-  return (0 !== result) ? result : compareValues(x, y);
+  // Similarity and alphabetical sorts have opposite natural orders.
+  return (0 !== result) ? result : compareValues(y, x);
 }
 
 /**
@@ -379,7 +334,7 @@ export function getI18nCounts(solutions) {
  * @returns {boolean} Whether the given token is empty.
  */
 function isEmptyToken(token) {
-  return (1 === token.length) && ('' === token[0].value.trim());
+  return (token.length <= 1) && ('' === (token[0] || '').trim());
 }
 
 /**
@@ -463,7 +418,7 @@ const MATCHING_DATA = Symbol('matching_data');
 function getSolutionMatchingData(solution) {
   if (!solution[MATCHING_DATA]) {
     const tokenGroups = lodash.groupBy(
-      solution.tokens.toArray().filter(!isEmptyToken(_)),
+      Array.from(solution.tokens).filter(!isEmptyToken(_)),
       token => token.length > 1
     );
 
@@ -471,10 +426,10 @@ function getSolutionMatchingData(solution) {
     const locale = solution.locale;
 
     solution[MATCHING_DATA]['shared'] = mergeMatchingData(
-      (tokenGroups['false'] || []).map(getStringMatchingData(_[0].value, locale))
+      (tokenGroups['false'] || []).map(getStringMatchingData(_[0], locale))
     );
 
-    const choicesMatchingData = (tokenGroups['true'] || []).map(it.map(getStringMatchingData(_.value, locale)));
+    const choicesMatchingData = (tokenGroups['true'] || []).map(it.map(getStringMatchingData(_, locale)));
 
     if (choicesMatchingData.length > 0) {
       const pathsMatchingData = lodash.product.apply(null, choicesMatchingData);

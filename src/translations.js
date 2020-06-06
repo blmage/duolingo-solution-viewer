@@ -12,7 +12,7 @@ const TRANSLATIONS = {
       },
       list: {
         link: {
-          solutions: 'Solutions ({{count}})',
+          label: 'Solutions ({{count}})',
         },
         modal: {
           fit_to_content: 'Fit to content',
@@ -41,7 +41,7 @@ const TRANSLATIONS = {
       },
       list: {
         link: {
-          solutions: 'Solutions ({{count}})',
+          label: 'Solutions ({{count}})',
         },
         modal: {
           fit_to_content: 'Adapter au contenu',

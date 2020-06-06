@@ -3,7 +3,10 @@
     [
       "@babel/env",
       {
-        "modules": false
+        "modules": false,
+        "targets": {
+          "esmodules": true
+        }
       }
     ]
   ],

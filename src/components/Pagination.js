@@ -3,15 +3,19 @@ import { useKey, useKeyPress } from 'preact-use';
 import { StyleSheet } from 'aphrodite';
 import { isNumber, noop } from 'lodash';
 import Paginator from 'paginator';
-import { BASE, useStyles, useThrottledCallback } from './base';
+import { BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, useStyles, useThrottledCallback } from './base';
+import { isInputFocused } from '../functions';
 
 const WRAPPER = 'wrapper';
 const ITEM = 'item';
 const BUTTON = 'button';
+const DISABLED_BUTTON = 'disabled_button';
+const ENABLED_BUTTON = 'enabled_button';
 const INDEX_BUTTON = 'index_button';
+const BUTTON_LABEL = 'button_label';
 
 const CLASS_NAMES = {
-  [BASE]: {
+  [CONTEXT_CHALLENGE]: {
     [WRAPPER]: [ '_2mM1T', '_1AQcy' ],
     [ITEM]: [ '_10S_q' ],
     [BUTTON]: [
@@ -30,6 +34,10 @@ const CLASS_NAMES = {
       'QVrnU',
     ],
   },
+  [CONTEXT_FORUM]: {
+    [BUTTON]: [ 'QHkFc' ],
+    [ENABLED_BUTTON]: [ '_1O1Bz', '_2NzLI' ],
+  },
 };
 
 const STYLE_SHEETS = {
@@ -46,6 +54,47 @@ const STYLE_SHEETS = {
       },
     },
   }),
+  [CONTEXT_FORUM]: StyleSheet.create({
+    [WRAPPER]: {
+      alignItems: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+      marginTop: '1em',
+    },
+    [BUTTON]: {
+      background: 'transparent',
+      borderRadius: '12px',
+      color: 'currentColor',
+      height: '32px',
+      lineHeight: '26px',
+      margin: '0 2px',
+      opacity: '0.5',
+      overflow: 'hidden',
+      position: 'relative',
+      width: '32px',
+    },
+    [DISABLED_BUTTON]: {
+      border: 0,
+    },
+    [ENABLED_BUTTON]: {
+      ':hover': {
+        ':before': {
+          background: 'currentColor',
+          bottom: 0,
+          content: '""',
+          display: 'block',
+          // This seems to have almost the same effect as the original brightness filter, which does not work here.
+          filter: 'invert(1)',
+          left: 0,
+          opacity: '0.3',
+          position: 'absolute',
+          right: 0,
+          top: 0,
+          zIndex: '-1',
+        },
+      },
+    }
+  }),
 };
 
 const Pagination =
@@ -55,15 +104,20 @@ const Pagination =
      itemCountPerPage = 20,
      displayedPageCount = 5,
      onChange = noop,
+     context = CONTEXT_CHALLENGE,
    }) => {
-    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS);
+    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
 
     const paginator = new Paginator(itemCountPerPage, displayedPageCount);
     const paginationData = paginator.build(totalItemCount, activePage);
 
     const [ isControlPressed ] = useKeyPress('Control');
 
-    const onPrevious = useThrottledCallback((data, goToFirst, callback) => {
+    const onPreviousKey = useThrottledCallback((data, goToFirst, callback) => {
+      if (isInputFocused()) {
+        return;
+      }
+
       if (data.has_previous_page) {
         if (goToFirst) {
           callback(1);
@@ -73,7 +127,11 @@ const Pagination =
       }
     }, 50, [ paginationData, isControlPressed, onChange ]);
 
-    const onNext = useThrottledCallback((data, goToLast, callback) => {
+    const onNextKey = useThrottledCallback((data, goToLast, callback) => {
+      if (isInputFocused()) {
+        return;
+      }
+
       if (data.has_next_page) {
         if (goToLast) {
           callback(data.total_pages);
@@ -83,8 +141,8 @@ const Pagination =
       }
     }, 50, [ paginationData, isControlPressed, onChange ]);
 
-    useKey('ArrowLeft', onPrevious, {}, [ onPrevious ]);
-    useKey('ArrowRight', onNext, {}, [ onNext ]);
+    useKey('ArrowLeft', onPreviousKey, {}, [ onPreviousKey ]);
+    useKey('ArrowRight', onNextKey, {}, [ onNextKey ]);
 
     if (totalItemCount <= itemCountPerPage) {
       return null;
@@ -97,10 +155,16 @@ const Pagination =
         buttonClassNames += ` ${getElementClassNames(INDEX_BUTTON)}`;
       }
 
+      if (!disabled) {
+        buttonClassNames += ` ${getElementClassNames(ENABLED_BUTTON)}`;
+      } else {
+        buttonClassNames += ` ${getElementClassNames(DISABLED_BUTTON)}`;
+      }
+
       return (
         <div key={key} className={getElementClassNames(ITEM)}>
           <button className={buttonClassNames} disabled={disabled} onClick={onClick}>
-            {label}
+            <span className={getElementClassNames(BUTTON_LABEL)}>{label}</span>
           </button>
         </div>
       );

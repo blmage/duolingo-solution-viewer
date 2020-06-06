@@ -1,11 +1,16 @@
 {
   "name": "Duolingo Solution Viewer",
-  "version": "1.2.0",
-  "description": "Provides access to the complete lists of accepted solutions for Duolingo's translation challenges.",
+  "version": "2.0.0",
+  "description": "Provides access to the complete lists of accepted solutions for Duolingo's translation / listening challenges.",
   "permissions": [
     "activeTab",
+    "storage",
     "https://*.duolingo.com/"
   ],
+  "background": {
+    "scripts": [ "src/background.js" ],
+    "persistent": false
+  },
   "content_scripts": [
     {
       "matches": [ "https://*.duolingo.com/*" ],

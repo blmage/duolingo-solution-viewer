@@ -1,5 +1,3 @@
-import XRegExp from 'xregexp';
-
 /**
  * The code of the extension.
  *
@@ -20,20 +18,6 @@ export const EXTENSION_PREFIX = '_duo-sv_';
  * @type {string}
  */
 export const DEFAULT_LOCALE = 'en';
-
-/**
- * A regexp for capturing words in a sentence.
- *
- * @constant {RegExp}
- */
-export const SENTENCE_WORDS_REGEXP = new XRegExp('([\\pL\\pN]+)', 'g');
-
-/**
- * A regexp for trimming non-word characters from a string.
- *
- * @constant {RegExp}
- */
-export const TRIMMED_WORDS_REGEXP = new XRegExp('([\\pL\\pN]+(.+[\\pL\\pN]+)*)', 'g');
 
 /**
  * The internal types identifying translation challenges.
@@ -73,6 +57,13 @@ export const NAMING_CHALLENGE_TYPES = [
 export const WORD_BANK_CHALLENGE_TYPES = [
   'listenTap',
 ];
+
+/**
+ * A unique constant for when a result is unknown.
+ *
+ * @type {symbol}
+ */
+export const RESULT_NONE = Symbol('none');
 
 /**
  * A unique constant for the type of correct challenge results.
@@ -120,8 +111,67 @@ export const MENU_ICON_SELECTOR = 'img.iZYCc';
 export const SENTENCE_ICON_CLASS_NAMES = [ 'FtLT3' ];
 
 /**
+ * The name of the meta tag in which to store the URL of the solution icon.
+ *
+ * @type {string}
+ */
+export const SOLUTION_ICON_URL_META_NAME = `${EXTENSION_PREFIX}-solution-icon-url`;
+
+/**
  * The path of the close icon on the image CDN.
  *
  * @type {string}
  */
 export const CLOSE_ICON_CDN_PATH = 'images/x.svg';
+
+/**
+ * The result of failed background actions.
+ *
+ * @type {string}
+ */
+export const ACTION_RESULT_FAILURE = 'failure';
+
+/**
+ * The result of successful background actions.
+ *
+ * @type {string}
+ */
+export const ACTION_RESULT_SUCCESS = 'success';
+
+/**
+ * The type of messages wrapping a request for a background action.
+ *
+ * @type {string}
+ */
+export const MESSAGE_TYPE_ACTION_REQUEST = `${EXTENSION_PREFIX}-action_request_`;
+
+/**
+ * The type of messages wrapping the result of a background action.
+ *
+ * @type {string}
+ */
+export const MESSAGE_TYPE_ACTION_RESULT = `${EXTENSION_PREFIX}-action_result_`;
+
+/**
+ * The type of the background action usable to fetch the challenge discussed by a forum comment.
+ *
+ * @type {string}
+ */
+export const ACTION_TYPE_GET_COMMENT_CHALLENGE = 'get_comment_challenge';
+
+/**
+ * The type of the background action usable to update the challenges discussed by some forum discussions.
+ *
+ * @type {string}
+ */
+export const ACTION_TYPE_UPDATE_DISCUSSION_CHALLENGES = 'update_discussion_challenges';
+
+/**
+ * The different types of available background actions.
+ *
+ * @type {string[]}
+ */
+export const ACTION_TYPES = [
+  ACTION_TYPE_GET_COMMENT_CHALLENGE,
+  ACTION_TYPE_UPDATE_DISCUSSION_CHALLENGES,
+];

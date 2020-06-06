@@ -2,8 +2,8 @@ import { h } from 'preact';
 import { IntlProvider, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import moize from 'moize';
-import { BASE, useStyles } from './base';
-import { RESULT_CORRECT, RESULT_INCORRECT, DEFAULT_RESULT_COLORS } from '../constants';
+import { CONTEXT_CHALLENGE, CONTEXT_FORUM, useStyles } from './base';
+import { RESULT_CORRECT, RESULT_INCORRECT, DEFAULT_RESULT_COLORS, RESULT_NONE } from '../constants';
 import { discardEvent, getSolutionIconCssUrl, getStylesByClassNames } from '../functions';
 import * as solution from '../solutions';
 
@@ -12,10 +12,14 @@ const ICON = 'icon';
 const TITLE = 'title';
 
 const CLASS_NAMES = {
-  [BASE]: {
+  [CONTEXT_CHALLENGE]: {
     [WRAPPER]: [ '_2KzUW' ],
     [ICON]: [ '_2wZWI' ],
     [TITLE]: [ '_1kYcS', '_1BWZU' ]
+  },
+  [CONTEXT_FORUM]: {
+    [WRAPPER]: [ '_5j_V-' ],
+    [TITLE]: [ 'uFNEM', 'tCqcy' ],
   },
   [RESULT_CORRECT]: {
     [WRAPPER]: [ '_11OI0' ],
@@ -27,17 +31,26 @@ const CLASS_NAMES = {
   },
 };
 
+const BASE_STYLE_SHEETS = {
+  [CONTEXT_FORUM]: StyleSheet.create({
+    [WRAPPER]: {
+      cursor: 'pointer',
+      float: 'right',
+      marginTop: '2px',
+      userSelect: 'none',
+    },
+  }),
+};
+
 /**
- * Returns the applicable stylesheet for a given result type.
- *
  * @function
- * @param {symbol} result
- * @returns {object}
+ * @param {symbol} result A result type.
+ * @returns {object} The corresponding stylesheet applicable on a challenge page.
  */
-const getResultStyleSheet = moize(
+const getChallengeResultStyleSheet = moize(
   result => {
     const iconStyles = getStylesByClassNames(
-      CLASS_NAMES[BASE][ICON].concat(CLASS_NAMES[result][ICON] || []),
+      CLASS_NAMES[CONTEXT_CHALLENGE][ICON].concat(CLASS_NAMES[result][ICON] || []),
       [
         'background-image',
         'background-origin',
@@ -48,7 +61,7 @@ const getResultStyleSheet = moize(
     );
 
     const wrapperStyles = getStylesByClassNames(
-      CLASS_NAMES[BASE][WRAPPER].concat(CLASS_NAMES[result][WRAPPER] || []),
+      CLASS_NAMES[CONTEXT_CHALLENGE][WRAPPER].concat(CLASS_NAMES[result][WRAPPER] || []),
       [ 'color' ]
     );
 
@@ -65,32 +78,41 @@ const getResultStyleSheet = moize(
   }
 );
 
-const SolutionListLink = ({ solutions = [], result = RESULT_CORRECT, onClick = discardEvent }) => {
-  const STYLE_SHEETS = {
-    [RESULT_CORRECT]: getResultStyleSheet(RESULT_CORRECT),
-    [RESULT_INCORRECT]: getResultStyleSheet(RESULT_INCORRECT),
-  };
+const SolutionListLink =
+  ({
+     solutions = [],
+     result = RESULT_NONE,
+     context = CONTEXT_CHALLENGE,
+     onClick = discardEvent,
+   }) => {
+    const STYLE_SHEETS = Object.assign({}, BASE_STYLE_SHEETS, (CONTEXT_FORUM === context)
+      ? {}
+      : {
+        [RESULT_CORRECT]: getChallengeResultStyleSheet(RESULT_CORRECT),
+        [RESULT_INCORRECT]: getChallengeResultStyleSheet(RESULT_INCORRECT),
+      }
+    );
 
-  const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ result ]);
+    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context, result ]);
 
-  if (0 === solutions.length) {
-    return null;
-  }
+    if (0 === solutions.length) {
+      return null;
+    }
 
-  const counts = solution.getI18nCounts(solutions);
+    const counts = solution.getI18nCounts(solutions);
 
-  return (
-    <IntlProvider scope="solution.list.link">
-      <a className={getElementClassNames(WRAPPER)} onClick={onClick}>
-        <div className={getElementClassNames(ICON)} />
-        <span className={getElementClassNames(TITLE)}>
-            <Text id="solutions" plural={counts.plural} fields={{ count: counts.display }}>
+    return (
+      <IntlProvider scope="solution.list.link">
+        <a className={getElementClassNames(WRAPPER)} onClick={onClick}>
+          <div className={getElementClassNames(ICON)} />
+          <span className={getElementClassNames(TITLE)}>
+            <Text id="label" plural={counts.plural} fields={{ count: counts.display }}>
               Solutions ({counts.display})
             </Text>
           </span>
-      </a>
-    </IntlProvider>
-  );
-};
+        </a>
+      </IntlProvider>
+    );
+  };
 
 export default SolutionListLink;

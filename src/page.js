@@ -1,13 +1,18 @@
+import 'preact/debug';
 import { h, render } from 'preact';
 import { IntlProvider } from 'preact-i18n';
-import lodash from 'lodash';
+import { isArray, isEqual, isFunction, isPlainObject, maxBy, set, uniqWith } from 'lodash';
 import { _, it } from 'param.macro';
+import { CONTEXT_FORUM } from './components/base';
 import ClosestSolution from './components/ClosestSolution';
 import CorrectedAnswer from './components/CorrectedAnswer';
+import SolutionList from './components/SolutionList';
 import SolutionListLink from './components/SolutionListLink';
 import SolutionListModal from './components/SolutionListModal';
 
 import {
+  ACTION_TYPE_GET_COMMENT_CHALLENGE,
+  ACTION_TYPE_UPDATE_DISCUSSION_CHALLENGES,
   EXTENSION_PREFIX,
   LISTENING_CHALLENGE_TYPES,
   NAMING_CHALLENGE_TYPES,
@@ -18,16 +23,28 @@ import {
 } from './constants';
 
 import * as solution from './solutions';
-import { diffStrings, discardEvent, getUiLocale, getUniqueElementId, logError } from './functions';
+
+import {
+  runPromiseForEffects,
+  diffStrings,
+  discardEvent,
+  getUiLocale,
+  getUniqueElementId,
+  logError,
+  sendActionRequestToContentScript,
+  toggleElement,
+} from './functions';
+
 import { getTranslations } from './translations';
 
 /**
  * A translation challenge.
  *
  * @typedef {object} Challenge
- * @property {string} statement The sentence to translate.
+ * @property {string} statement The sentence to translate/recognize.
  * @property {import('./solutions.js').Solution[]} solutions The accepted translations.
- * @property {boolean} isNamingChallenge Whether the challenge is a naming challenge.
+ * @property {string} fromLanguage The language the user speaks.
+ * @property {string} toLanguage The language the user learns.
  */
 
 /**
@@ -56,23 +73,31 @@ let currentListeningChallenges = {};
  * @returns {import('./solutions.js').Solution[]} The corresponding list of solutions.
  */
 function getChallengeSolutions(challenge) {
-  const grader = lodash.isPlainObject(challenge.grader) ? challenge.grader : {};
-  const locale = String(challenge.targetLanguage || grader.language || '').trim() || getUiLocale();
+  const grader = isPlainObject(challenge.grader) ? challenge.grader : {};
+  const metaData = isPlainObject(challenge.metadata) ? challenge.metadata : {};
+
+  const locale = String(
+    challenge.targetLanguage
+    || grader.language
+    || metaData.target_language
+    || metaData.language
+    || ''
+  ).trim() || getUiLocale();
 
   if (NAMING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0) {
-    if (lodash.isArray(challenge.correctSolutions)) {
+    if (isArray(challenge.correctSolutions)) {
       return solution.fromNamingSolutions(challenge.correctSolutions, locale);
     }
   } else if (WORD_BANK_CHALLENGE_TYPES.indexOf(challenge.type) >= 0) {
-    if (lodash.isArray(challenge.correctTokens)) {
+    if (isArray(challenge.correctTokens)) {
       return solution.fromWordBankTokens(challenge.correctTokens, locale);
     }
   } else if (
-    lodash.isPlainObject(grader)
-    && lodash.isArray(grader.vertices)
+    isPlainObject(grader)
+    && isArray(grader.vertices)
     && (grader.vertices.length > 0)
   ) {
-    return solution.fromVertices(grader.vertices, false, locale);
+    return solution.fromVertices(grader.vertices, locale, !!grader.whitespaceDelimited);
   }
 
   return [];
@@ -82,17 +107,21 @@ function getChallengeSolutions(challenge) {
  * Prepares the different challenges for a freshly started practice session.
  *
  * @param {Array} newChallenges A set of raw challenge data.
+ * @param {string} fromLanguage The language the user speaks.
+ * @param {string} toLanguage The language the user learns.
  */
-function handleNewChallenges(newChallenges) {
+async function handleNewChallenges(newChallenges, fromLanguage, toLanguage) {
   currentTranslationChallenges = {};
   currentNamingChallenges = [];
   currentListeningChallenges = {};
+  const discussionChallenges = {};
 
   newChallenges.forEach(challenge => {
     const solutions = getChallengeSolutions(challenge);
 
     if (solutions.length > 0) {
       const statement = String(challenge.prompt || '').normalize().trim();
+      const discussionId = String(challenge.sentenceDiscussionId || '').trim();
 
       if (
         ('' !== statement)
@@ -100,9 +129,18 @@ function handleNewChallenges(newChallenges) {
       ) {
         currentTranslationChallenges[statement] = {
           statement,
-          solutions: lodash.uniqWith(solutions, lodash.isEqual),
-          isNamingChallenge: NAMING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0,
+          solutions: uniqWith(solutions, isEqual),
+          fromLanguage,
+          toLanguage
         };
+
+        if (NAMING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0) {
+          currentNamingChallenges.push(currentTranslationChallenges[statement]);
+        }
+
+        if ('' !== discussionId) {
+          discussionChallenges[discussionId] = currentTranslationChallenges[statement];
+        }
       } else if (
         (LISTENING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0)
         && ('' !== String(challenge.solutionTranslation || '').trim())
@@ -111,14 +149,20 @@ function handleNewChallenges(newChallenges) {
 
         currentListeningChallenges[solutionTranslation] = {
           statement,
-          solutions: lodash.uniqWith(solutions, lodash.isEqual),
-          isNamingChallenge: false,
+          solutions: uniqWith(solutions, isEqual),
+          fromLanguage,
+          toLanguage
         };
       }
     }
   });
 
-  currentNamingChallenges = lodash.filter(currentTranslationChallenges, it.isNamingChallenge);
+  runPromiseForEffects(
+    sendActionRequestToContentScript(
+      ACTION_TYPE_UPDATE_DISCUSSION_CHALLENGES,
+      discussionChallenges
+    )
+  );
 }
 
 /**
@@ -134,14 +178,19 @@ XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
   if (url.match(NEW_SESSION_URL_REGEXP)) {
     this.addEventListener('load', () => {
       try {
-        const data = lodash.isPlainObject(this.response)
+        const data = isPlainObject(this.response)
           ? this.response
           : JSON.parse(this.responseText);
 
-        if (lodash.isPlainObject(data)) {
-          const baseChallenges = lodash.isArray(data.challenges) ? data.challenges : [];
-          const adaptiveChallenges = lodash.isArray(data.adaptiveChallenges) ? data.adaptiveChallenges : [];
-          handleNewChallenges(baseChallenges.concat(adaptiveChallenges));
+        if (isPlainObject(data)) {
+          const baseChallenges = isArray(data.challenges) ? data.challenges : [];
+          const adaptiveChallenges = isArray(data.adaptiveChallenges) ? data.adaptiveChallenges : [];
+
+          handleNewChallenges(
+            baseChallenges.concat(adaptiveChallenges),
+            data.fromLanguage || getUiLocale(),
+            data.learningLanguage || ''
+          );
         }
       } catch (error) {
         logError(error, 'Could not prepare the translation challenges for the new practice session: ');
@@ -169,6 +218,21 @@ const TRANSLATION_CHALLENGE_WRAPPER = TRANSLATION_CHALLENGE_TYPES
 const LISTENING_CHALLENGE_WRAPPER = LISTENING_CHALLENGE_TYPES
   .map(type => `[data-test="challenge challenge-${type}"]`)
   .join(', ');
+
+/**
+ * A CSS selector for the result wrapper of the current challenge screen.
+ *
+ * @type {string}
+ */
+const RESULT_WRAPPER_SELECTOR = '._1Ag8k';
+
+/**
+ * The class name which is applied to the result wrapper when the user has given a correct answer.
+ *
+ * @type {string}
+ */
+const RESULT_WRAPPER_CORRECT_CLASS_NAME = '_1WH_r';
+
 
 /**
  * A CSS selector for the header of the current challenge.
@@ -230,32 +294,39 @@ const ANSWER_SELECTED_TOKEN_SELECTOR = '[data-test=challenge-tap-token]';
 const CHALLENGE_FOOTER_SELECTOR = '._1obm2';
 
 /**
- * A CSS selector for the result wrapper of the current challenge screen.
- *
- * @type {string}
- */
-const RESULT_WRAPPER_SELECTOR = '._1Ag8k';
-
-/**
- * The class name which is applied to the result wrapper when the user has given a correct answer.
- *
- * @type {string}
- */
-const RESULT_WRAPPER_CORRECT_CLASS_NAME = '_1WH_r';
-
-/**
  * A CSS selector for the solution wrapper of the current challenge screen, holding the answer key to the challenge.
  *
  * @type {string}
  */
-const SOLUTION_WRAPPER_SELECTOR = '.vpbSG';
+const CHALLENGE_SOLUTION_WRAPPER_SELECTOR = '.vpbSG';
 
 /**
  * A CSS selector for the list of action links of the current challenge screen.
  *
  * @type {string}
  */
-const ACTION_LINK_LIST_SELECTOR = '._1Xpok';
+const CHALLENGE_ACTION_LINK_LIST_SELECTOR = '._1Xpok';
+
+/**
+ * A CSS selector for the fixed page header used among other places in the forum.
+ *
+ * @type {string}
+ */
+const FORUM_FIXED_PAGE_HEADER_SELECTOR = '._2Jt0i, ._2i8Km';
+
+/**
+ * A CSS selector for the wrapper of the original post in a forum discussion.
+ *
+ * @type {string}
+ */
+const FORUM_OP_WRAPPER_SELECTOR = '._3eQwU';
+
+/**
+ * A CSS selector for the list of actions related to the original post in a forum discussion.
+ *
+ * @type {string}
+ */
+const FORUM_OP_ACTION_LINK_LIST_SELECTOR = '._3Rqyw';
 
 /**
  * The UI elements used to wrap the different components rendered by the extension.
@@ -272,7 +343,7 @@ const componentWrappers = {};
 function getComponentWrapper(component, parentElement) {
   if (!componentWrappers[component.name] || !componentWrappers[component.name].isConnected) {
     const wrapper = document.createElement('div');
-    wrapper.id = getUniqueElementId(`${EXTENSION_PREFIX}${component.name}-`);
+    wrapper.id = getUniqueElementId(`${EXTENSION_PREFIX}-${component.name}-`);
     componentWrappers[component.name] = wrapper;
   }
 
@@ -285,14 +356,14 @@ function getComponentWrapper(component, parentElement) {
  * @param {import('./solutions.js').Solution} closestSolution A solution that came closest to a user answer.
  * @param {symbol} result The result of the corresponding challenge.
  */
-function renderClosestSolution(closestSolution, result) {
+function renderChallengeClosestSolution(closestSolution, result) {
   try {
-    const solutionWrapper = document.querySelector(SOLUTION_WRAPPER_SELECTOR);
+    const solutionWrapper = document.querySelector(CHALLENGE_SOLUTION_WRAPPER_SELECTOR);
 
     if (solutionWrapper) {
       render(
         <IntlProvider definition={getTranslations(getUiLocale())}>
-          <ClosestSolution solution={solution.toDisplayableString(closestSolution, false)} result={result} />
+          <ClosestSolution solution={solution.toDisplayableString(closestSolution)} result={result} />
         </IntlProvider>,
         getComponentWrapper(ClosestSolution, solutionWrapper)
       );
@@ -309,9 +380,9 @@ function renderClosestSolution(closestSolution, result) {
  * A list of tokens representing the similarities and differences between a user answer and a solution.
  * @param {symbol} result The result of the corresponding challenge.
  */
-function renderCorrectedAnswer(diffTokens, result) {
+function renderChallengeCorrectedAnswer(diffTokens, result) {
   try {
-    const solutionWrapper = document.querySelector(SOLUTION_WRAPPER_SELECTOR);
+    const solutionWrapper = document.querySelector(CHALLENGE_SOLUTION_WRAPPER_SELECTOR);
 
     if (solutionWrapper) {
       render(
@@ -339,7 +410,7 @@ let isSolutionListModalDisplayed = false;
  * @param {Challenge} challenge A challenge.
  * @param {string} userAnswer The user's answer to the challenge.
  */
-function renderSolutionListModal(challenge, userAnswer) {
+function renderChallengeSolutionListModal(challenge, userAnswer = '') {
   try {
     if (isSolutionListModalDisplayed) {
       return;
@@ -370,16 +441,16 @@ function renderSolutionListModal(challenge, userAnswer) {
  * @param {symbol} result The result of the challenge.
  * @param {string} userAnswer The user's answer to the challenge.
  */
-function renderSolutionListLink(challenge, result, userAnswer) {
+function renderChallengeSolutionListLink(challenge, result, userAnswer) {
   try {
-    const actionLinkList = document.querySelector(ACTION_LINK_LIST_SELECTOR);
+    const actionLinkList = document.querySelector(CHALLENGE_ACTION_LINK_LIST_SELECTOR);
 
     if (actionLinkList) {
       render(
         <IntlProvider definition={getTranslations(getUiLocale())}>
           <SolutionListLink result={result}
                             solutions={challenge.solutions}
-                            onClick={() => renderSolutionListModal(challenge, userAnswer)} />
+                            onClick={() => renderChallengeSolutionListModal(challenge, userAnswer)} />
         </IntlProvider>,
         getComponentWrapper(SolutionListLink, actionLinkList)
       );
@@ -390,6 +461,65 @@ function renderSolutionListLink(challenge, result, userAnswer) {
     logError(error, 'Could not render the solution list link: ');
   }
 }
+
+/**
+ * @param {Challenge} challenge A translation challenge.
+ */
+function renderForumSolutionList(challenge) {
+  try {
+    if (forumOpWrapper && forumOpWrapper.isConnected) {
+      const actionLinkList = document.querySelector(FORUM_OP_ACTION_LINK_LIST_SELECTOR);
+
+      if (actionLinkList) {
+        const solutionListWrapper = getComponentWrapper(SolutionList, forumOpWrapper)
+
+        const toggleSolutionList = () => {
+          toggleElement(solutionListWrapper);
+        };
+
+        const scrollToSolutionList = () => {
+          const pageHeader = document.querySelector(FORUM_FIXED_PAGE_HEADER_SELECTOR);
+
+          window.scrollTo({
+            behavior: 'smooth',
+            top: solutionListWrapper.offsetTop - (pageHeader ? pageHeader.clientHeight : 0) - 10,
+          });
+        };
+
+        toggleSolutionList();
+
+        render(
+          <IntlProvider definition={getTranslations(getUiLocale() || challenge.fromLanguage)}>
+            <SolutionList context={CONTEXT_FORUM}
+                          solutions={challenge.solutions}
+                          onPageChange={scrollToSolutionList} />
+          </IntlProvider>,
+          solutionListWrapper
+        );
+
+        render(
+          <IntlProvider definition={getTranslations(getUiLocale())}>
+            <SolutionListLink context={CONTEXT_FORUM}
+                              solutions={challenge.solutions}
+                              onClick={toggleSolutionList} />
+          </IntlProvider>,
+          getComponentWrapper(SolutionListLink, actionLinkList)
+        );
+      } else {
+        throw new Error('Could not find the action link list element.');
+      }
+    }
+  } catch (error) {
+    logError(error, 'Could not render the solution list: ');
+  }
+}
+
+/**
+ * The last seen document location.
+ *
+ * @type {string|null}
+ */
+let documentLocation = null;
 
 /**
  * The last seen challenge footer element.
@@ -413,15 +543,43 @@ let resultWrapper = null;
 let completedChallenge = null;
 
 /**
+ * The ID of the forum comment that is currently being displayed, if any.
+ *
+ * @type {number|null}
+ */
+let forumCommentId = null;
+
+/**
+ * The challenge discussed by the forum comment that is currently being displayed, if any.
+ *
+ * @type {Challenge|null}
+ */
+let forumCommentChallenge = null;
+
+/**
+ * The last seen wrapper of an original post in a forum discussion.
+ *
+ * @type {Element|null}
+ */
+let forumOpWrapper = null;
+
+/**
+ * A RegExp for the URLs of forum comments.
+ *
+ * @type {RegExp}
+ */
+const FORUM_COMMENT_URL_REGEXP = /forum\.duolingo\.com\/comment\/([\d]+)/;
+
+/**
  * @param {object} challenge A challenge.
  * @param {Function|null} getCorrectionBaseSolution
  * A function from the current challenge to the solution the user answer should be compared to, or null if the
- * corrected answer should not be displayed. 
+ * corrected answer should not be displayed.
  * @param {Element} resultWrapper The UI result wrapper.
  * @returns {boolean} Whether the result of the challenge could be handled.
  */
 function handleChallengeResult(challenge, getCorrectionBaseSolution, resultWrapper) {
-  if (lodash.isPlainObject(challenge)) {
+  if (isPlainObject(challenge)) {
     const result = resultWrapper.classList.contains(RESULT_WRAPPER_CORRECT_CLASS_NAME)
       ? RESULT_CORRECT
       : RESULT_INCORRECT;
@@ -439,9 +597,9 @@ function handleChallengeResult(challenge, getCorrectionBaseSolution, resultWrapp
     }
 
     if ('' === userAnswer) {
-      challenge.solutions.forEach(lodash.set(_, 'score', 0));
+      challenge.solutions.forEach(set(_, 'score', 0));
     } else {
-      challenge.solutions.forEach(item => lodash.set(item, 'score', solution.matchAgainstAnswer(item, userAnswer)));
+      challenge.solutions.forEach(item => set(item, 'score', solution.matchAgainstAnswer(item, userAnswer)));
     }
 
     completedChallenge = { challenge, result, userAnswer };
@@ -449,21 +607,21 @@ function handleChallengeResult(challenge, getCorrectionBaseSolution, resultWrapp
     if (userAnswer) {
       if (RESULT_INCORRECT === result) {
         if (challenge.solutions.length > 1) {
-          renderClosestSolution(lodash.maxBy(challenge.solutions, 'score'), result);
+          renderChallengeClosestSolution(maxBy(challenge.solutions, 'score'), result);
         }
       } else if (
-        lodash.isFunction(getCorrectionBaseSolution)
+        isFunction(getCorrectionBaseSolution)
         && !challenge.solutions.some(it.score === 1)
       ) {
         const diffTokens = diffStrings(getCorrectionBaseSolution(challenge), userAnswer);
 
-        if (lodash.isArray(diffTokens)) {
-          renderCorrectedAnswer(diffTokens, result);
+        if (isArray(diffTokens)) {
+          renderChallengeCorrectedAnswer(diffTokens, result);
         }
       }
     }
 
-    renderSolutionListLink(challenge, result, userAnswer);
+    renderChallengeSolutionListLink(challenge, result, userAnswer);
 
     return true;
   }
@@ -546,11 +704,35 @@ function handleListeningChallengeResult(resultWrapper) {
 }
 
 /**
+ * @param {string} location The new location of the document.
+ */
+function handleDocumentLocationChange(location) {
+  forumCommentId = null;
+  forumCommentChallenge = null;
+  const matches = location.match(FORUM_COMMENT_URL_REGEXP);
+
+  if (isArray(matches)) {
+    const commentId = Number(matches[1]);
+
+    if ((commentId > 0) && (commentId !== forumCommentId)) {
+      forumCommentId = commentId;
+
+      sendActionRequestToContentScript(ACTION_TYPE_GET_COMMENT_CHALLENGE, commentId)
+        .then(challenge => {
+          forumCommentChallenge = challenge;
+          renderForumSolutionList(challenge);
+        })
+        .catch(error => logError(error, 'Could not handle the forum comment:'));
+    }
+  }
+}
+
+/**
  * A mutation observer for the footer of the challenge screen, detecting and handling challenge results.
  *
  * @type {MutationObserver}
  */
-const mutationObserver = new MutationObserver(() => {
+const challengeFooterMutationObserver = new MutationObserver(() => {
   if (!challengeFooter) {
     return;
   }
@@ -580,20 +762,37 @@ document.addEventListener('keydown', event => {
     && (event.key.toLowerCase() === 's')
   ) {
     discardEvent(event);
-    renderSolutionListModal(completedChallenge.challenge, completedChallenge.userAnswer);
+    renderChallengeSolutionListModal(completedChallenge.challenge, completedChallenge.userAnswer);
   }
 });
 
 setInterval(() => {
+  if (document.location.href !== documentLocation) {
+    documentLocation = document.location.href;
+    handleDocumentLocationChange(documentLocation);
+  }
+
   const newChallengeFooter = document.querySelector(CHALLENGE_FOOTER_SELECTOR);
 
   if (newChallengeFooter) {
     if (newChallengeFooter !== challengeFooter) {
       challengeFooter = newChallengeFooter;
-      mutationObserver.disconnect();
-      mutationObserver.observe(challengeFooter, { childList: true, subtree: true });
+      challengeFooterMutationObserver.disconnect();
+      challengeFooterMutationObserver.observe(challengeFooter, { childList: true, subtree: true });
     }
   } else {
     completedChallenge = null;
+  }
+
+  const newForumOpWrapper = document.querySelector(FORUM_OP_WRAPPER_SELECTOR);
+
+  if (newForumOpWrapper) {
+    if (newForumOpWrapper !== forumOpWrapper) {
+      forumOpWrapper = newForumOpWrapper;
+
+      if (forumCommentChallenge) {
+        renderForumSolutionList(forumCommentChallenge);
+      }
+    }
   }
 }, 50);

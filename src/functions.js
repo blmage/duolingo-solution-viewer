@@ -1,17 +1,19 @@
-import lodash from 'lodash';
-import 'lodash.product';
+import { fromPairs, get, noop, trim } from 'lodash';
 import { it } from 'param.macro';
 import moize from 'moize';
-import { Map } from 'immutable';
+import Cookies from 'js-cookie';
 import TextDiff from 'diff';
 
 import {
+  ACTION_RESULT_SUCCESS,
+  MESSAGE_TYPE_ACTION_REQUEST,
+  MESSAGE_TYPE_ACTION_RESULT,
   DEFAULT_LOCALE,
   EXTENSION_CODE,
-  EXTENSION_PREFIX,
   IMAGE_CDN_DEFAULT_BASE_URL,
   MENU_ICON_SELECTOR,
   SENTENCE_ICON_CLASS_NAMES,
+  SOLUTION_ICON_URL_META_NAME,
 } from './constants';
 
 /**
@@ -36,11 +38,77 @@ export function getUniqueElementId(prefix) {
 }
 
 /**
+ * @param {Element} element The element to toggle.
+ */
+export function toggleElement(element) {
+  if (element instanceof Element) {
+    if (element.style.display === 'none') {
+      element.style.display = '';
+    } else {
+      element.style.display = 'none';
+    }
+  }
+}
+
+/**
  * @param {Event} event The UI event to completely discard.
  */
 export function discardEvent(event) {
   event.preventDefault();
   event.stopPropagation();
+}
+
+/**
+ * @returns {boolean} Whether the currently focused element is an input.
+ */
+export function isInputFocused() {
+  return !document.activeElement
+    ? false
+    : ([ 'input', 'select', 'textarea' ].indexOf(document.activeElement.tagName.toLowerCase()) >= 0);
+}
+
+/**
+ * @param {Promise} promise A promise to run solely for its effects, ignoring its result.
+ */
+export function runPromiseForEffects(promise) {
+  promise.then(noop).catch(noop);
+}
+
+/**
+ * Sends an action request to the content script.
+ *
+ * @param {string} action The action key.
+ * @param {*} value The action payload.
+ * @returns {Promise} A promise for the result of the action.
+ */
+export async function sendActionRequestToContentScript(action, value) {
+  return new Promise((resolve, reject) => {
+    const resultListener = event => {
+      if (
+        (event.source === window)
+        && event.data
+        && (MESSAGE_TYPE_ACTION_RESULT === event.data.type)
+        && (action === event.data.action)
+      ) {
+        if (event.data.result === ACTION_RESULT_SUCCESS) {
+          resolve(event.data.value || null);
+        } else {
+          reject();
+        }
+
+        event.stopPropagation();
+        window.removeEventListener('message', resultListener);
+      }
+    };
+
+    window.addEventListener('message', resultListener);
+
+    window.postMessage({
+      type: MESSAGE_TYPE_ACTION_REQUEST,
+      action,
+      value,
+    }, '*');
+  });
 }
 
 /**
@@ -58,7 +126,7 @@ export const getStylesByClassNames = moize(
     document.body.appendChild(element);
 
     const computedStyle = getComputedStyle(element);
-    const styles = lodash.fromPairs(styleNames.map(name => [ name, computedStyle.getPropertyValue(name) || '' ]));
+    const styles = fromPairs(styleNames.map(name => [ name, computedStyle.getPropertyValue(name) || '' ]));
 
     element.remove();
 
@@ -83,7 +151,7 @@ export const getImageCdnBaseUrl = moize(
  */
 export const getSolutionIconCssUrl = moize(
   () => {
-    const solutionIconMeta = document.querySelector(`meta[name="${EXTENSION_PREFIX}-solution-icon-url"]`);
+    const solutionIconMeta = document.querySelector(`meta[name="${SOLUTION_ICON_URL_META_NAME}"]`);
     const solutionIconUrl = (solutionIconMeta && solutionIconMeta.getAttribute('content') || '').trim();
 
     return (solutionIconUrl && `url(${solutionIconUrl})`)
@@ -96,7 +164,9 @@ export const getSolutionIconCssUrl = moize(
  * @returns {string} The tag of the current language used for the UI.
  */
 export function getUiLocale() {
-  return lodash.get(window || {}, [ 'duo', 'uiLanguage' ]) || DEFAULT_LOCALE;
+  return String(get(window || {}, [ 'duo', 'uiLanguage' ]) || '').trim()
+    || String(Cookies.get('ui_language') || '').trim()
+    || DEFAULT_LOCALE;
 }
 
 /**
@@ -120,24 +190,6 @@ export function logError(error, prefix) {
 
     loggingIframe.contentWindow.console.error(`[${EXTENSION_CODE}] ${prefix || ''}`, error);
   }
-}
-
-/**
- * @param {Function} mutator A function applying a series of mutations to a given map.
- * @returns {Map} A new map initialized using the given mutator.
- */
-export function newMapWith(mutator) {
-  return Map().withMutations(mutator);
-}
-
-/**
- * @param {Function} merge The function usable to resolve key conflicts.
- * @param {Map} base The base map.
- * @param {Map[]} maps A list of maps to merge into the base map.
- * @returns {Map} The union of all the given maps.
- */
-export function mergeMapsWith(merge, base, ...maps) {
-  return (maps.length > 0) ? base.mergeWith(merge, ...maps) : base;
 }
 
 /**
@@ -167,13 +219,13 @@ export function invertComparison(compare) {
  * punctuation and spaces), or null if they are equivalent.
  */
 export function diffStrings(x, y) {
-  const INSIGNIFICANT_CHARS = '.,;:?¿!¡()" \t\n\r\xA0';
+  const INSIGNIFICANT_CHARS = '.,;:?Â¿!Â¡()" \t\n\r\xA0';
 
   const diffTokens = TextDiff.diffChars(
     // diffChars is right-biased in that it will rather keep characters from the second string.
     // We want to keep characters from the base string instead.
-    lodash.trim(y.normalize(), INSIGNIFICANT_CHARS),
-    lodash.trim(x.normalize(), INSIGNIFICANT_CHARS),
+    trim(y.normalize(), INSIGNIFICANT_CHARS),
+    trim(x.normalize(), INSIGNIFICANT_CHARS),
     {
       comparator: (left, right) =>
         left.toLowerCase() === right.toLowerCase()

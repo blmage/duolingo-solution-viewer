@@ -7,6 +7,8 @@ import { terser } from 'rollup-plugin-terser';
 
 const { PRODUCTION } = process.env;
 
+const sources = [ 'background', 'content', 'page' ];
+
 const plugins = [
   babel({
     babelHelpers: 'bundled',
@@ -43,12 +45,12 @@ if (PRODUCTION) {
   }));
 }
 
-export default {
-  input: 'src/index.js',
+export default sources.map(source => ({
+  input: `src/${source}.js`,
   output: {
-    file: 'dist/src/page.js',
+    file: `dist/src/${source}.js`,
     format: 'iife',
   },
   treeshake: true,
   plugins,
-};
+}));

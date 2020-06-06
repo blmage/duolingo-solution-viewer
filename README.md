@@ -6,7 +6,8 @@
 [![Mozilla Add-on](https://img.shields.io/amo/v/duolingo-solution-viewer)](https://addons.mozilla.org/firefox/addon/duolingo-solution-viewer/)
 
 A browser extension providing access to the complete lists of **accepted solutions** for
-[Duolingo](https://www.duolingo.com)'s **translation challenges**.
+[Duolingo](https://www.duolingo.com)'s **translation / listening challenges**, and restoring
+the **correction of typos** for listening challenges.
 
 ### Table of contents
 
