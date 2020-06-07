@@ -1,6 +1,6 @@
 import { fromPairs, get, noop, trim } from 'lodash';
-import { it } from 'param.macro';
 import moize from 'moize';
+import { it } from 'param.macro';
 import Cookies from 'js-cookie';
 import TextDiff from 'diff';
 

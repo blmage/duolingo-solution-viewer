@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { IntlProvider, Localizer, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import { identity, noop } from 'lodash';
+import { it } from 'param.macro';
+import moize from 'moize';
 import { BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, useLocalStorage, useLocalStorageList, useStyles } from './base';
 import Pagination from './Pagination';
 import { invertComparison } from '../functions';
@@ -24,22 +26,6 @@ const PAGE_SIZE_LINK = 'page_size_link';
 const PAGE_SIZE_SELECT_WRAPPER = 'page_size_select_wrapper';
 const PAGE_SIZE_SELECT = 'page_size_select';
 const PAGE_SIZE_OPTION = 'page_size_option';
-
-const SORT_DIRECTION_ASC = 'asc';
-const SORT_DIRECTION_DESC = 'desc';
-
-const SORT_DIRECTIONS = {
-  [SORT_DIRECTION_ASC]: {
-    label: '↑',
-    actionLabelId: 'sort_ascending',
-    defaultActionLabel: 'Sort in ascending order',
-  },
-  [SORT_DIRECTION_DESC]: {
-    label: '↓',
-    actionLabelId: 'sort_descending',
-    defaultActionLabel: 'Sort in descending order',
-  },
-};
 
 const CLASS_NAMES = {
   [CONTEXT_CHALLENGE]: {
@@ -225,17 +211,48 @@ const SORT_TYPE_ALPHABETICAL = 'alphabetical';
 const SORT_TYPE_SIMILARITY = 'similarity';
 
 const SORT_TYPES = {
+  [SORT_TYPE_SIMILARITY]: {
+    labelId: 'similarity_sort',
+    defaultLabel: 'Similarity sort',
+    actionLabelId: 'sort_by_similarity',
+    defaultActionLabel: 'Sort by similarity',
+  },
   [SORT_TYPE_ALPHABETICAL]: {
     labelId: 'alphabetical_sort',
     defaultLabel: 'Alphabetical sort',
     actionLabelId: 'sort_alphabetically',
     defaultActionLabel: 'Sort alphabetically',
   },
-  [SORT_TYPE_SIMILARITY]: {
-    labelId: 'similarity_sort',
-    defaultLabel: 'Similarity sort',
-    actionLabelId: 'sort_by_similarity',
-    defaultActionLabel: 'Sort by similarity',
+};
+
+/**
+ * @function
+ * @param {boolean} isScoreAvailable Whether solutions have scores in the current context.
+ * @returns {string[]} The available sort types.
+ */
+const getAvailableSortTypes = moize(isScoreAvailable => {
+  let sortTypes = Object.keys(SORT_TYPES);
+
+  if (!isScoreAvailable) {
+    sortTypes = sortTypes.filter(SORT_TYPE_SIMILARITY !== it);
+  }
+
+  return sortTypes;
+});
+
+const SORT_DIRECTION_ASC = 'asc';
+const SORT_DIRECTION_DESC = 'desc';
+
+const SORT_DIRECTIONS = {
+  [SORT_DIRECTION_ASC]: {
+    label: '↑',
+    actionLabelId: 'sort_ascending',
+    defaultActionLabel: 'Sort in ascending order',
+  },
+  [SORT_DIRECTION_DESC]: {
+    label: '↓',
+    actionLabelId: 'sort_descending',
+    defaultActionLabel: 'Sort in descending order',
   },
 };
 
@@ -277,15 +294,17 @@ const SolutionList = ({ solutions = [], context = CONTEXT_CHALLENGE, onPageChang
     shouldTriggerPageChange.current = true;
   }, [ page, pageSize, solutions.length, setRawPageSize ]);
 
-  // The similarity sort falls back to the alphabetical sort, so we don't need to check for the forum context here.
+
+  const sortTypes = getAvailableSortTypes(CONTEXT_CHALLENGE === context);
+
   const {
     state: sortType,
     nextState: nextSortType,
     next: setNextSortType,
   } = useLocalStorageList(
     'sort-type',
-    Object.keys(SORT_TYPES),
-    SORT_TYPE_SIMILARITY
+    sortTypes,
+    sortTypes[0]
   );
 
   const {
@@ -374,7 +393,7 @@ const SolutionList = ({ solutions = [], context = CONTEXT_CHALLENGE, onPageChang
           </span>
           <div className={getElementClassNames(TITLE_LINK_WRAPPER)}>
             <Localizer>
-              {(CONTEXT_CHALLENGE === context)
+              {(sortTypes.length > 1)
                 ? (
                   <a className={getElementClassNames(SORT_LINK)}
                      onClick={setNextSortType}
@@ -391,8 +410,8 @@ const SolutionList = ({ solutions = [], context = CONTEXT_CHALLENGE, onPageChang
                   </a>
                 ) : (
                   <span className={getElementClassNames(SORT_TYPE_LABEL)}>
-                    <Text id={SORT_TYPES[SORT_TYPE_ALPHABETICAL].labelId}>
-                      {SORT_TYPES[SORT_TYPE_ALPHABETICAL].defaultLabel}
+                    <Text id={SORT_TYPES[sortType].labelId}>
+                      {SORT_TYPES[sortType].defaultLabel}
                     </Text>
                   </span>
                 )}

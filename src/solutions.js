@@ -308,8 +308,8 @@ export function compareValues(x, y) {
  */
 export function compareScores(x, y) {
   const result = (y.score || 0) - (x.score || 0);
-  // Similarity and alphabetical sorts have opposite natural orders.
-  return (0 !== result) ? result : compareValues(y, x);
+  // Note to self: this is the right order.
+  return (0 !== result) ? result : compareValues(x, y);
 }
 
 /**
