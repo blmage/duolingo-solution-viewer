@@ -185,11 +185,12 @@ XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
         if (isPlainObject(data)) {
           const baseChallenges = isArray(data.challenges) ? data.challenges : [];
           const adaptiveChallenges = isArray(data.adaptiveChallenges) ? data.adaptiveChallenges : [];
+          const metaData = isPlainObject(data.metadata) ? data.metadata : {};
 
           handleNewChallenges(
             baseChallenges.concat(adaptiveChallenges),
-            data.fromLanguage || getUiLocale(),
-            data.learningLanguage || ''
+            String(metaData.ui_language || metaData.from_language || data.fromLanguage || '').trim() || getUiLocale(),
+            String(metaData.language || data.learningLanguage || '').trim()
           );
         }
       } catch (error) {
