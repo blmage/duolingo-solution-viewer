@@ -1,4 +1,3 @@
-import 'preact/debug';
 import { h, render } from 'preact';
 import { IntlProvider } from 'preact-i18n';
 import { isArray, isEqual, isFunction, isPlainObject, maxBy, set, uniqWith } from 'lodash';
