@@ -722,7 +722,7 @@ function handleDocumentLocationChange(location) {
           forumCommentChallenge = challenge;
           renderForumSolutionList(challenge);
         })
-        .catch(error => logError(error, 'Could not handle the forum comment:'));
+        .catch(error => error && logError(error, 'Could not handle the forum comment:'));
     }
   }
 }
