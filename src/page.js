@@ -30,6 +30,7 @@ import {
   getUiLocale,
   getUniqueElementId,
   logError,
+  normalizeString,
   sendActionRequestToContentScript,
   toggleElement,
 } from './functions';
@@ -119,7 +120,7 @@ async function handleNewChallenges(newChallenges, fromLanguage, toLanguage) {
     const solutions = getChallengeSolutions(challenge);
 
     if (solutions.length > 0) {
-      const statement = String(challenge.prompt || '').normalize().trim();
+      const statement = normalizeString(String(challenge.prompt || '')).trim();
       const discussionId = String(challenge.sentenceDiscussionId || '').trim();
 
       if (
@@ -144,7 +145,7 @@ async function handleNewChallenges(newChallenges, fromLanguage, toLanguage) {
         (LISTENING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0)
         && ('' !== String(challenge.solutionTranslation || '').trim())
       ) {
-        const solutionTranslation = String(challenge.solutionTranslation.normalize()).trim();
+        const solutionTranslation = normalizeString(String(challenge.solutionTranslation)).trim();
 
         currentListeningChallenges[solutionTranslation] = {
           statement,
@@ -654,7 +655,7 @@ function handleTranslationChallengeResult(resultWrapper) {
     elementHints.forEach(hint => hint.parentNode.removeChild(hint));
   }
 
-  const statement = cleanWrapper.innerText.normalize().trim();
+  const statement = normalizeString(cleanWrapper.innerText).trim();
 
   let result = handleChallengeResult(
     currentTranslationChallenges[statement],
@@ -694,7 +695,7 @@ function handleListeningChallengeResult(resultWrapper) {
     return false;
   }
 
-  const solution = translatedSolutionWrapper.innerText.normalize().trim();
+  const solution = normalizeString(translatedSolutionWrapper.innerText).trim();
 
   return handleChallengeResult(
     currentListeningChallenges[solution],

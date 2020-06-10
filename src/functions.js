@@ -204,6 +204,15 @@ export function invertComparison(compare) {
 }
 
 /**
+ * 
+ * @param {string} string A string. 
+ * @returns {string} A Unicode-normalized version of the given string, in which redundant spaces have been removed.
+ */
+export function normalizeString(string) {
+  return string.normalize().replace(/(\s)\1+/g, '$1');
+}
+
+/**
  * @typedef {object} DiffToken
  * @property {string} value The value of the token.
  * @property {number} count The length of the token.
