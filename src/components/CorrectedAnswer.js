@@ -48,15 +48,15 @@ const CorrectedAnswer = ({ diffTokens = [], result = RESULT_CORRECT }) => {
     if (token.added) {
       if (DISPLAY_MODE_CORRECTED === displayMode) {
         return null;
+      } else if (!token.ignorable) {
+        elementKey = ADDED_TOKEN;
       }
-
-      elementKey = ADDED_TOKEN;
     } else if (token.removed) {
       if (DISPLAY_MODE_ORIGINAL === displayMode) {
         return null;
+      } else if (!token.ignorable) {
+        elementKey = REMOVED_TOKEN;
       }
-
-      elementKey = REMOVED_TOKEN;
     }
 
     return <span className={elementKey && getElementClassNames(elementKey)}>{token.value}</span>;

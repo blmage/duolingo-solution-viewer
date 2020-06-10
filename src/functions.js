@@ -209,6 +209,7 @@ export function invertComparison(compare) {
  * @property {number} count The length of the token.
  * @property {boolean} added Whether the token was added in the right string.
  * @property {boolean} removed Whether the token was removed in the right string.
+ * @property {boolean} ignorable Whether the token is part of a change, but is not significant.
  */
 
 /**
@@ -222,24 +223,19 @@ export function diffStrings(x, y) {
   const INSIGNIFICANT_CHARS = '.,;:?¿!¡()" \t\n\r\xA0';
 
   const diffTokens = TextDiff.diffChars(
-    // diffChars is right-biased in that it will rather keep characters from the second string.
-    // We want to keep characters from the base string instead.
-    trim(y.normalize(), INSIGNIFICANT_CHARS),
     trim(x.normalize(), INSIGNIFICANT_CHARS),
-    {
-      comparator: (left, right) =>
-        left.toLowerCase() === right.toLowerCase()
-        || INSIGNIFICANT_CHARS.includes(left) && INSIGNIFICANT_CHARS.includes(right)
-    }
+    trim(y.normalize(), INSIGNIFICANT_CHARS),
   );
 
-  if (!diffTokens.some(!!it.added || !!it.removed)) {
+  diffTokens.forEach(token => {
+    token.added = !!token.added;
+    token.removed = !!token.removed;
+    token.ignorable = (token.added || token.removed) && (trim(token.value, INSIGNIFICANT_CHARS) === '');
+  });
+
+  if (!diffTokens.some((it.added || it.removed) && !it.ignorable)) {
     return null;
   }
 
-  return diffTokens.map(token => ({
-    ...token,
-    added: !!token.removed,
-    removed: !!token.added,
-  }));
+  return diffTokens;
 }
