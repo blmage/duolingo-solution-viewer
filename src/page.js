@@ -31,6 +31,7 @@ import {
   getUniqueElementId,
   logError,
   normalizeString,
+  querySelectors,
   sendActionRequestToContentScript,
   toggleElement,
 } from './functions';
@@ -208,7 +209,7 @@ XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
  * @type {string}
  */
 const TRANSLATION_CHALLENGE_WRAPPER = TRANSLATION_CHALLENGE_TYPES
-  .map(type => `[data-test="challenge challenge-${type}"]`)
+  .map(type => `[data-test^="challenge challenge-${type}"]`)
   .join(', ');
 
 /**
@@ -217,7 +218,7 @@ const TRANSLATION_CHALLENGE_WRAPPER = TRANSLATION_CHALLENGE_TYPES
  * @type {string}
  */
 const LISTENING_CHALLENGE_WRAPPER = LISTENING_CHALLENGE_TYPES
-  .map(type => `[data-test="challenge challenge-${type}"]`)
+  .map(type => `[data-test^="challenge challenge-${type}"]`)
   .join(', ');
 
 /**
@@ -234,27 +235,24 @@ const RESULT_WRAPPER_SELECTOR = '._1Ag8k';
  */
 const RESULT_WRAPPER_CORRECT_CLASS_NAME = '_1WH_r';
 
-
 /**
- * A CSS selector for the header of the current challenge.
+ * Some of the possible CSS selectors for the statement of the current challenge (holding the sentence to translate),
+ * ordered by priority.
  *
- * @type {string}
+ * @type {string[]}
  */
-const CHALLENGE_HEADER_SELECTOR = '[data-test=challenge-header]';
-
-/**
- * A CSS selector for the statement of the current challenge, holding the sentence to translate.
- *
- * @type {string}
- */
-const CHALLENGE_STATEMENT_SELECTOR = '[data-test=hint-sentence]';
+const CHALLENGE_STATEMENT_SELECTORS = [
+  '[data-test="hint-sentence"]',
+  '[data-test="challenge-header"]',
+  '[data-test="challenge-translate-prompt"]',
+];
 
 /**
  * A CSS selector for the hints added to the statement of the current challenge.
  *
  * @type {string}
  */
-const CHALLENGE_STATEMENT_HINT_SELECTOR = '[data-test=hint-popover]';
+const CHALLENGE_STATEMENT_HINT_SELECTOR = '[data-test="hint-popover"]';
 
 /**
  * A CSS selector for the translated solution of the current challenge.
@@ -269,8 +267,8 @@ const CHALLENGE_TRANSLATED_SOLUTION_SELECTOR = '.vpbSG > *:last-child > .TnCw3';
  * @type {string}
  */
 const ANSWER_INPUT_SELECTOR = [
-  'input[data-test=challenge-text-input]',
-  'textarea[data-test=challenge-translate-input]',
+  'input[data-test="challenge-text-input"]',
+  'textarea[data-test="challenge-translate-input"]',
 ].join(', ');
 
 /**
@@ -285,7 +283,7 @@ const ANSWER_SELECTED_TOKEN_CONTAINER_SELECTOR = '._3vVWl';
  *
  * @type {string}
  */
-const ANSWER_SELECTED_TOKEN_SELECTOR = '[data-test=challenge-tap-token]';
+const ANSWER_SELECTED_TOKEN_SELECTOR = '[data-test="challenge-tap-token"]';
 
 /**
  * A CSS selector for the footer of the current challenge screen, holding the result and action elements.
@@ -641,8 +639,7 @@ function handleTranslationChallengeResult(resultWrapper) {
     return false;
   }
 
-  const statementWrapper = document.querySelector(CHALLENGE_STATEMENT_SELECTOR)
-    || document.querySelector(CHALLENGE_HEADER_SELECTOR);
+  const statementWrapper = querySelectors(CHALLENGE_STATEMENT_SELECTORS);
 
   if (!statementWrapper) {
     return false;

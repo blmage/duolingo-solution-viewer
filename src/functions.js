@@ -38,6 +38,22 @@ export function getUniqueElementId(prefix) {
 }
 
 /**
+ * @param {string[]} selectors A list of selectors.
+ * @returns {Element|null} The first element to match any of the selectors, in order.
+ */
+export function querySelectors(selectors) {
+  for (let i = 0, l = selectors.length; i < l; i++) {
+    const element = document.querySelector(selectors[i]);
+
+    if (element instanceof Element) {
+      return element;
+    }
+  }
+
+  return null;
+}
+
+/**
  * @param {Element} element The element to toggle.
  */
 export function toggleElement(element) {
@@ -204,8 +220,7 @@ export function invertComparison(compare) {
 }
 
 /**
- * 
- * @param {string} string A string. 
+ * @param {string} string A string.
  * @returns {string} A Unicode-normalized version of the given string, in which redundant spaces have been removed.
  */
 export function normalizeString(string) {
