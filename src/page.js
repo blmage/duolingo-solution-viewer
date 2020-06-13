@@ -1,6 +1,6 @@
 import { h, render } from 'preact';
 import { IntlProvider } from 'preact-i18n';
-import { isArray, isFunction, maxBy, set } from 'lodash';
+import { isArray, isString, maxBy, minBy, set } from 'lodash';
 import { _, it } from 'param.macro';
 import { isObject } from './functions';
 import { CONTEXT_FORUM } from './components/base';
@@ -88,18 +88,28 @@ function getChallengeSolutions(challenge) {
 
   if (NAMING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0) {
     if (isArray(challenge.correctSolutions)) {
-      return solution.fromNamingSolutions(challenge.correctSolutions, locale);
+      return solution.fromSentences(challenge.correctSolutions, locale);
     }
-  } else if (WORD_BANK_CHALLENGE_TYPES.indexOf(challenge.type) >= 0) {
-    if (isArray(challenge.correctTokens)) {
-      return solution.fromWordBankTokens(challenge.correctTokens, locale);
-    }
-  } else if (
+  }
+
+  if (
     isObject(grader)
     && isArray(grader.vertices)
     && (grader.vertices.length > 0)
   ) {
     return solution.fromVertices(grader.vertices, locale, !!grader.whitespaceDelimited);
+  }
+
+  if (LISTENING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0) {
+    if (isString(challenge.prompt)) {
+      return solution.fromSentences([ challenge.prompt ], locale);
+    }
+  }
+
+  if (WORD_BANK_CHALLENGE_TYPES.indexOf(challenge.type) >= 0) {
+    if (isArray(challenge.correctTokens)) {
+      return solution.fromWordBankTokens(challenge.correctTokens, locale);
+    }
   }
 
   return [];
@@ -572,13 +582,11 @@ const FORUM_COMMENT_URL_REGEXP = /forum\.duolingo\.com\/comment\/([\d]+)/;
 
 /**
  * @param {object} challenge A challenge.
- * @param {Function|null} getCorrectionBaseSolution
- * A function from the current challenge to the solution the user answer should be compared to, or null if the
- * corrected answer should not be displayed.
+ * @param {boolean} showCorrectedAnswer Whether the corrected version of the user answer should be shown, if relevant.
  * @param {Element} resultWrapper The UI result wrapper.
  * @returns {boolean} Whether the result of the challenge could be handled.
  */
-function handleChallengeResult(challenge, getCorrectionBaseSolution, resultWrapper) {
+function handleChallengeResult(challenge, showCorrectedAnswer, resultWrapper) {
   if (isObject(challenge)) {
     const result = resultWrapper.classList.contains(RESULT_WRAPPER_CORRECT_CLASS_NAME)
       ? RESULT_CORRECT
@@ -599,7 +607,11 @@ function handleChallengeResult(challenge, getCorrectionBaseSolution, resultWrapp
     if ('' === userAnswer) {
       challenge.solutions.forEach(set(_, 'score', 0));
     } else {
-      challenge.solutions.forEach(item => set(item, 'score', solution.matchAgainstAnswer(item, userAnswer)));
+      challenge.solutions.forEach(item => set(
+        item,
+        'score',
+        solution.getMatchingScoreWithAnswer(item, userAnswer)
+      ));
     }
 
     completedChallenge = { challenge, result, userAnswer };
@@ -609,11 +621,17 @@ function handleChallengeResult(challenge, getCorrectionBaseSolution, resultWrapp
         if (challenge.solutions.length > 1) {
           renderChallengeClosestSolution(maxBy(challenge.solutions, 'score'), result);
         }
-      } else if (
-        isFunction(getCorrectionBaseSolution)
-        && !challenge.solutions.some(it.score === 1)
-      ) {
-        const diffTokens = diffStrings(getCorrectionBaseSolution(challenge), userAnswer);
+      } else if (showCorrectedAnswer) {
+        const bestScore = maxBy(challenge.solutions, 'score').score;
+
+        const diffTokens = minBy(
+          challenge.solutions
+            .filter(it.score === bestScore)
+            .flatMap(solution.getMatchingReferencesWithAnswer(_, userAnswer))
+            .map(diffStrings(_, userAnswer))
+            .filter(isArray),
+          it.length
+        );
 
         if (isArray(diffTokens)) {
           renderChallengeCorrectedAnswer(diffTokens, result);
@@ -657,7 +675,7 @@ function handleTranslationChallengeResult(resultWrapper) {
 
   let result = handleChallengeResult(
     currentTranslationChallenges[statement],
-    null,
+    false,
     resultWrapper
   );
 
@@ -667,7 +685,7 @@ function handleTranslationChallengeResult(resultWrapper) {
     if (challenge) {
       result = handleChallengeResult(
         currentTranslationChallenges[challenge.statement],
-        null,
+        false,
         resultWrapper
       );
     }
@@ -697,7 +715,7 @@ function handleListeningChallengeResult(resultWrapper) {
 
   return handleChallengeResult(
     currentListeningChallenges[solution],
-    challenge => challenge.statement,
+    true,
     resultWrapper
   );
 }

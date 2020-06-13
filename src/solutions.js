@@ -238,15 +238,15 @@ export function fromVertices(vertices, locale, isWhitespaceDelimited) {
 }
 
 /**
- * @param {string[]} solutions A list of correct solutions for a naming challenge.
+ * @param {string[]} sentences A list of sentences.
  * @param {string} locale The locale of the challenge.
  * @returns {Solution[]} A set of solutions.
  */
-export function fromNamingSolutions(solutions, locale) {
-  return solutions
+export function fromSentences(sentences, locale) {
+  return sentences
     .filter(lodash.isString)
-    .map(solution => {
-      const reference = solution.normalize().trim();
+    .map(sentence => {
+      const reference = sentence.normalize().trim();
       const tokens = reference.split(SENTENCE_WORDS_REGEXP).map([ it ]);
 
       return {
@@ -456,10 +456,11 @@ function getSolutionMatchingData(solution) {
 /**
  * @param {Solution} solution A solution.
  * @param {string} answer A user answer.
- * @returns {number}
- * The similarity score between the given solution and answer, ranging from 0 (100% different) to 1 (100% similar).
+ * @returns {number[]}
+ * The similarity scores between the given answer and each path of the given solution,
+ * (the higher the score, the more the solution corresponds to the answer).
  */
-export function matchAgainstAnswer(solution, answer) {
+function matchAgainstAnswer(solution, answer) {
   const solutionMatchingData = getSolutionMatchingData(solution);
 
   const locale = solution.locale;
@@ -487,10 +488,10 @@ export function matchAgainstAnswer(solution, answer) {
   });
 
   if (!solutionMatchingData['paths']) {
-    return 2.0 * sharedIntersectionSize / (sharedCharCount - sharedWordCount);
+    return [ 2.0 * sharedIntersectionSize / (sharedCharCount - sharedWordCount) ];
   }
 
-  const scores = solutionMatchingData['paths'].map(pathMatchingData => {
+  return solutionMatchingData['paths'].map(pathMatchingData => {
     const pathIntersectionSize = answerBigramMap.reduce(
       (size, answerCount, bigram) => size + Math.min(answerCount, pathMatchingData.bigramMap.get(bigram) || 0),
       0
@@ -501,6 +502,61 @@ export function matchAgainstAnswer(solution, answer) {
 
     return 2.0 * (sharedIntersectionSize + pathIntersectionSize) / (totalCharCount - totalWordCount);
   });
+}
 
-  return Math.max.apply(null, scores);
+/**
+ * @param {Solution} solution A solution.
+ * @param {string} answer A user answer.
+ * @returns {number}
+ * The similarity score between the given answer and the given solution
+ * (the higher the score, the more the solution corresponds to the answer).
+ */
+export function getMatchingScoreWithAnswer(solution, answer) {
+  return Math.max.apply(null, matchAgainstAnswer(solution, answer));
+}
+
+/**
+ * @param {Solution} solution A solution.
+ * @param {string} answer A user answer.
+ * @returns {string[]} The reference string(s) from the given solution that best match the given answer.
+ */
+export function getMatchingReferencesWithAnswer(solution, answer) {
+  if (!solution.isComplex) {
+    return [ solution.reference ];
+  }
+
+  const tokenCount = solution.tokens.length;
+
+  if (0 === tokenCount) {
+    return [];
+  }
+
+  const scores = matchAgainstAnswer(solution, answer);
+  const bestScore = lodash.max(scores);
+  const forkSizes = [ solution.tokens[tokenCount - 1].length, 1 ];
+
+  for (let i = tokenCount - 2; i >= 1; i--) {
+    forkSizes.unshift(forkSizes[0] * solution.tokens[i].length);
+  }
+
+  return scores.map((score, index) => {
+    if (score < bestScore) {
+      return null;
+    }
+
+    let pathIndex = index;
+    let reference = '';
+
+    for (let i = 0; i < tokenCount; i++) {
+      if (1 === solution.tokens[i].length) {
+        reference += solution.tokens[i][0];
+      } else {
+        const valueIndex = Math.floor(pathIndex / forkSizes[i]);
+        reference += solution.tokens[i][valueIndex];
+        pathIndex = pathIndex % forkSizes[i];
+      }
+    }
+
+    return reference;
+  }).filter(lodash.isString);
 }
