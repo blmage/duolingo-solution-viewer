@@ -3,6 +3,7 @@ import 'lodash.product';
 import moize from 'moize';
 import { _, it, lift } from 'param.macro';
 import { List, Map } from 'immutable';
+import { isEmptyObject } from './functions';
 
 /**
  * A single vertex from a solution graph.
@@ -171,7 +172,7 @@ function fromGroupedVertices(groupedVertices, startIndex, locale, isWhitespaceDe
   if (
     !groupedVertices[startIndex]
     || !lodash.isPlainObject(groupedVertices[startIndex])
-    || lodash.isEmpty(groupedVertices[startIndex])
+    || isEmptyObject(groupedVertices[startIndex])
   ) {
     return [];
   }

@@ -263,3 +263,17 @@ export function diffStrings(x, y) {
 
   return diffTokens;
 }
+
+/**
+ * @param {object} object A Plain Old Javascript Object.
+ * @returns {boolean} Whether the given object is empty.
+ */
+export function isEmptyObject(object) {
+  for (let key in object) {
+    if (object.hasOwnProperty(key)) {
+      return false;
+    }
+  }
+
+  return true;
+}

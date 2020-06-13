@@ -1,7 +1,7 @@
-import { get, isEmpty, isPlainObject } from 'lodash';
+import { get, isPlainObject } from 'lodash';
 import { it } from 'param.macro';
 import Dexie from 'dexie';
-import { runPromiseForEffects } from './functions';
+import { isEmptyObject, runPromiseForEffects } from './functions';
 
 import {
   ACTION_RESULT_FAILURE,
@@ -190,7 +190,7 @@ database.open().then(() => {
         sendResponse({ type: ACTION_RESULT_FAILURE });
       }
     } else if (ACTION_TYPE_UPDATE_DISCUSSION_CHALLENGES === message.type) {
-      if (isPlainObject(message.value) && !isEmpty(message.value)) {
+      if (isPlainObject(message.value) && !isEmptyObject(message.value)) {
         // Don't make the content script/page script wait for a result it doesn't care about.
         sendResponse({ type: ACTION_RESULT_SUCCESS });
 
