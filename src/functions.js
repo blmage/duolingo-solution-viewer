@@ -1,4 +1,4 @@
-import { fromPairs, get, noop, trim } from 'lodash';
+import { fromPairs, get, isArray, noop, trim } from 'lodash';
 import moize from 'moize';
 import { it } from 'param.macro';
 import Cookies from 'js-cookie';
@@ -262,6 +262,14 @@ export function diffStrings(x, y) {
   }
 
   return diffTokens;
+}
+
+/**
+ * @param {*} value The tested value.
+ * @returns {boolean} Whether the given value is an object. This excludes Arrays, but not Dates or RegExps.
+ */
+export function isObject(value) {
+  return ('object' === typeof value) && !!value && !isArray(value);
 }
 
 /**

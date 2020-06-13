@@ -1,7 +1,7 @@
-import { get, isPlainObject } from 'lodash';
+import { get } from 'lodash';
 import { it } from 'param.macro';
 import Dexie from 'dexie';
-import { isEmptyObject, runPromiseForEffects } from './functions';
+import { isEmptyObject, isObject, runPromiseForEffects } from './functions';
 
 import {
   ACTION_RESULT_FAILURE,
@@ -156,7 +156,7 @@ async function updateDiscussionChallenge(discussionId, challenge) {
 async function getCommentChallenge(commentId) {
   const result = await database[TABLE_COMMENT_CHALLENGES].get(commentId);
 
-  if (isPlainObject(result)) {
+  if (isObject(result)) {
     try {
       await database[TABLE_COMMENT_CHALLENGES].update(
         commentId,
@@ -190,7 +190,7 @@ database.open().then(() => {
         sendResponse({ type: ACTION_RESULT_FAILURE });
       }
     } else if (ACTION_TYPE_UPDATE_DISCUSSION_CHALLENGES === message.type) {
-      if (isPlainObject(message.value) && !isEmptyObject(message.value)) {
+      if (isObject(message.value) && !isEmptyObject(message.value)) {
         // Don't make the content script/page script wait for a result it doesn't care about.
         sendResponse({ type: ACTION_RESULT_SUCCESS });
 

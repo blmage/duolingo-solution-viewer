@@ -1,7 +1,8 @@
 import { h, render } from 'preact';
 import { IntlProvider } from 'preact-i18n';
-import { isArray, isEqual, isFunction, isPlainObject, maxBy, set } from 'lodash';
+import { isArray, isFunction, maxBy, set } from 'lodash';
 import { _, it } from 'param.macro';
+import { isObject } from './functions';
 import { CONTEXT_FORUM } from './components/base';
 import ClosestSolution from './components/ClosestSolution';
 import CorrectedAnswer from './components/CorrectedAnswer';
@@ -74,8 +75,8 @@ let currentListeningChallenges = {};
  * @returns {import('./solutions.js').Solution[]} The corresponding list of solutions.
  */
 function getChallengeSolutions(challenge) {
-  const grader = isPlainObject(challenge.grader) ? challenge.grader : {};
-  const metaData = isPlainObject(challenge.metadata) ? challenge.metadata : {};
+  const grader = isObject(challenge.grader) ? challenge.grader : {};
+  const metaData = isObject(challenge.metadata) ? challenge.metadata : {};
 
   const locale = String(
     challenge.targetLanguage
@@ -94,7 +95,7 @@ function getChallengeSolutions(challenge) {
       return solution.fromWordBankTokens(challenge.correctTokens, locale);
     }
   } else if (
-    isPlainObject(grader)
+    isObject(grader)
     && isArray(grader.vertices)
     && (grader.vertices.length > 0)
   ) {
@@ -179,14 +180,14 @@ XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
   if (url.match(NEW_SESSION_URL_REGEXP)) {
     this.addEventListener('load', () => {
       try {
-        const data = isPlainObject(this.response)
+        const data = isObject(this.response)
           ? this.response
           : JSON.parse(this.responseText);
 
-        if (isPlainObject(data)) {
+        if (isObject(data)) {
           const baseChallenges = isArray(data.challenges) ? data.challenges : [];
           const adaptiveChallenges = isArray(data.adaptiveChallenges) ? data.adaptiveChallenges : [];
-          const metaData = isPlainObject(data.metadata) ? data.metadata : {};
+          const metaData = isObject(data.metadata) ? data.metadata : {};
 
           handleNewChallenges(
             baseChallenges.concat(adaptiveChallenges),
@@ -578,7 +579,7 @@ const FORUM_COMMENT_URL_REGEXP = /forum\.duolingo\.com\/comment\/([\d]+)/;
  * @returns {boolean} Whether the result of the challenge could be handled.
  */
 function handleChallengeResult(challenge, getCorrectionBaseSolution, resultWrapper) {
-  if (isPlainObject(challenge)) {
+  if (isObject(challenge)) {
     const result = resultWrapper.classList.contains(RESULT_WRAPPER_CORRECT_CLASS_NAME)
       ? RESULT_CORRECT
       : RESULT_INCORRECT;

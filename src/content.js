@@ -1,4 +1,5 @@
-import { isPlainObject, isString } from 'lodash';
+import { isString } from 'lodash';
+import { isObject } from './functions';
 
 import {
   ACTION_RESULT_FAILURE,
@@ -43,7 +44,7 @@ async function sendMessageToBackground(type, value) {
 window.addEventListener('message', event => {
   if (
     (event.source === window)
-    && isPlainObject(event.data)
+    && isObject(event.data)
     && (MESSAGE_TYPE_ACTION_REQUEST === event.data.type)
   ) {
     let resultPromise;

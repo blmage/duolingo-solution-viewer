@@ -3,7 +3,7 @@ import 'lodash.product';
 import moize from 'moize';
 import { _, it, lift } from 'param.macro';
 import { List, Map } from 'immutable';
-import { isEmptyObject } from './functions';
+import { isEmptyObject, isObject } from './functions';
 
 /**
  * A single vertex from a solution graph.
@@ -89,7 +89,7 @@ function compareStrings(x, y, locale) {
 /**
  * A memoized version of compareStrings, used to efficiently compare words or small strings, which are a sweet spot
  * for memoization.
- * 
+ *
  * @function
  * @param {string} x A token string.
  * @param {string} y Another token string.
@@ -171,7 +171,7 @@ function prependTokenVertices(vertices, solution, isWhitespaceDelimited) {
 function fromGroupedVertices(groupedVertices, startIndex, locale, isWhitespaceDelimited) {
   if (
     !groupedVertices[startIndex]
-    || !lodash.isPlainObject(groupedVertices[startIndex])
+    || !isObject(groupedVertices[startIndex])
     || isEmptyObject(groupedVertices[startIndex])
   ) {
     return [];
