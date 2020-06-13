@@ -240,22 +240,55 @@ export function normalizeString(string) {
  * @param {string} x A string.
  * @param {string} y Another string.
  * @returns {DiffToken[]|null}
- * A list of tokens representing the similarities and differences between the two given strings (ignoring insignificant
- * punctuation and spaces), or null if they are equivalent.
+ * A list of tokens representing the similarities and differences between the two given strings
+ * (ignoring insignificant punctuation and spaces), or null if they are equivalent.
  */
 export function diffStrings(x, y) {
-  const INSIGNIFICANT_CHARS = '.,;:?¿!¡()" \t\n\r\xA0';
+  const diffTokens = TextDiff.diffChars(normalizeString(x), normalizeString(y))
+    .flatMap(token => {
+      const subTokens = [];
 
-  const diffTokens = TextDiff.diffChars(
-    trim(x.normalize(), INSIGNIFICANT_CHARS),
-    trim(y.normalize(), INSIGNIFICANT_CHARS),
-  );
+      token.added = !!token.added;
+      token.removed = !!token.removed;
 
-  diffTokens.forEach(token => {
-    token.added = !!token.added;
-    token.removed = !!token.removed;
-    token.ignorable = (token.added || token.removed) && (trim(token.value, INSIGNIFICANT_CHARS) === '');
-  });
+      if (token.added || token.removed) {
+        const matches = token.value.match(/(^[.,;:?¿!¡()'"\s]*)(.*?)([.,;:?¿!¡()'"\s]*)$/);
+
+        if (null !== matches) {
+          if ('' !== matches[1]) {
+            subTokens.push({
+              ...token,
+              value: matches[1],
+              count: matches[1].length,
+              ignorable: true,
+            });
+          }
+
+          if ('' !== matches[2]) {
+            subTokens.push({
+              ...token,
+              value: matches[2],
+              count: matches[2].length,
+            });
+          }
+
+          if ('' !== matches[3]) {
+            subTokens.push({
+              ...token,
+              value: matches[3],
+              count: matches[3].length,
+              ignorable: true,
+            });
+          }
+        }
+      }
+
+      if (0 === subTokens.length) {
+        subTokens.push(token);
+      }
+
+      return subTokens;
+    });
 
   if (!diffTokens.some((it.added || it.removed) && !it.ignorable)) {
     return null;
