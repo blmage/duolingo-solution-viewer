@@ -1,6 +1,6 @@
 import { h, render } from 'preact';
 import { IntlProvider } from 'preact-i18n';
-import { isArray, isEqual, isFunction, isPlainObject, maxBy, set, uniqWith } from 'lodash';
+import { isArray, isEqual, isFunction, isPlainObject, maxBy, set } from 'lodash';
 import { _, it } from 'param.macro';
 import { CONTEXT_FORUM } from './components/base';
 import ClosestSolution from './components/ClosestSolution';
@@ -130,7 +130,7 @@ async function handleNewChallenges(newChallenges, fromLanguage, toLanguage) {
       ) {
         currentTranslationChallenges[statement] = {
           statement,
-          solutions: uniqWith(solutions, isEqual),
+          solutions,
           fromLanguage,
           toLanguage
         };
@@ -150,7 +150,7 @@ async function handleNewChallenges(newChallenges, fromLanguage, toLanguage) {
 
         currentListeningChallenges[solutionTranslation] = {
           statement,
-          solutions: uniqWith(solutions, isEqual),
+          solutions,
           fromLanguage,
           toLanguage
         };
