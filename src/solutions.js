@@ -86,6 +86,19 @@ function compareStrings(x, y, locale) {
 }
 
 /**
+ * A memoized version of compareStrings, used to efficiently compare words or small strings, which are a sweet spot
+ * for memoization.
+ * 
+ * @function
+ * @param {string} x A token string.
+ * @param {string} y Another token string.
+ * @param {string} locale The locale to use for the comparison.
+ * @returns {number}
+ * A negative value if x comes before y, a positive value if x comes before y, and 0 if both strings are equivalent.
+ */
+const compareTokenStrings = moize(compareStrings);
+
+/**
  * @param {Vertex[]} vertices A list of vertices taken from a solution graph, and corresponding to a single token.
  * @param {string} locale The locale to use for comparing token strings.
  * @param {boolean} isWhitespaceDelimited Whether tokens are whitespace-delimited.
@@ -108,7 +121,7 @@ function parseTokenVertices(vertices, locale, isWhitespaceDelimited) {
 
   if (values.length > 1) {
     isComplex = true;
-    values = lodash.sortedUniqBy(values.sort(compareStrings(_, _, locale)), it);
+    values = lodash.sortedUniqBy(values.sort(compareTokenStrings(_, _, locale)), it);
     reference = values[0];
   } else {
     isComplex = false;
