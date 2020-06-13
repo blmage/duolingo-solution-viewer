@@ -18,7 +18,7 @@ const database = new Dexie(EXTENSION_CODE);
  * @returns {string} The definition of the compound index based on the given fields.
  */
 function getCompoundIndex(fields) {
-  return `[${  fields.join('+')  }]`;
+  return `[${fields.join('+')}]`;
 }
 
 const TABLE_DISCUSSION_COMMENTS = 'discussion_comments';

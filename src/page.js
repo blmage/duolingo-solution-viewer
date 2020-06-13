@@ -2,7 +2,6 @@ import { h, render } from 'preact';
 import { IntlProvider } from 'preact-i18n';
 import { isArray, isString, maxBy, minBy, set } from 'lodash';
 import { _, it } from 'param.macro';
-import { isObject } from './functions';
 import { CONTEXT_FORUM } from './components/base';
 import ClosestSolution from './components/ClosestSolution';
 import CorrectedAnswer from './components/CorrectedAnswer';
@@ -30,6 +29,7 @@ import {
   discardEvent,
   getUiLocale,
   getUniqueElementId,
+  isObject,
   logError,
   normalizeString,
   querySelectors,

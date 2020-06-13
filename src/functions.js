@@ -1,4 +1,4 @@
-import { fromPairs, get, isArray, noop, trim } from 'lodash';
+import { fromPairs, get, isArray, noop } from 'lodash';
 import moize from 'moize';
 import { it } from 'param.macro';
 import Cookies from 'js-cookie';
@@ -311,7 +311,7 @@ export function isObject(value) {
  */
 export function isEmptyObject(object) {
   for (let key in object) {
-    if (object.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(object, key)) {
       return false;
     }
   }
