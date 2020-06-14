@@ -1,5 +1,7 @@
 import { get } from 'lodash';
 import { it } from 'param.macro';
+import wrapFetchWithRetry from 'fetch-retry';
+import sleep from 'sleep-promise';
 import Dexie from 'dexie';
 import { isEmptyObject, isObject, runPromiseForEffects } from './functions';
 
@@ -59,6 +61,20 @@ function getCurrentAccessAt() {
 }
 
 /**
+ * A wrapper around fetch which retries twice when encountering an error.
+ *
+ * @function
+ * @param {string} url The URL to fetch.
+ * @param {?object} options Optional parameters such as method, headers, etc.
+ * @returns {Promise} A promise for the result of the request.
+ */
+const fetchWithRetry = wrapFetchWithRetry(fetch, {
+  retries: 2,
+  retryDelay: 1500,
+  retryOn: [ 403, 500, 503, 504 ],
+});
+
+/**
  * @param {string} table The table in which to insert/update the value.
  * @param {object} value The value to insert/update in the table.
  * @returns {Promise}
@@ -106,7 +122,14 @@ async function getDiscussionCommentId(discussionId, fromLanguage, toLanguage) {
   const result = await database[TABLE_DISCUSSION_COMMENTS].get(discussionId);
 
   if (!isObject(result)) {
-    const response = await fetch(getDiscussionCommentDataUrl(discussionId, fromLanguage, toLanguage));
+    const response = await fetchWithRetry(
+      getDiscussionCommentDataUrl(
+        discussionId,
+        fromLanguage,
+        toLanguage
+      )
+    );
+
     const data = await response.json();
     const commentId = Number(get(data, [ 'comment', 'id' ]));
 
@@ -199,9 +222,9 @@ database.open().then(() => {
         runPromiseForEffects(
           Promise.all(
             Object.entries(message.value)
-              .map(([ discussionId, challenge ]) =>
-                updateDiscussionChallenge(discussionId, challenge)
-              )
+              .map(([ discussionId, challenge ], index) => {
+                return sleep(4500 * index).then(() => updateDiscussionChallenge(discussionId, challenge));
+              })
           )
         );
       } else {

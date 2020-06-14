@@ -13,6 +13,7 @@
     "aphrodite": "^2.4.0",
     "dexie": "^3.0.1",
     "diff": "^4.0.2",
+    "fetch-retry": "^3.1.0",
     "immutable": "^4.0.0-rc.12",
     "js-cookie": "^2.2.1",
     "lodash": "^4.17.15",
@@ -21,7 +22,8 @@
     "paginator": "^1.0.0",
     "preact": "^10.4.4",
     "preact-i18n": "^2.0.0-preactx.2",
-    "preact-use": "github:blmage/preact-use#master"
+    "preact-use": "github:blmage/preact-use#master",
+    "sleep-promise": "^8.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.10.2",
