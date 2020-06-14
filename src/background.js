@@ -103,9 +103,9 @@ function getDiscussionCommentDataUrl(discussionId, fromLanguage, toLanguage) {
  * @returns {Promise} A promise for the ID of the comment corresponding to the given forum discussion.
  */
 async function getDiscussionCommentId(discussionId, fromLanguage, toLanguage) {
-  let commentId = await database[TABLE_DISCUSSION_COMMENTS].get(discussionId);
+  const result = await database[TABLE_DISCUSSION_COMMENTS].get(discussionId);
 
-  if (!commentId) {
+  if (!isObject(result)) {
     const response = await fetch(getDiscussionCommentDataUrl(discussionId, fromLanguage, toLanguage));
     const data = await response.json();
     const commentId = Number(get(data, [ 'comment', 'id' ]));
@@ -121,6 +121,8 @@ async function getDiscussionCommentId(discussionId, fromLanguage, toLanguage) {
 
     throw new Error(`There is no comment for discussion #${discussionId}.`);
   }
+
+  return result[FIELD_COMMENT_ID];
 }
 
 /**
