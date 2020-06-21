@@ -13,6 +13,7 @@ the **correction of typos** for listening challenges.
 
 * [Download](#download)
 * [Features](#features)
+* [Keyboard shortcuts](#keyboard-shortcuts)
 * [Limitations](#limitations)
 * [Tested courses](#tested-courses)
 * [Contributions](#contributions)
@@ -63,6 +64,17 @@ custom themes such as [Darklingo++](https://userstyles.org/styles/169205/darklin
 
 <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/dark_incorrect_answer_solution_list_modal_error_dark.png" width="500" />
 
+### Keyboard shortcuts
+
+After having submitted an answer to a challenge, use:
+* `s` to open the solution window, 
+* `↑` / `↓` to scroll up / down the window content,
+* `Esc` to close the solution window.
+
+When a list of solutions is available, use:
+* `←` / `→` to navigate through the pages one by one,
+* `Ctrl` + `←` / `→` to go directly to the first / last page.
+
 ### Limitations
 
 * The extension is deeply tied to how the UI components are "named", meaning that significant changes on
@@ -76,9 +88,6 @@ custom themes such as [Darklingo++](https://userstyles.org/styles/169205/darklin
 
 * "Fill in the blank" challenges are based on "normal" translation challenges. The lists of solutions provided for them
   may  therefore include sentences that do not match the blanks.  
-
-* Due to the intrinsic limitations of browser extensions, if a lesson or practice page is accessed directly
-  (either by entering its URL or by refreshing the page), the corresponding lists of solutions won't be available.
 
 ### Tested courses
 
