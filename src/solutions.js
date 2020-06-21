@@ -3,7 +3,8 @@ import 'lodash.product';
 import moize from 'moize';
 import { _, it, lift } from 'param.macro';
 import { List, Map } from 'immutable';
-import { isEmptyObject, isObject } from './functions';
+import TextDiff from 'diff';
+import { compareStrings, isEmptyObject, isObject, normalizeString } from './functions';
 
 /**
  * A single vertex from a solution graph.
@@ -66,24 +67,6 @@ function newMapWith(mutator) {
  */
 function mergeMapsWith(merge, base, ...maps) {
   return (maps.length > 0) ? base.mergeWith(merge, ...maps) : base;
-}
-
-/**
- * Compares two strings using a pre-defined set of collation rules.
- *
- * @param {string} x A string.
- * @param {string} y Another string.
- * @param {string} locale The locale to use for the comparison.
- * @returns {number}
- * A negative value if x comes before y, a positive value if x comes before y, and 0 if both strings are equivalent.
- */
-function compareStrings(x, y, locale) {
-  return x.localeCompare(y, locale, {
-    ignorePunctuation: true,
-    numeric: true,
-    sensitivity: 'accent',
-    usage: 'sort',
-  });
 }
 
 /**
@@ -286,63 +269,6 @@ export function fromWordBankTokens(wordTokens, locale) {
 }
 
 /**
- * @param {Solution} solution A solution.
- * @returns {string} A user-friendly string summarizing the given solution.
- */
-export function toDisplayableString(solution) {
-  return solution.tokens.reduce((result, choices) => {
-    return result + ((1 === choices.length) ? choices[0] : (`[${choices.join(' / ')}]`));
-  }, '');
-}
-
-/**
- * @param {Solution} x A solution.
- * @param {Solution} y Another solution.
- * @returns {number}
- * The result of the alphabetical comparison between the solution references. A negative value if x comes before y,
- * a positive value if x comes after y, and 0 if both solutions have equivalent references.
- */
-export function compareValues(x, y) {
-  let result = compareStrings(x.reference, y.reference, x.locale);
-
-  if (0 === result) {
-    result = y.isComplex - x.isComplex;
-  }
-
-  return result;
-}
-
-/**
- * @param {Solution} x A solution.
- * @param {Solution} y Another solution.
- * @returns {number}
- * The result of the comparison between the similarity scores of the solutions. A negative value if x comes before y,
- * a positive value if x comes after y, and 0 if both solutions are similar.
- */
-export function compareScores(x, y) {
-  const result = (y.score || 0) - (x.score || 0);
-  // Note to self: this is the right order.
-  return (0 !== result) ? result : compareValues(x, y);
-}
-
-/**
- * @param {Solution[]} solutions A set of solutions.
- * @returns {{display: string, plural: number}}
- * An object holding a displayable count and a number usable for pluralization.
- */
-export function getI18nCounts(solutions) {
-  let plural = solutions.length;
-  let display = plural.toString();
-
-  if (solutions.some(!!it.isComplex)) {
-    ++plural;
-    display += '+';
-  }
-
-  return { display, plural };
-}
-
-/**
  * @param {Token} token A solution token.
  * @returns {boolean} Whether the given token is empty.
  */
@@ -520,7 +446,7 @@ export function getMatchingScoreWithAnswer(solution, answer) {
  * @param {string} answer A user answer.
  * @returns {string[]} The reference string(s) from the given solution that best match the given answer.
  */
-export function getMatchingReferencesWithAnswer(solution, answer) {
+export function getBestMatchingReferencesForAnswer(solution, answer) {
   if (!solution.isComplex) {
     return [ solution.reference ];
   }
@@ -559,4 +485,112 @@ export function getMatchingReferencesWithAnswer(solution, answer) {
 
     return reference;
   }).filter(lodash.isString);
+}
+
+/**
+ * @typedef {object} DiffToken
+ * @property {string} value The value of the token.
+ * @property {number} count The length of the token.
+ * @property {boolean} added Whether the token was added in the right string.
+ * @property {boolean} removed Whether the token was removed in the right string.
+ * @property {boolean} ignorable Whether the token is part of a change, but is not significant.
+ */
+
+/**
+ * @param {string} reference A solution reference.
+ * @param {string} answer A user answer.
+ * @returns {DiffToken[]|null}
+ * A list of tokens representing the similarities and differences between the two given values
+ * (ignoring case, insignificant punctuation marks and spaces), or null if they can be considered equivalent.
+ */
+export function diffReferenceWithAnswer(reference, answer) {
+  const diffTokens = TextDiff.diffChars(
+    normalizeString(reference).toLowerCase(),
+    normalizeString(answer).toLowerCase()
+  ).flatMap(token => {
+    // First run to mark punctuation and space differences as ignorable. 
+    const subTokens = [];
+
+    token.added = !!token.added;
+    token.removed = !!token.removed;
+
+    if (token.added || token.removed) {
+      const matches = [ ...token.value.matchAll(/[.,;:?¿!¡()'"\s]+/g) ];
+
+      const lastIndex = matches.reduce((index, match) => {
+        if (match.index > index) {
+          subTokens.push({
+            added: token.added,
+            removed: token.removed,
+            value: token.value.substring(index, match.index),
+            count: match.index - index,
+          });
+        }
+
+        subTokens.push({
+          added: token.added,
+          removed: token.removed,
+          ignorable: true,
+          value: match[0],
+          count: match[0].length,
+        });
+
+        return match.index + match[0].length;
+      }, 0);
+
+      if ((lastIndex > 0) && (lastIndex < token.value.length)) {
+        subTokens.push({
+          added: token.added,
+          removed: token.removed,
+          value: token.value.substring(lastIndex, token.length),
+          count: token.value.length - lastIndex,
+        });
+      }
+    }
+
+    if (0 === subTokens.length) {
+      subTokens.push(token);
+    }
+
+    return subTokens;
+  });
+
+  if (!diffTokens.some((it.added || it.removed) && !it.ignorable)) {
+    return null;
+  }
+
+  // Second run to find and keep case differences, but mark them as ignorable.
+  const { result } = diffTokens.reduce(({ result, left, right }, token) => {
+    if (token.added) {
+      result.push(token);
+      return { result, left, right: right.substring(token.value.length) };
+    } else if (token.removed) {
+      result.push(token);
+      return { result, right, left: left.substring(token.value.length) };
+    }
+
+    const subLeft = left.substring(0, token.value.length);
+    const subRight = right.substring(0, token.value.length);
+
+    const subTokens = TextDiff.diffChars(subLeft, subRight)
+
+    subTokens.forEach(subToken => {
+      subToken.added = !!subToken.added;
+      subToken.removed = !!subToken.removed;
+
+      if (subToken.added || subToken.removed) {
+        subToken.ignorable = true;
+      }
+    });
+
+    result.push(...subTokens);
+
+    return {
+      result,
+      left: left.substring(token.value.length),
+      right: right.substring(token.value.length)
+    };
+  }, { result: [], left: reference, right: answer });
+
+  return result;
 }

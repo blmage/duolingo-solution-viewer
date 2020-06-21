@@ -3,9 +3,61 @@ import { IntlProvider, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import moize from 'moize';
 import { CONTEXT_CHALLENGE, CONTEXT_FORUM, useStyles } from './base';
+import Loader from './Loader';
 import { RESULT_CORRECT, RESULT_INCORRECT, DEFAULT_RESULT_COLORS, RESULT_NONE } from '../constants';
-import { discardEvent, getSolutionIconCssUrl, getStylesByClassNames } from '../functions';
-import * as solution from '../solutions';
+
+import {
+  discardEvent,
+  getSolutionsI18nCounts,
+  getSolutionIconCssUrl,
+  getStylesByClassNames,
+} from '../functions';
+
+const SolutionLink =
+  ({
+     context = CONTEXT_CHALLENGE,
+     result = RESULT_NONE,
+     isLoading = false,
+     solutions = [],
+     onClick = discardEvent,
+   }) => {
+    const STYLE_SHEETS = Object.assign({}, BASE_STYLE_SHEETS, (CONTEXT_FORUM === context)
+      ? {}
+      : {
+        [RESULT_CORRECT]: getChallengeResultStyleSheet(RESULT_CORRECT),
+        [RESULT_INCORRECT]: getChallengeResultStyleSheet(RESULT_INCORRECT),
+      }
+    );
+
+    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context, result ]);
+
+    if (!isLoading && (0 === solutions.length)) {
+      return null;
+    }
+
+    const counts = getSolutionsI18nCounts(solutions);
+
+    return (
+      <IntlProvider scope="solution_link">
+        {isLoading ? (
+          <div className={getElementClassNames(WRAPPER)}>
+            <Loader />
+          </div>
+        ) : (
+          <a className={getElementClassNames(WRAPPER)} onClick={onClick}>
+            <div className={getElementClassNames(ICON)} />
+            <span className={getElementClassNames(TITLE)}>
+              <Text id="label" plural={counts.plural} fields={{ count: counts.display }}>
+                Solutions ({counts.display})
+              </Text>
+            </span>
+          </a>
+        )}
+      </IntlProvider>
+    );
+  };
+
+export default SolutionLink;
 
 const WRAPPER = 'wrapper';
 const ICON = 'icon';
@@ -44,7 +96,7 @@ const BASE_STYLE_SHEETS = {
 
 /**
  * @function
- * @param {symbol} result A result type.
+ * @param {string} result A result type.
  * @returns {object} The corresponding stylesheet applicable on a challenge page.
  */
 const getChallengeResultStyleSheet = moize(
@@ -77,42 +129,3 @@ const getChallengeResultStyleSheet = moize(
     });
   }
 );
-
-const SolutionListLink =
-  ({
-     solutions = [],
-     result = RESULT_NONE,
-     context = CONTEXT_CHALLENGE,
-     onClick = discardEvent,
-   }) => {
-    const STYLE_SHEETS = Object.assign({}, BASE_STYLE_SHEETS, (CONTEXT_FORUM === context)
-      ? {}
-      : {
-        [RESULT_CORRECT]: getChallengeResultStyleSheet(RESULT_CORRECT),
-        [RESULT_INCORRECT]: getChallengeResultStyleSheet(RESULT_INCORRECT),
-      }
-    );
-
-    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context, result ]);
-
-    if (0 === solutions.length) {
-      return null;
-    }
-
-    const counts = solution.getI18nCounts(solutions);
-
-    return (
-      <IntlProvider scope="solution.list.link">
-        <a className={getElementClassNames(WRAPPER)} onClick={onClick}>
-          <div className={getElementClassNames(ICON)} />
-          <span className={getElementClassNames(TITLE)}>
-            <Text id="label" plural={counts.plural} fields={{ count: counts.display }}>
-              Solutions ({counts.display})
-            </Text>
-          </span>
-        </a>
-      </IntlProvider>
-    );
-  };
-
-export default SolutionListLink;

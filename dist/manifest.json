@@ -1,6 +1,6 @@
 {
   "name": "Duolingo Solution Viewer",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "Provides access to the complete lists of accepted solutions for Duolingo's translation / listening challenges.",
   "permissions": [
     "activeTab",
@@ -19,7 +19,8 @@
     }
   ],
   "web_accessible_resources": [
-    "src/page.js",
+    "src/observer.js",
+    "src/ui.js",
     "assets/icon_solution.svg"
   ],
   "icons": {

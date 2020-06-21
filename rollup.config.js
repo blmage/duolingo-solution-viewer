@@ -7,7 +7,12 @@ import { terser } from 'rollup-plugin-terser';
 
 const { PRODUCTION } = process.env;
 
-const sources = [ 'background', 'content', 'page' ];
+const sources = [
+  'background',
+  'content',
+  'observer',
+  'ui',
+];
 
 const plugins = [
   babel({
@@ -37,10 +42,11 @@ if (PRODUCTION) {
   plugins.push(terser({
     // Preserve the names of the components, which are used for various purposes.
     keep_fnames: new RegExp([
+      'ChallengeSolutions',
       'ClosestSolution',
       'CorrectedAnswer',
-      'SolutionListLink',
-      'SolutionListModal',
+      'SolutionLink',
+      'SolutionList',
     ].join('|'))
   }));
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'preact/hooks';
 import { useLocalStorage as useRawLocalStorage, useStateList } from 'preact-use';
+import { isArray } from 'lodash';
 import { css } from 'aphrodite';
 import { EXTENSION_PREFIX } from '../constants';
 
@@ -31,31 +32,36 @@ export const CONTEXT_FORUM = Symbol('forum');
  * @param {object} classNames Some nested maps from state and element keys to class names.
  * @param {object} styleSheets Some nested maps from state and element keys to style sheets.
  * @param {(string|symbol)[]} stateKeys A list of keys describing the current component state.
- * @returns {Function} A function which, given an element key, returns a list of the current corresponding class names.
+ * @returns {Function}
+ * A function which, given one or more element keys, returns a list of the current corresponding class names.
  */
 export const useStyles = (classNames, styleSheets = {}, stateKeys = []) => {
-  return useCallback(elementKey => {
-    const allClassNames = [];
+  return useCallback(elementKeys => {
+    const keys = isArray(elementKeys) ? elementKeys : [ elementKeys ];
 
-    if (styleSheets[BASE] && styleSheets[BASE][elementKey]) {
-      allClassNames.push(css(styleSheets[BASE][elementKey]));
-    }
+    return keys.flatMap(elementKey => {
+      const allClassNames = [];
 
-    if (classNames[BASE] && classNames[BASE][elementKey]) {
-      allClassNames.push(...classNames[BASE][elementKey]);
-    }
-
-    stateKeys.forEach(stateKey => {
-      if (stateKey && styleSheets[stateKey] && styleSheets[stateKey][elementKey]) {
-        allClassNames.push(css(styleSheets[stateKey][elementKey]));
+      if (styleSheets[BASE] && styleSheets[BASE][elementKey]) {
+        allClassNames.push(css(styleSheets[BASE][elementKey]));
       }
 
-      if (stateKey && classNames[stateKey] && classNames[stateKey][elementKey]) {
-        allClassNames.push(...classNames[stateKey][elementKey]);
+      if (classNames[BASE] && classNames[BASE][elementKey]) {
+        allClassNames.push(...classNames[BASE][elementKey]);
       }
-    });
 
-    return allClassNames.join(' ');
+      stateKeys.forEach(stateKey => {
+        if (stateKey && styleSheets[stateKey] && styleSheets[stateKey][elementKey]) {
+          allClassNames.push(css(styleSheets[stateKey][elementKey]));
+        }
+
+        if (stateKey && classNames[stateKey] && classNames[stateKey][elementKey]) {
+          allClassNames.push(...classNames[stateKey][elementKey]);
+        }
+      });
+
+      return allClassNames;
+    }).join(' ')
   }, stateKeys.concat([ classNames, styleSheets ])); // eslint-disable-line react-hooks/exhaustive-deps
 };
 

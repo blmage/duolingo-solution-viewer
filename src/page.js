@@ -1,218 +1,50 @@
 import { h, render } from 'preact';
 import { IntlProvider } from 'preact-i18n';
-import { isArray, isString, maxBy, minBy, set } from 'lodash';
-import { _, it } from 'param.macro';
-import { CONTEXT_FORUM } from './components/base';
+import { isArray, maxBy } from 'lodash';
+import sleep from 'sleep-promise';
+import { CONTEXT_CHALLENGE, CONTEXT_FORUM } from './components/base';
+import ChallengeSolutions from './components/ChallengeSolutions';
 import ClosestSolution from './components/ClosestSolution';
 import CorrectedAnswer from './components/CorrectedAnswer';
-import SolutionList from './components/SolutionList';
-import SolutionListLink from './components/SolutionListLink';
-import SolutionListModal from './components/SolutionListModal';
+import Modal from './components/Modal';
+import SolutionLink from './components/SolutionLink';
 
 import {
-  ACTION_TYPE_GET_COMMENT_CHALLENGE,
-  ACTION_TYPE_UPDATE_DISCUSSION_CHALLENGES,
-  EXTENSION_PREFIX,
-  LISTENING_CHALLENGE_TYPES,
-  NAMING_CHALLENGE_TYPES,
-  RESULT_CORRECT,
-  RESULT_INCORRECT,
-  TRANSLATION_CHALLENGE_TYPES,
-  WORD_BANK_CHALLENGE_TYPES,
-} from './constants';
-
-import * as solution from './solutions';
-
-import {
-  runPromiseForEffects,
-  diffStrings,
   discardEvent,
+  getSolutionDisplayableString,
   getUiLocale,
   getUniqueElementId,
+  isInputFocused,
   isObject,
   logError,
-  normalizeString,
   querySelectors,
   sendActionRequestToContentScript,
   toggleElement,
 } from './functions';
 
+import {
+  ACTION_TYPE_GET_COMMENT_CHALLENGE,
+  ACTION_TYPE_GET_CURRENT_LISTENING_CHALLENGE,
+  ACTION_TYPE_GET_CURRENT_TRANSLATION_CHALLENGE, ACTION_TYPE_MATCH_CHALLENGE_WITH_USER_ANSWER,
+  ACTION_TYPE_UPDATE_COMMENT_USER_REFERENCE,
+  EMPTY_CHALLENGE,
+  EXTENSION_PREFIX,
+  FORUM_COMMENT_URL_REGEXP,
+  LISTENING_CHALLENGE_TYPES,
+  RESULT_CORRECT,
+  RESULT_INCORRECT,
+  TRANSLATION_CHALLENGE_TYPES,
+} from './constants';
+
 import { getTranslations } from './translations';
 
 /**
- * A translation challenge.
+ * A minimum loading delay for the action requests to the background script.
+ * This is an attempt at avoiding flashes of contents while providing a consistent feedback to the user.
  *
- * @typedef {object} Challenge
- * @property {string} statement The sentence to translate/recognize.
- * @property {import('./solutions.js').Solution[]} solutions The accepted translations.
- * @property {string} fromLanguage The language the user speaks.
- * @property {string} toLanguage The language the user learns.
+ * @type {number}
  */
-
-/**
- * The translation challenges of the current practice session, arranged by statements.
- *
- * @type {object.<string, Challenge>}
- */
-let currentTranslationChallenges = {};
-
-/**
- * The naming challenges of the current practice session, arranged by statements.
- *
- * @type {Array<Challenge>}
- */
-let currentNamingChallenges = [];
-
-/**
- * The listening challenges of the current practice session, arranged by translations.
- *
- * @type {object.<string, Challenge>}
- */
-let currentListeningChallenges = {};
-
-/**
- * @param {object} challenge A challenge.
- * @returns {import('./solutions.js').Solution[]} The corresponding list of solutions.
- */
-function getChallengeSolutions(challenge) {
-  const grader = isObject(challenge.grader) ? challenge.grader : {};
-  const metaData = isObject(challenge.metadata) ? challenge.metadata : {};
-
-  const locale = String(
-    challenge.targetLanguage
-    || grader.language
-    || metaData.target_language
-    || metaData.language
-    || ''
-  ).trim() || getUiLocale();
-
-  if (NAMING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0) {
-    if (isArray(challenge.correctSolutions)) {
-      return solution.fromSentences(challenge.correctSolutions, locale);
-    }
-  }
-
-  if (
-    isObject(grader)
-    && isArray(grader.vertices)
-    && (grader.vertices.length > 0)
-  ) {
-    return solution.fromVertices(grader.vertices, locale, !!grader.whitespaceDelimited);
-  }
-
-  if (LISTENING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0) {
-    if (isString(challenge.prompt)) {
-      return solution.fromSentences([ challenge.prompt ], locale);
-    }
-  }
-
-  if (WORD_BANK_CHALLENGE_TYPES.indexOf(challenge.type) >= 0) {
-    if (isArray(challenge.correctTokens)) {
-      return solution.fromWordBankTokens(challenge.correctTokens, locale);
-    }
-  }
-
-  return [];
-}
-
-/**
- * Prepares the different challenges for a freshly started practice session.
- *
- * @param {Array} newChallenges A set of raw challenge data.
- * @param {string} fromLanguage The language the user speaks.
- * @param {string} toLanguage The language the user learns.
- */
-async function handleNewChallenges(newChallenges, fromLanguage, toLanguage) {
-  currentTranslationChallenges = {};
-  currentNamingChallenges = [];
-  currentListeningChallenges = {};
-  const discussionChallenges = {};
-
-  newChallenges.forEach(challenge => {
-    const solutions = getChallengeSolutions(challenge);
-
-    if (solutions.length > 0) {
-      const statement = normalizeString(String(challenge.prompt || '')).trim();
-      const discussionId = String(challenge.sentenceDiscussionId || '').trim();
-
-      if (
-        ('' !== statement)
-        && (TRANSLATION_CHALLENGE_TYPES.indexOf(challenge.type) >= 0)
-      ) {
-        currentTranslationChallenges[statement] = {
-          statement,
-          solutions,
-          fromLanguage,
-          toLanguage
-        };
-
-        if (NAMING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0) {
-          currentNamingChallenges.push(currentTranslationChallenges[statement]);
-        }
-
-        if ('' !== discussionId) {
-          discussionChallenges[discussionId] = currentTranslationChallenges[statement];
-        }
-      } else if (
-        (LISTENING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0)
-        && ('' !== String(challenge.solutionTranslation || '').trim())
-      ) {
-        const solutionTranslation = normalizeString(String(challenge.solutionTranslation)).trim();
-
-        currentListeningChallenges[solutionTranslation] = {
-          statement,
-          solutions,
-          fromLanguage,
-          toLanguage
-        };
-      }
-    }
-  });
-
-  runPromiseForEffects(
-    sendActionRequestToContentScript(
-      ACTION_TYPE_UPDATE_DISCUSSION_CHALLENGES,
-      discussionChallenges
-    )
-  );
-}
-
-/**
- * A RegExp for the URL that is used by Duolingo to start a new practice session.
- *
- * @type {RegExp}
- */
-const NEW_SESSION_URL_REGEXP = /\/[\d]{4}-[\d]{2}-[\d]{2}\/sessions/g;
-
-const originalRequestOpen = XMLHttpRequest.prototype.open;
-
-XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
-  if (url.match(NEW_SESSION_URL_REGEXP)) {
-    this.addEventListener('load', () => {
-      try {
-        const data = isObject(this.response)
-          ? this.response
-          : JSON.parse(this.responseText);
-
-        if (isObject(data)) {
-          const baseChallenges = isArray(data.challenges) ? data.challenges : [];
-          const adaptiveChallenges = isArray(data.adaptiveChallenges) ? data.adaptiveChallenges : [];
-          const metaData = isObject(data.metadata) ? data.metadata : {};
-
-          handleNewChallenges(
-            baseChallenges.concat(adaptiveChallenges),
-            String(metaData.ui_language || metaData.from_language || data.fromLanguage || '').trim() || getUiLocale(),
-            String(metaData.language || data.learningLanguage || '').trim()
-          );
-        }
-      } catch (error) {
-        logError(error, 'Could not prepare the translation challenges for the new practice session: ');
-      }
-    });
-  }
-
-  return originalRequestOpen.call(this, method, url, async, user, password);
-};
+const MINIMUM_LOADING_DELAY = 300;
 
 /**
  * A CSS selector for the wrapper of the current translation challenge.
@@ -270,7 +102,7 @@ const CHALLENGE_STATEMENT_HINT_SELECTOR = '[data-test="hint-popover"]';
  *
  * @type {string}
  */
-const CHALLENGE_TRANSLATED_SOLUTION_SELECTOR = '.vpbSG > *:last-child > .TnCw3';
+const CHALLENGE_SOLUTION_TRANSLATION_SELECTOR = '.vpbSG > *:last-child > .TnCw3';
 
 /**
  * A CSS selector for all the different kinds of answer input which are not based on the word bank.
@@ -363,8 +195,8 @@ function getComponentWrapper(component, parentElement) {
 }
 
 /**
- * @param {import('./solutions.js').Solution} closestSolution A solution that came closest to a user answer.
- * @param {symbol} result The result of the corresponding challenge.
+ * @param {import('./solutions.js').Solution} closestSolution A solution that is closest to a user answer.
+ * @param {string} result The result of the corresponding challenge.
  */
 function renderChallengeClosestSolution(closestSolution, result) {
   try {
@@ -373,7 +205,7 @@ function renderChallengeClosestSolution(closestSolution, result) {
     if (solutionWrapper) {
       render(
         <IntlProvider definition={getTranslations(getUiLocale())}>
-          <ClosestSolution solution={solution.toDisplayableString(closestSolution)} result={result} />
+          <ClosestSolution solution={getSolutionDisplayableString(closestSolution)} result={result} />
         </IntlProvider>,
         getComponentWrapper(ClosestSolution, solutionWrapper)
       );
@@ -386,18 +218,18 @@ function renderChallengeClosestSolution(closestSolution, result) {
 }
 
 /**
- * @param {import('./functions.js').Token} diffTokens
+ * @param {import('./solutions.js').DiffToken[]} correctionDiff
  * A list of tokens representing the similarities and differences between a user answer and a solution.
- * @param {symbol} result The result of the corresponding challenge.
+ * @param {string} result The result of the corresponding challenge.
  */
-function renderChallengeCorrectedAnswer(diffTokens, result) {
+function renderChallengeCorrectedAnswer(correctionDiff, result) {
   try {
     const solutionWrapper = document.querySelector(CHALLENGE_SOLUTION_WRAPPER_SELECTOR);
 
     if (solutionWrapper) {
       render(
         <IntlProvider definition={getTranslations(getUiLocale())}>
-          <CorrectedAnswer diffTokens={diffTokens} result={result} />
+          <CorrectedAnswer diffTokens={correctionDiff} result={result} />
         </IntlProvider>,
         getComponentWrapper(CorrectedAnswer, solutionWrapper)
       );
@@ -417,29 +249,94 @@ function renderChallengeCorrectedAnswer(diffTokens, result) {
 let isSolutionListModalDisplayed = false;
 
 /**
- * @param {Challenge} challenge A challenge.
- * @param {string} userAnswer The user's answer to the challenge.
+ * @param {string} result The result of the challenge.
  */
-function renderChallengeSolutionListModal(challenge, userAnswer = '') {
+function renderChallengeSolutionLoader(result) {
+  try {
+    const actionLinkList = document.querySelector(CHALLENGE_ACTION_LINK_LIST_SELECTOR);
+
+    if (actionLinkList) {
+      render(
+        <IntlProvider definition={getTranslations(getUiLocale())}>
+          <SolutionLink result={result} isLoading={true} />
+        </IntlProvider>,
+        getComponentWrapper(SolutionLink, actionLinkList)
+      );
+    } else {
+      throw new Error('Could not find the action link list element.');
+    }
+  } catch (error) {
+    logError(error, 'Could not render the solution list loader: ');
+  }
+}
+
+/**
+ * @param {import('./background.js').Challenge} challenge A challenge.
+ * @param {string} result The result of the challenge.
+ * @param {string} userAnswer The answer given by the user.
+ */
+function renderChallengeSolutionModal(challenge, result, userAnswer) {
   try {
     if (isSolutionListModalDisplayed) {
       return;
     }
 
-    // Use a unique key to always reopen the modal.
-    const modalKey = new Date().getTime().toString();
     isSolutionListModalDisplayed = true;
+    const currentResultWrapper = resultWrapper;
+    const modalKey = new Date().getTime().toString();
+
+    const updateUserAnswer = async newAnswer => {
+      try {
+        renderChallengeSolutionLoader(result);
+        await sleep(MINIMUM_LOADING_DELAY);
+
+        const data = challenge.commentId
+          ? (
+            await sendActionRequestToContentScript(
+              ACTION_TYPE_UPDATE_COMMENT_USER_REFERENCE,
+              {
+                userReference: newAnswer,
+                commentId: challenge.commentId,
+              }
+            )
+          ) : (
+            await sendActionRequestToContentScript(
+              ACTION_TYPE_MATCH_CHALLENGE_WITH_USER_ANSWER,
+              {
+                challenge,
+                userAnswer: newAnswer,
+              }
+            )
+          );
+
+        if (
+          isObject(data)
+          && isObject(data.challenge)
+          && (currentResultWrapper === resultWrapper)
+        ) {
+          renderChallengeSolutionLink(data.challenge, result, newAnswer);
+          return data.challenge.solutions || [];
+        }
+      } catch (error) {
+        renderChallengeSolutionLink(challenge, result, userAnswer);
+        error && logError(error, 'Could not update the user answer: ');
+      }
+    }
+
+    const onModalClose = () => {
+      isSolutionListModalDisplayed = false;
+    };
 
     render(
       <IntlProvider definition={getTranslations(getUiLocale())}>
-        <SolutionListModal key={modalKey}
-                           {...challenge}
-                           userAnswer={userAnswer}
-                           onClose={() => {
-                             isSolutionListModalDisplayed = false;
-                           }} />
+        <Modal key={modalKey} onClose={onModalClose}>
+          <ChallengeSolutions context={CONTEXT_CHALLENGE}
+                              {...challenge}
+                              userReference={userAnswer}
+                              onUserReferenceUpdate={updateUserAnswer} />
+        </Modal>
       </IntlProvider>,
-      getComponentWrapper(SolutionListModal, document.body)
+      getComponentWrapper(Modal, document.body)
     );
   } catch (error) {
     logError(error, 'Could not render the solution list modal: ');
@@ -447,22 +344,22 @@ function renderChallengeSolutionListModal(challenge, userAnswer = '') {
 }
 
 /**
- * @param {Challenge} challenge A challenge.
- * @param {symbol} result The result of the challenge.
- * @param {string} userAnswer The user's answer to the challenge.
+ * @param {import('./background.js').Challenge} challenge A challenge.
+ * @param {string} result The result of the challenge.
+ * @param {string} userAnswer The answer given by the user.
  */
-function renderChallengeSolutionListLink(challenge, result, userAnswer) {
+function renderChallengeSolutionLink(challenge, result, userAnswer) {
   try {
     const actionLinkList = document.querySelector(CHALLENGE_ACTION_LINK_LIST_SELECTOR);
 
     if (actionLinkList) {
       render(
         <IntlProvider definition={getTranslations(getUiLocale())}>
-          <SolutionListLink result={result}
-                            solutions={challenge.solutions}
-                            onClick={() => renderChallengeSolutionListModal(challenge, userAnswer)} />
+          <SolutionLink result={result}
+                        solutions={challenge.solutions}
+                        onClick={() => renderChallengeSolutionModal(challenge, result, userAnswer)} />
         </IntlProvider>,
-        getComponentWrapper(SolutionListLink, actionLinkList)
+        getComponentWrapper(SolutionLink, actionLinkList)
       );
     } else {
       throw new Error('Could not find the action link list element.');
@@ -473,47 +370,72 @@ function renderChallengeSolutionListLink(challenge, result, userAnswer) {
 }
 
 /**
- * @param {Challenge} challenge A translation challenge.
+ * @param {number} commentId The ID of a forum comment.
+ * @param {import('./background.js').Challenge} challenge A challenge.
+ * @param {string} userReference The reference answer from the user.
  */
-function renderForumSolutionList(challenge) {
+function renderForumCommentChallenge(commentId, challenge, userReference = '') {
   try {
     if (forumOpWrapper && forumOpWrapper.isConnected) {
       const actionLinkList = document.querySelector(FORUM_OP_ACTION_LINK_LIST_SELECTOR);
 
       if (actionLinkList) {
-        const solutionListWrapper = getComponentWrapper(SolutionList, forumOpWrapper)
+        const challengeWrapper = getComponentWrapper(ChallengeSolutions, forumOpWrapper)
 
-        const toggleSolutionList = () => {
-          toggleElement(solutionListWrapper);
-        };
+        if (0 === challengeWrapper.childNodes.length) {
+          // Hide the challenge on the initial rendering.
+          toggleElement(challengeWrapper, false);
+        }
 
-        const scrollToSolutionList = () => {
+        const updateUserReference = async newReference => {
+          try {
+            await sleep(MINIMUM_LOADING_DELAY);
+
+            const data = await sendActionRequestToContentScript(
+              ACTION_TYPE_UPDATE_COMMENT_USER_REFERENCE,
+              {
+                commentId,
+                userReference: newReference,
+              }
+            );
+
+            if (
+              isObject(data)
+              && isObject(data.challenge)
+              && (commentId === forumCommentId)
+            ) {
+              forumCommentData = data;
+              return data.challenge.solutions || [];
+            }
+          } catch (error) {
+            error && logError(error, 'Could not update the user reference: ');
+          }
+        }
+
+        const getScrollOffset = () => {
           const pageHeader = document.querySelector(FORUM_FIXED_PAGE_HEADER_SELECTOR);
-
-          window.scrollTo({
-            behavior: 'smooth',
-            top: solutionListWrapper.offsetTop - (pageHeader ? pageHeader.clientHeight : 0) - 10,
-          });
+          return pageHeader ? pageHeader.clientHeight : 0;
         };
-
-        toggleSolutionList();
 
         render(
           <IntlProvider definition={getTranslations(getUiLocale() || challenge.fromLanguage)}>
-            <SolutionList context={CONTEXT_FORUM}
-                          solutions={challenge.solutions}
-                          onPageChange={scrollToSolutionList} />
+            <ChallengeSolutions key={`forum-challenge-${commentId}`}
+                                context={CONTEXT_FORUM}
+                                solutions={challenge.solutions}
+                                userReference={userReference}
+                                onUserReferenceUpdate={updateUserReference}
+                                getScrollOffset={getScrollOffset} />
           </IntlProvider>,
-          solutionListWrapper
+          challengeWrapper
         );
 
         render(
           <IntlProvider definition={getTranslations(getUiLocale())}>
-            <SolutionListLink context={CONTEXT_FORUM}
-                              solutions={challenge.solutions}
-                              onClick={toggleSolutionList} />
+            <SolutionLink context={CONTEXT_FORUM}
+                          solutions={challenge.solutions}
+                          onClick={() => toggleElement(challengeWrapper)} />
           </IntlProvider>,
-          getComponentWrapper(SolutionListLink, actionLinkList)
+          getComponentWrapper(SolutionLink, actionLinkList)
         );
       } else {
         throw new Error('Could not find the action link list element.');
@@ -532,14 +454,14 @@ function renderForumSolutionList(challenge) {
 let documentLocation = null;
 
 /**
- * The last seen challenge footer element.
+ * The last seen footer element on a challenge screen.
  *
  * @type {Element|null}
  */
 let challengeFooter = null;
 
 /**
- * The last seen result wrapper element.
+ * The last seen wrapping element for a challenge result.
  *
  * @type {Element|null}
  */
@@ -553,6 +475,13 @@ let resultWrapper = null;
 let completedChallenge = null;
 
 /**
+ * The last seen wrapping element of an original post in a forum discussion.
+ *
+ * @type {Element|null}
+ */
+let forumOpWrapper = null;
+
+/**
  * The ID of the forum comment that is currently being displayed, if any.
  *
  * @type {number|null}
@@ -560,98 +489,71 @@ let completedChallenge = null;
 let forumCommentId = null;
 
 /**
- * The challenge discussed by the forum comment that is currently being displayed, if any.
+ * Some data about the challenge discussed by the forum comment that is currently being displayed.
  *
- * @type {Challenge|null}
+ * @type {object|null}
  */
-let forumCommentChallenge = null;
+let forumCommentData = null;
 
 /**
- * The last seen wrapper of an original post in a forum discussion.
- *
- * @type {Element|null}
+ * @returns {string} The current user answer.
  */
-let forumOpWrapper = null;
+function getUserAnswer() {
+  const answerInput = document.querySelector(ANSWER_INPUT_SELECTOR);
+  let userAnswer = (answerInput && answerInput.value && String(answerInput.value).trim()) || '';
 
-/**
- * A RegExp for the URLs of forum comments.
- *
- * @type {RegExp}
- */
-const FORUM_COMMENT_URL_REGEXP = /forum\.duolingo\.com\/comment\/([\d]+)/;
+  if ('' === userAnswer) {
+    const tokenContainer = document.querySelector(ANSWER_SELECTED_TOKEN_CONTAINER_SELECTOR)
 
-/**
- * @param {object} challenge A challenge.
- * @param {boolean} showCorrectedAnswer Whether the corrected version of the user answer should be shown, if relevant.
- * @param {Element} resultWrapper The UI result wrapper.
- * @returns {boolean} Whether the result of the challenge could be handled.
- */
-function handleChallengeResult(challenge, showCorrectedAnswer, resultWrapper) {
-  if (isObject(challenge)) {
-    const result = resultWrapper.classList.contains(RESULT_WRAPPER_CORRECT_CLASS_NAME)
-      ? RESULT_CORRECT
-      : RESULT_INCORRECT;
-
-    const answerInput = document.querySelector(ANSWER_INPUT_SELECTOR);
-    let userAnswer = (answerInput && answerInput.value && String(answerInput.value).trim()) || '';
-
-    if ('' === userAnswer) {
-      const tokenContainer = document.querySelector(ANSWER_SELECTED_TOKEN_CONTAINER_SELECTOR)
-
-      if (tokenContainer) {
-        const tokens = Array.from(tokenContainer.querySelectorAll(ANSWER_SELECTED_TOKEN_SELECTOR));
-        userAnswer = tokens.map(token => token.innerText.trim()).join(' ').normalize().trim();
-      }
+    if (tokenContainer) {
+      const tokens = Array.from(tokenContainer.querySelectorAll(ANSWER_SELECTED_TOKEN_SELECTOR));
+      userAnswer = tokens.map(token => token.innerText.trim()).join(' ').normalize().trim();
     }
-
-    if ('' === userAnswer) {
-      challenge.solutions.forEach(set(_, 'score', 0));
-    } else {
-      challenge.solutions.forEach(item => set(
-        item,
-        'score',
-        solution.getMatchingScoreWithAnswer(item, userAnswer)
-      ));
-    }
-
-    completedChallenge = { challenge, result, userAnswer };
-
-    if (userAnswer) {
-      if (RESULT_INCORRECT === result) {
-        if (challenge.solutions.length > 1) {
-          renderChallengeClosestSolution(maxBy(challenge.solutions, 'score'), result);
-        }
-      } else if (showCorrectedAnswer) {
-        const bestScore = maxBy(challenge.solutions, 'score').score;
-
-        const diffTokens = minBy(
-          challenge.solutions
-            .filter(it.score === bestScore)
-            .flatMap(solution.getMatchingReferencesWithAnswer(_, userAnswer))
-            .map(diffStrings(_, userAnswer))
-            .filter(isArray),
-          it.length
-        );
-
-        if (isArray(diffTokens)) {
-          renderChallengeCorrectedAnswer(diffTokens, result);
-        }
-      }
-    }
-
-    renderChallengeSolutionListLink(challenge, result, userAnswer);
-
-    return true;
   }
 
-  return false;
+  return userAnswer;
 }
 
 /**
- * @param {Element} resultWrapper The UI result wrapper.
- * @returns {boolean} Whether the result of a translation challenge could be handled.
+ * @param {object} challenge A challenge.
+ * @param {string} result The result of the challenge.
+ * @param {string} userAnswer The answer given by the user.
+ * @param {import('./solutions.js').DiffToken[]|null} correctionDiff
+ * If a corrected version of the answer should be displayed, a list of tokens representing the similarities and
+ * differences between this answer and a reference solution.
+ * @returns {Promise<boolean>} Whether the result of the challenge could be handled.
  */
-function handleTranslationChallengeResult(resultWrapper) {
+async function handleChallengeResult(challenge, result, userAnswer, correctionDiff = null) {
+  await sleep(MINIMUM_LOADING_DELAY);
+
+  if (!challengeFooter) {
+    // We have already passed to the next challenge.
+    return true;
+  }
+
+  completedChallenge = { challenge, result, userAnswer };
+
+  if (userAnswer) {
+    if (RESULT_INCORRECT === result) {
+      if (challenge.solutions.length > 1) {
+        renderChallengeClosestSolution(maxBy(challenge.solutions, 'score'), result);
+      }
+    } else if (isArray(correctionDiff)) {
+      renderChallengeCorrectedAnswer(correctionDiff, result);
+    }
+  }
+
+  renderChallengeSolutionLink(challenge, result, userAnswer);
+
+  return true;
+}
+
+/**
+ * @param {string} result The result of the challenge.
+ * @param {string} userAnswer The answer given by the user.
+ * @returns {Promise<boolean>} A promise for whether the result of a translation challenge was handled.
+ */
+async function handleTranslationChallengeResult(result, userAnswer) {
   const challengeWrapper = document.querySelector(TRANSLATION_CHALLENGE_WRAPPER);
 
   if (!challengeWrapper) {
@@ -671,52 +573,47 @@ function handleTranslationChallengeResult(resultWrapper) {
     elementHints.forEach(hint => hint.parentNode.removeChild(hint));
   }
 
-  const statement = normalizeString(cleanWrapper.innerText).trim();
-
-  let result = handleChallengeResult(
-    currentTranslationChallenges[statement],
-    false,
-    resultWrapper
-  );
-
-  if (!result) {
-    const challenge = currentNamingChallenges.find(statement.indexOf(_.statement) >= 0);
-
-    if (challenge) {
-      result = handleChallengeResult(
-        currentTranslationChallenges[challenge.statement],
-        false,
-        resultWrapper
-      );
+  return sendActionRequestToContentScript(
+    ACTION_TYPE_GET_CURRENT_TRANSLATION_CHALLENGE,
+    {
+      result,
+      userAnswer,
+      statement: cleanWrapper.innerText,
     }
-  }
-
-  return result;
+  ).catch(() => false).then(challenge =>
+    isObject(challenge) && handleChallengeResult(challenge, result, userAnswer)
+  );
 }
 
 /**
- * @param {Element} resultWrapper The UI result wrapper.
- * @returns {boolean} Whether the result of a listening challenge could be handled.
+ * @param {string} result The result of the challenge.
+ * @param {string} userAnswer The answer given by the user.
+ * @returns {Promise<boolean>} A promise for whether the result of a listening challenge was handled.
  */
-function handleListeningChallengeResult(resultWrapper) {
+async function handleListeningChallengeResult(result, userAnswer) {
   const challengeWrapper = document.querySelector(LISTENING_CHALLENGE_WRAPPER);
 
   if (!challengeWrapper) {
     return false;
   }
 
-  const translatedSolutionWrapper = document.querySelector(CHALLENGE_TRANSLATED_SOLUTION_SELECTOR);
+  const solutionTranslationWrapper = document.querySelector(CHALLENGE_SOLUTION_TRANSLATION_SELECTOR);
 
-  if (!translatedSolutionWrapper) {
+  if (!solutionTranslationWrapper) {
     return false;
   }
 
-  const solution = normalizeString(translatedSolutionWrapper.innerText).trim();
-
-  return handleChallengeResult(
-    currentListeningChallenges[solution],
-    true,
-    resultWrapper
+  return sendActionRequestToContentScript(
+    ACTION_TYPE_GET_CURRENT_LISTENING_CHALLENGE,
+    {
+      result,
+      userAnswer,
+      solutionTranslation: solutionTranslationWrapper.innerText,
+    }
+  ).catch(() => false).then(data =>
+    isObject(data)
+    && isObject(data.challenge)
+    && handleChallengeResult(data.challenge, result, userAnswer, data.correctionDiff)
   );
 }
 
@@ -725,7 +622,7 @@ function handleListeningChallengeResult(resultWrapper) {
  */
 function handleDocumentLocationChange(location) {
   forumCommentId = null;
-  forumCommentChallenge = null;
+  forumCommentData = null;
   const matches = location.match(FORUM_COMMENT_URL_REGEXP);
 
   if (isArray(matches)) {
@@ -734,12 +631,21 @@ function handleDocumentLocationChange(location) {
     if ((commentId > 0) && (commentId !== forumCommentId)) {
       forumCommentId = commentId;
 
-      sendActionRequestToContentScript(ACTION_TYPE_GET_COMMENT_CHALLENGE, commentId)
-        .then(challenge => {
-          forumCommentChallenge = challenge;
-          renderForumSolutionList(challenge);
-        })
-        .catch(error => error && logError(error, 'Could not handle the forum comment:'));
+      sendActionRequestToContentScript(
+        ACTION_TYPE_GET_COMMENT_CHALLENGE,
+        commentId
+      ).then(data => {
+        if (
+          isObject(data)
+          && isObject(data.challenge)
+          && (forumCommentId === data.commentId)
+        ) {
+          forumCommentData = data;
+          renderForumCommentChallenge(data.commentId, data.challenge, data.userReference);
+        }
+      }).catch(error => {
+        error && logError(error, 'Could not handle the forum comment:');
+      });
     }
   }
 }
@@ -762,9 +668,23 @@ const challengeFooterMutationObserver = new MutationObserver(() => {
 
     if (null !== resultWrapper) {
       try {
-        if (!handleListeningChallengeResult(resultWrapper)) {
-          handleTranslationChallengeResult(resultWrapper);
-        }
+        const userAnswer = getUserAnswer();
+
+        const result = resultWrapper.classList.contains(RESULT_WRAPPER_CORRECT_CLASS_NAME)
+          ? RESULT_CORRECT
+          : RESULT_INCORRECT;
+
+        renderChallengeSolutionLoader(result);
+
+        handleListeningChallengeResult(result, userAnswer)
+          .then(wasHandled =>
+            wasHandled || handleTranslationChallengeResult(result, userAnswer)
+          ).then(wasHandled =>
+            wasHandled || renderChallengeSolutionLink(EMPTY_CHALLENGE, result, userAnswer)
+          ).catch(error => {
+            renderChallengeSolutionLink(EMPTY_CHALLENGE, result, userAnswer);
+            throw error;
+          });
       } catch (error) {
         logError(error, 'Could not handle the challenge result: ');
       }
@@ -776,10 +696,17 @@ document.addEventListener('keydown', event => {
   if (
     !event.ctrlKey
     && (null !== completedChallenge)
+    && !isSolutionListModalDisplayed
+    && !isInputFocused()
     && (event.key.toLowerCase() === 's')
   ) {
     discardEvent(event);
-    renderChallengeSolutionListModal(completedChallenge.challenge, completedChallenge.userAnswer);
+
+    renderChallengeSolutionModal(
+      completedChallenge.challenge,
+      completedChallenge.result,
+      completedChallenge.userAnswer
+    );
   }
 });
 
@@ -807,8 +734,12 @@ setInterval(() => {
     if (newForumOpWrapper !== forumOpWrapper) {
       forumOpWrapper = newForumOpWrapper;
 
-      if (forumCommentChallenge) {
-        renderForumSolutionList(forumCommentChallenge);
+      if (forumCommentData) {
+        renderForumCommentChallenge(
+          forumCommentData.commentId,
+          forumCommentData.challenge,
+          forumCommentData.userReference
+        );
       }
     }
   }

@@ -6,36 +6,6 @@ import { _ } from 'param.macro';
 import { BASE, useStyles } from './base';
 import { RESULT_CORRECT, RESULT_INCORRECT } from '../constants';
 
-const WRAPPER = 'wrapper';
-const VALUE = 'value';
-const ADDED_TOKEN = 'added_token';
-const REMOVED_TOKEN = 'removed_token';
-
-const CLASS_NAMES = {
-  [BASE]: {
-    [WRAPPER]: [ '_36Uyg' ],
-    [VALUE]: [ 'TnCw3' ],
-  },
-  [RESULT_CORRECT]: {
-    [WRAPPER]: [ '_11xjL ' ],
-    [ADDED_TOKEN]: [ '_2QxbX' ],
-  },
-  [RESULT_INCORRECT]: {
-    [WRAPPER]: [ '_2QxbX' ],
-  },
-};
-
-const STYLE_SHEETS = {
-  [BASE]: StyleSheet.create({
-    [WRAPPER]: {
-      marginBottom: '10px',
-    },
-    [REMOVED_TOKEN]: {
-      textDecoration: 'underline',
-    },
-  }),
-};
-
 const DISPLAY_MODE_ORIGINAL = 'original';
 const DISPLAY_MODE_CORRECTED = 'corrected';
 
@@ -65,6 +35,7 @@ const CorrectedAnswer = ({ diffTokens = [], result = RESULT_CORRECT }) => {
   const [ originalAnswer, setOriginalAnswer ] = useState([]);
   const [ correctedAnswer, setCorrectedAnswer ] = useState([]);
 
+  // Refreshes both answers when the diff tokens have changed.
   useEffect(() => {
     setOriginalAnswer(diffTokens.map(renderToken(_, DISPLAY_MODE_ORIGINAL)));
     setCorrectedAnswer(diffTokens.map(renderToken(_, DISPLAY_MODE_CORRECTED)));
@@ -75,9 +46,9 @@ const CorrectedAnswer = ({ diffTokens = [], result = RESULT_CORRECT }) => {
   }
 
   return (
-    <IntlProvider scope="solution.result">
+    <IntlProvider scope="corrected_answer">
       <h2 className={getElementClassNames(WRAPPER)}>
-        <Text id="corrected_answer">Corrected answer:</Text>
+        <Text id="title">Corrected answer:</Text>
         <div className={getElementClassNames(VALUE)}>
           {originalAnswer}
         </div>
@@ -90,3 +61,33 @@ const CorrectedAnswer = ({ diffTokens = [], result = RESULT_CORRECT }) => {
 }
 
 export default CorrectedAnswer;
+
+const WRAPPER = 'wrapper';
+const VALUE = 'value';
+const ADDED_TOKEN = 'added_token';
+const REMOVED_TOKEN = 'removed_token';
+
+const CLASS_NAMES = {
+  [BASE]: {
+    [WRAPPER]: [ '_36Uyg' ],
+    [VALUE]: [ 'TnCw3' ],
+  },
+  [RESULT_CORRECT]: {
+    [WRAPPER]: [ '_11xjL ' ],
+    [ADDED_TOKEN]: [ '_2QxbX' ],
+  },
+  [RESULT_INCORRECT]: {
+    [WRAPPER]: [ '_2QxbX' ],
+  },
+};
+
+const STYLE_SHEETS = {
+  [BASE]: StyleSheet.create({
+    [WRAPPER]: {
+      marginBottom: '10px',
+    },
+    [REMOVED_TOKEN]: {
+      textDecoration: 'underline',
+    },
+  }),
+};
