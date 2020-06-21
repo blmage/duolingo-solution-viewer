@@ -659,7 +659,7 @@ async function handleActionRequest(action, data, sender, sendResponse) {
         await handleCurrentListeningChallengeRequest(getSenderId(sender), data, sendResult);
         break;
       case ACTION_TYPE_MATCH_CHALLENGE_WITH_USER_ANSWER:
-        await handleChallengeAnswerMatchingRequest(data, sendResult);
+        handleChallengeAnswerMatchingRequest(data, sendResult);
         break;
       case ACTION_TYPE_GET_COMMENT_CHALLENGE:
         await handleCommentChallengeRequest(data, sendResult);
