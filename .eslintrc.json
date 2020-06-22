@@ -25,5 +25,10 @@
         "react"
     ],
     "rules": {
+    },
+    "settings": {
+        "jsdoc": {
+            "mode": "typescript"
+        }
     }
 }
