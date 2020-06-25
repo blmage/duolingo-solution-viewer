@@ -66,8 +66,10 @@ const TITLE = 'title';
 const CLASS_NAMES = {
   [CONTEXT_CHALLENGE]: {
     // Copied from the wrapper of the "Report" and "Discuss" icons and links.
+    // The class name responsible for the result color is ignored here.
     [WRAPPER]: [ '_2KzUW' ],
     // Copied from the "Report" and "Discuss" icons.
+    // The class name responsible for the background image is ignored here.
     [ICON]: [ '_2wZWI' ],
     // Copied from the "Report" and "Discuss" titles.
     [TITLE]: [ '_1kYcS', '_1BWZU' ]
@@ -79,15 +81,23 @@ const CLASS_NAMES = {
     [TITLE]: [ 'uFNEM', 'tCqcy' ],
   },
   [RESULT_CORRECT]: {
+    // Copied from the wrapper of the "Report" and "Discuss" icons and links when the result is correct.
     // Adds the "correct" color.
-    [WRAPPER]: [ '_11xjL' ],
-    [ICON]: [ '_11xjL' ],
+    [WRAPPER]: [ '_11OI0' ],
   },
   [RESULT_INCORRECT]: {
+    // Copied from the wrapper of the "Report" and "Discuss" icons and links when the result is incorrect.
     // Adds the "incorrect" color.
     [WRAPPER]: [ '_1uM9m' ],
-    [ICON]: [ '_1uM9m' ],
   },
+};
+
+// Copied from the "Report" icons.
+// We do not add those class names to the icon elements because we already apply the right colors on them using
+// inline styles. Custom themes targeting those class names may also apply their own filters, giving unwanted results.
+const ICON_RESULT_CLASS_NAMES = {
+  [RESULT_CORRECT]: [ '_1vlYi' ],
+  [RESULT_INCORRECT]: [ '_3HTPX' ],
 };
 
 const BASE_STYLE_SHEETS = {
@@ -109,9 +119,8 @@ const BASE_STYLE_SHEETS = {
 const getChallengeResultStyleSheet = moize(
   result => {
     const iconStyles = getStylesByClassNames(
-      CLASS_NAMES[CONTEXT_CHALLENGE][ICON].concat(CLASS_NAMES[result][ICON] || []),
+      CLASS_NAMES[CONTEXT_CHALLENGE][ICON].concat(ICON_RESULT_CLASS_NAMES[result] || []),
       [
-        'background-image',
         'background-origin',
         'background-position',
         'background-repeat',
