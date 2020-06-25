@@ -315,6 +315,11 @@ function renderChallengeSolutionModal(challenge, result, userAnswer) {
           && (currentResultWrapper === resultWrapper)
         ) {
           renderChallengeSolutionLink(data.challenge, result, newAnswer);
+
+          if (isObject(completedChallenge)) {
+            completedChallenge.userAnswer = newAnswer;
+          }
+
           return data.challenge.solutions || [];
         }
       } catch (error) {
