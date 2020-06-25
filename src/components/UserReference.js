@@ -6,23 +6,34 @@ import moize from 'moize';
 import { BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, useStyles } from './base';
 import { discardEvent, noop } from '../functions';
 
+const FORUM_FOLLOW_BUTTON_SELECTOR = '._13Bfz button';
 const FORUM_NEW_POST_BUTTONS_SELECTOR = '._1KvMS textarea + div button';
 
 /**
  * @function
- * @returns string When in the context of a forum discussion, the inline styles applied to the new post buttons.
+ * @returns {object|null} When in the context of a forum discussion, the inline styles applied to the new post buttons.
  */
 const getForumNewPostButtonsInlineStyles = moize(
   () => {
-    const buttons = document.querySelectorAll(FORUM_NEW_POST_BUTTONS_SELECTOR);
+    const postButtons = Array.from(document.querySelectorAll(FORUM_NEW_POST_BUTTONS_SELECTOR));
 
-    return (2 !== buttons.length) ? {
-      [COMMIT_BUTTON]: '',
-      [ROLLBACK_BUTTON]: '',
-    } : {
-      [COMMIT_BUTTON]: String(buttons[0].getAttribute('style') || ''),
-      [ROLLBACK_BUTTON]: String(buttons[1].getAttribute('style') || ''),
-    };
+    return (2 !== postButtons.length)
+      ? null
+      : {
+        [COMMIT_BUTTON]: String(postButtons[0].getAttribute('style') || ''),
+        [ROLLBACK_BUTTON]: String(postButtons[1].getAttribute('style') || ''),
+      };
+  }
+);
+
+/**
+ * @function
+ * @returns {string|null} When in the context of a forum discussion, the inline styles applied to the follow button.
+ */
+const getForumFollowButtonInlineStyles = moize(
+  () => {
+    const followButton = document.querySelector(FORUM_FOLLOW_BUTTON_SELECTOR);
+    return String(followButton && followButton.getAttribute('style') || '');
   }
 );
 
@@ -43,8 +54,25 @@ const UserReference =
       ('' === reference) && EMPTY_VALUE,
     ].filter(Boolean);
 
-    const buttonStyles = getForumNewPostButtonsInlineStyles();
     const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
+
+    let buttonInlineStyles = {};
+    let additionalButtonClass = null;
+
+    if (CONTEXT_FORUM === context) {
+      buttonInlineStyles = getForumNewPostButtonsInlineStyles();
+
+      if (null === buttonInlineStyles) {
+        const inlineStyles = getForumFollowButtonInlineStyles();
+
+        buttonInlineStyles = {
+          [COMMIT_BUTTON]: inlineStyles,
+          [ROLLBACK_BUTTON]: inlineStyles,
+        };
+
+        additionalButtonClass = FALLBACK_BUTTON;
+      }
+    }
 
     const commitEdit = useCallback(event => {
       discardEvent(event);
@@ -121,14 +149,14 @@ const UserReference =
                   {editedReference}
                 </textarea>
                 <button onClick={commitEdit}
-                        style={buttonStyles[COMMIT_BUTTON]}
-                        className={getElementClassNames([ BUTTON, COMMIT_BUTTON ])}>
+                        style={buttonInlineStyles[COMMIT_BUTTON] || ''}
+                        className={getElementClassNames([ BUTTON, COMMIT_BUTTON, additionalButtonClass ])}>
                   <Text id="update">Update</Text>
                 </button>
                 <span className={getElementClassNames(BUTTON_SPACER)}>
                   <button onClick={rollbackEdit}
-                          style={buttonStyles[ROLLBACK_BUTTON]}
-                          className={getElementClassNames([ BUTTON, ROLLBACK_BUTTON ])}>
+                          style={buttonInlineStyles[ROLLBACK_BUTTON] || ''}
+                          className={getElementClassNames([ BUTTON, ROLLBACK_BUTTON, additionalButtonClass ])}>
                     <Text id="cancel">Cancel</Text>
                   </button>
                 </span>
@@ -150,6 +178,7 @@ const EDIT_FIELD = 'edit_field';
 const BUTTON = 'button';
 const COMMIT_BUTTON = 'commit_button';
 const ROLLBACK_BUTTON = 'rollback_button';
+const FALLBACK_BUTTON = 'fallback_button';
 const BUTTON_SPACER = 'button_spacer';
 
 const CLASS_NAMES = {
@@ -184,6 +213,7 @@ const CLASS_NAMES = {
     [BUTTON]: [ '_2NzLI', 'QHkFc' ],
     [COMMIT_BUTTON]: [ '_1qPrY', '_2pnz9' ],
     [ROLLBACK_BUTTON]: [ '_3kaGF', '_1O1Bz' ],
+    [FALLBACK_BUTTON]: [ '_1O1Bz' ],
     [BUTTON_SPACER]: [ '_3cCqs' ],
   },
 };
