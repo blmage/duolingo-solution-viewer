@@ -66,6 +66,7 @@ const LISTENING_CHALLENGE_WRAPPER = LISTENING_CHALLENGE_TYPES
 
 /**
  * A CSS selector for the result wrapper of the current challenge screen.
+ * It is currently located just before the wrapper of the "Continue" button.
  *
  * @type {string}
  */
@@ -99,6 +100,7 @@ const CHALLENGE_STATEMENT_HINT_SELECTOR = '[data-test="hint-popover"]';
 
 /**
  * A CSS selector for the translated solution of the current challenge.
+ * In case it might help, the ClosestSolution component targets the same value.
  *
  * @type {string}
  */
@@ -150,7 +152,8 @@ const CHALLENGE_SOLUTION_WRAPPER_SELECTOR = '.vpbSG';
 const CHALLENGE_ACTION_LINK_LIST_SELECTOR = '._1Xpok';
 
 /**
- * A CSS selector for the fixed page header used among other places in the forum.
+ * A CSS selector for the fixed page header used in the forum. We use the class names with the most styles.
+ * Note that the fixed header is different on desktop and mobile, hence the two classes.
  *
  * @type {string}
  */
