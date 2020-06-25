@@ -184,6 +184,7 @@ const BUTTON_SPACER = 'button_spacer';
 const CLASS_NAMES = {
   [CONTEXT_CHALLENGE]: {
     [EDIT_FIELD]: [
+      // Copied from the text answer field.
       '_2mhBk',
       '_1JtWw',
       '_1tY-d',
@@ -191,6 +192,8 @@ const CLASS_NAMES = {
       '_2NQKM',
     ],
     [BUTTON]: [
+      // Copied from the special letter buttons provided for some languages (such as French).
+      // The class responsible for the small and square dimensions is ignored here.
       '_3ZQ9H',
       '_3lE5Q',
       '_18se6',
@@ -204,16 +207,25 @@ const CLASS_NAMES = {
       '_1LIf4',
       'QVrnU',
     ],
+    // Adds the main (link) color.
     [COMMIT_BUTTON]: [ '_2rA41' ],
   },
   [CONTEXT_FORUM]: {
+    // Copied from the (heading) wrapper of the "Translation:" subtitle and the translation value.
     [WRAPPER]: [ '_2qRu2' ],
+    // Copied from the "Translation:" subtitle.
     [TITLE]: [ '_1gXMJ' ],
+    // Copied from the post text field.
     [EDIT_FIELD]: [ '_1Ch3x', '_2yvtl', 'gFN2J' ],
+    // The class names applied to both post buttons.
     [BUTTON]: [ '_2NzLI', 'QHkFc' ],
+    // The class names specific to the "Post" button.
     [COMMIT_BUTTON]: [ '_1qPrY', '_2pnz9' ],
+    // The class names specific to the "Cancel" button.
     [ROLLBACK_BUTTON]: [ '_3kaGF', '_1O1Bz' ],
+    // One of the class name from the "Cancel" button which adds 3D-like border widths.
     [FALLBACK_BUTTON]: [ '_1O1Bz' ],
+    // Copied from the (spacing) wrapper of the "Cancel" button.
     [BUTTON_SPACER]: [ '_3cCqs' ],
   },
 };

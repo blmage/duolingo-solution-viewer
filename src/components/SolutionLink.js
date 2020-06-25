@@ -65,19 +65,26 @@ const TITLE = 'title';
 
 const CLASS_NAMES = {
   [CONTEXT_CHALLENGE]: {
+    // Copied from the wrapper of the "Report" and "Discuss" icons and links.
     [WRAPPER]: [ '_2KzUW' ],
+    // Copied from the "Report" and "Discuss" icons.
     [ICON]: [ '_2wZWI' ],
+    // Copied from the "Report" and "Discuss" titles.
     [TITLE]: [ '_1kYcS', '_1BWZU' ]
   },
   [CONTEXT_FORUM]: {
+    // Copied from the direct wrapper of the "Give Lingot" link.
     [WRAPPER]: [ '_5j_V-' ],
+    // Copied from the "Reply" link.
     [TITLE]: [ 'uFNEM', 'tCqcy' ],
   },
   [RESULT_CORRECT]: {
-    [WRAPPER]: [ '_11OI0' ],
-    [ICON]: [ '_1vlYi' ],
+    // Adds the "correct" color.
+    [WRAPPER]: [ '_11xjL' ],
+    [ICON]: [ '_11xjL' ],
   },
   [RESULT_INCORRECT]: {
+    // Adds the "incorrect" color.
     [WRAPPER]: [ '_1uM9m' ],
     [ICON]: [ '_1uM9m' ],
   },

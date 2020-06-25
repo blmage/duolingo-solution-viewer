@@ -138,17 +138,27 @@ const CONTENT = 'content';
 
 const CLASS_NAMES = {
   [BASE]: {
+    // Copied from the "Report" modal overlay.
+    // The class names responsible for the opacity/animation are used below.
     [OVERLAY]: [ '_16E8f', '_18rH6', '_3wo9p' ],
+    // Copied from the global wrapper of the "Report" modal content.
+    // The class names responsible for the opacity/animation are also used below.
     [WRAPPER]: [ '_3Xf7y', 'w4pY4', '_1qa4z', '_3wo9p' ],
+    // Copied from the closing button of the "Report" modal.
     [CLOSE_BUTTON]: [ '_2YJA9' ],
     [SIZE_BUTTON]: [ '_2YJA9' ],
+    // Copied from the direct wrapper of the "Report" modal content.
     [CONTENT]: [ '_2vnDy' ],
   },
   [STATE_PENDING]: {
+    // Found in the "app" stylesheet, or by debugging the modal animation.
+    // Applies full transparency and disable pointer events.
     [OVERLAY]: [ '_2WcLD' ],
     [WRAPPER]: [ '_2WcLD' ],
   },
   [STATE_OPENING]: {
+    // Found in the "app" stylesheet, or by debugging the modal animation.
+    // Applies full opacity.
     [OVERLAY]: [ '_39TEz' ],
     [WRAPPER]: [ '_2WcLD' ],
   },

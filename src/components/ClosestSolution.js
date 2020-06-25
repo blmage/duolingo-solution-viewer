@@ -32,13 +32,17 @@ const VALUE = 'value';
 
 const CLASS_NAMES = {
   [BASE]: {
+    // Copied from the direct wrapper of the "Correct solution" title and the corresponding value.
     [WRAPPER]: [ '_36Uyg' ],
+    // Copied from the solution value.
     [VALUE]: [ 'TnCw3' ],
   },
   [RESULT_CORRECT]: {
+    // Adds the "correct" color
     [WRAPPER]: [ '_11xjL' ],
   },
   [RESULT_INCORRECT]: {
+    // Adds the "incorrect" color.
     [WRAPPER]: [ '_2QxbX' ],
   },
 };

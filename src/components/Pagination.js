@@ -161,8 +161,12 @@ const BUTTON_LABEL = 'button_label';
 
 const CLASS_NAMES = {
   [CONTEXT_CHALLENGE]: {
-    [WRAPPER]: [ '_2mM1T', '_1AQcy' ],
+    // Copied from the global wrapper of the special letter buttons provided for some languages (such as French).
+    // The class responsible for the null height is ignored here.
+    [WRAPPER]: [ '_2mM1T' ],
+    // Copied from the direct wrapper of each special letter button.
     [ITEM]: [ '_10S_q' ],
+    // Copied from the special letter buttons.
     [BUTTON]: [
       '_2dfXt',
       '_3ZQ9H',
@@ -180,7 +184,8 @@ const CLASS_NAMES = {
     ],
   },
   [CONTEXT_FORUM]: {
-    [BUTTON]: [ 'QHkFc' ],
+    // Copied from the "Follow discussion" button.
+    // Only the class names responsible for the padding and 3D-like border widths are used here.
     [ENABLED_BUTTON]: [ '_1O1Bz', '_2NzLI' ],
   },
 };

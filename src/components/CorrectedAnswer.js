@@ -69,11 +69,15 @@ const REMOVED_TOKEN = 'removed_token';
 
 const CLASS_NAMES = {
   [BASE]: {
+    // Copied from the direct wrapper of the "Meaning" title and the corresponding value.
     [WRAPPER]: [ '_36Uyg' ],
+    // Copied from the solution translation.
     [VALUE]: [ 'TnCw3' ],
   },
   [RESULT_CORRECT]: {
+    // Adds the "correct" color.
     [WRAPPER]: [ '_11xjL ' ],
+    // Adds the "incorrect" color.
     [ADDED_TOKEN]: [ '_2QxbX' ],
   },
   [RESULT_INCORRECT]: {
