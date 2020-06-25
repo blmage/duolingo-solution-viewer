@@ -158,13 +158,14 @@ export function isInputFocused() {
 
 /**
  * @param {Element} element An element.
+ * @param {number} threshold The minimum scroll height for an ancestor to be considered scrollable.
  * @returns {Element} The first ancestor of the given element which has a scrollbar.
  */
-export function getScrollableAncestor(element) {
+export function getScrollableAncestor(element, threshold = 10) {
   let parent = element.parentNode;
 
   while (parent) {
-    if ((parent.clientHeight > 0) && (parent.scrollHeight > parent.clientHeight)) {
+    if ((parent.clientHeight > 0) && (parent.scrollHeight - threshold > parent.clientHeight)) {
       return parent;
     }
 
