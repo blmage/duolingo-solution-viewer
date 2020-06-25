@@ -40,11 +40,11 @@ import { getTranslations } from './translations';
 
 /**
  * A minimum loading delay for the action requests to the background script.
- * This is an attempt at avoiding flashes of contents while providing a consistent feedback to the user.
+ * This is an attempt at avoiding flashes of contents and providing a consistent feedback to the user.
  *
  * @type {number}
  */
-const MINIMUM_LOADING_DELAY = 300;
+const MINIMUM_LOADING_DELAY = 250;
 
 /**
  * A CSS selector for the wrapper of the current translation challenge.
