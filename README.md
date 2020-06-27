@@ -15,7 +15,6 @@ the **correction of typos** for listening challenges.
 * [Features](#features)
 * [Keyboard shortcuts](#keyboard-shortcuts)
 * [Limitations](#limitations)
-* [Tested courses](#tested-courses)
 * [Contributions](#contributions)
     * [Translations](#translations)
     * [Bug reports and feature requests](#bug-reports-and-feature-requests)
@@ -27,42 +26,53 @@ the **correction of typos** for listening challenges.
 
 ### Features
 
-* After an answer has been submitted, provides a link to the corresponding list of solutions:
+* Provides a link to the list of solutions of the current challenge, once you have submitted your answer:
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/base_correct_answer_solution_list_link.png" width="500" />
+    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_link.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/base_incorrect_answer_solution_list_link.png" width="500" />
+    * By default, the solutions are sorted by their similarity with your answer:
 
-* The list of solutions also becomes available from the corresponding forum discussion.
+    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_modal.png" width="500" />
 
-* This link opens a window with a summary of the challenge, including all the accepted solutions:
+    * But you can also switch to an alphabetical sort:
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/base_correct_answer_solution_list_modal.png" width="500" />
+    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_modal_alphabetical_sort.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/base_incorrect_answer_solution_list_modal.png" width="500" />
+    * Click on your answer to edit it. The similarity scores of the solutions will be refreshed accordingly:
 
-* Those solutions can be sorted on their similarity with the given answer, rather than alphabetically:
+    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_modal_reference_update.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/base_correct_answer_solution_list_modal_similarity.png" width="500" />
+    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_modal_update_result.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/base_incorrect_answer_solution_list_modal_similarity.png" width="500" />
+* Remembers the lists of solutions of each challenge, to also make them available from the corresponding forum discussions:
 
-* When an incorrect answer is submitted, the closest correct solution is displayed:
+    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_forum_solution_list.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/base_incorrect_answer_closest_solution.png" width="500" />
+    * All the options seen above are also accessible in the forum, such as editing your reference:
+    
+    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_forum_solution_list_reference_update.png" width="500" />
+    
+    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_forum_solution_list_update_result.png" width="500" />
 
-*  When a correct answer to a listening challenge contains some typos, the differences with the correct solution are displayed.
+* Displays the closest solution when the answer you submitted is incorrect:
 
-* The extension strives to blend seamlessly in [Duolingo](https://www.duolingo.com)'s UI, and to be compatible with
-custom themes such as [Darklingo++](https://userstyles.org/styles/169205/darklingo):
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_incorrect_answer_closest_solution.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/dark_correct_answer_solution_list_link_dark.png" width="500" />
+* Outlines typos in answers to listening challenges:
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/dark_correct_answer_solution_list_modal_dark.png" width="500" />
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_listening_correction.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/dark_incorrect_answer_solution_list_link_errror_dark.png" width="500" />
+* Strives to blend seamlessly in [Duolingo](https://www.duolingo.com)'s UI, and to be compatible with custom themes such as [Darklingo++](https://userstyles.org/styles/169205/darklingo):
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/screenshots/dark_incorrect_answer_solution_list_modal_error_dark.png" width="500" />
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_correct_answer_solution_list_link.png" width="500" />
+
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_correct_answer_solution_list_modal.png" width="500" />
+
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_forum_solution_list.png" width="500" />
+
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_incorrect_answer_closest_solution.png" width="500" />
+
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_correct_answer_listening_correction.png" width="500" />
 
 ### Keyboard shortcuts
 
@@ -88,47 +98,6 @@ When a list of solutions is available, use:
 
 * "Fill in the blank" challenges are based on "normal" translation challenges. The lists of solutions provided for them
   may  therefore include sentences that do not match the blanks.  
-
-### Tested courses
-
-The extension should already be **compatible with most courses**, but has only been tested so far with:
-
-<table>
-  <tr>
-    <th>Speaking</th>
-    <th>Learning</th>
-  </tr>
-  <tr>
-    <td rowspan="1">Dutch</td>
-    <td>German</td>
-  </tr>
-  <tr>
-    <td rowspan="5">English</td>
-    <td>French</td>
-  </tr>
-  <tr>
-    <td>Klingon</td>
-  </tr>
-  <tr>
-    <td>Norwegian</td>
-  </tr>
-  <tr>
-    <td>Spanish</td>
-  </tr>
-  <tr>
-    <td>Vietnamese</td>
-  </tr>
-  <tr>
-    <td rowspan="1">French</td>
-    <td>English</td>
-  </tr>
-</table>
-
-If you have tested the extension with a course that is not listed above, and:
-* _it works well_: let me know in the
-  [dedicated issue](https://github.com/blmage/duolingo-solution-viewer/issues/1)!
-* _you encountered some problems_: report those in
-  [a new issue](https://github.com/blmage/duolingo-solution-viewer/issues/new) (including as much details as possible).
 
 ## Contributions
 
