@@ -1,4 +1,7 @@
-# Duolingo Solution Viewer
+<h1>
+  <img align="center" width="48" height="48" src="https://raw.githubusercontent.com/blmage/duolingo-solution-viewer/master/dist/icons/icon_48.png" />
+  Duolingo Solution Viewer
+</h1>
 
 [![DeepScan grade](https://deepscan.io/api/teams/9459/projects/11992/branches/180276/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=9459&pid=11992&bid=180276)
 ![ESLint](https://github.com/blmage/duolingo-solution-viewer/workflows/ESLint/badge.svg)
