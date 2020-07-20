@@ -20,7 +20,7 @@
     "lodash.product": "^18.9.19",
     "moize": "^5.4.7",
     "paginator": "^1.0.0",
-    "preact": "^10.4.5",
+    "preact": "^10.4.6",
     "preact-i18n": "^2.0.0-preactx.2",
     "preact-use": "github:blmage/preact-use#master",
     "sleep-promise": "^8.0.1"
