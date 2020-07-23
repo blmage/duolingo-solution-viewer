@@ -104,8 +104,8 @@ function parseTokenVertices(vertices, locale, isWhitespaceDelimited) {
   }
 
   if (values.length > 1) {
-    isComplex = true;
     values = lodash.sortedUniqBy(values.sort(compareTokenStrings(_, _, locale)), it);
+    isComplex = values.length > 1;
     reference = values[0];
   } else {
     isComplex = false;
