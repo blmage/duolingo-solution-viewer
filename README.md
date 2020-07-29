@@ -31,35 +31,35 @@ the **correction of typos** for listening challenges.
 
 * Provides a link to the list of solutions of the current challenge, once you have submitted your answer:
 
-    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_link.png" width="500" />
+  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_link.png" width="500" />
 
     * By default, the solutions are sorted by their similarity with your answer:
 
-    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_modal.png" width="500" />
+      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_modal.png" width="500" />
 
     * But you can also switch to an alphabetical sort:
 
-    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_modal_alphabetical_sort.png" width="500" />
+      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_modal_alphabetical_sort.png" width="500" />
 
     * Click on your answer to edit it. The similarity scores of the solutions will be refreshed accordingly:
 
-    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_modal_reference_update.png" width="500" />
+      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_modal_reference_update.png" width="500" />
 
-    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_modal_update_result.png" width="500" />
+      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_modal_update_result.png" width="500" />
 
 * Remembers the lists of solutions of each challenge, to also make them available from the corresponding forum discussions:
 
     <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_forum_solution_list.png" width="500" />
 
     * All the options seen above are also accessible in the forum, such as editing your reference:
-    
-    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_forum_solution_list_reference_update.png" width="500" />
-    
-    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_forum_solution_list_update_result.png" width="500" />
+
+      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_forum_solution_list_reference_update.png" width="500" />
+
+      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_forum_solution_list_update_result.png" width="500" />
 
 * Displays the closest solution when the answer you submitted is incorrect:
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_incorrect_answer_closest_solution.png" width="500" />
+  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_incorrect_answer_closest_solution.png" width="500" />
 
 * Outlines typos in answers to listening challenges:
 
@@ -67,15 +67,15 @@ the **correction of typos** for listening challenges.
 
 * Strives to blend seamlessly in [Duolingo](https://www.duolingo.com)'s UI, and to be compatible with custom themes such as [Darklingo++](https://userstyles.org/styles/169205/darklingo):
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_correct_answer_solution_list_link.png" width="500" />
+  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_correct_answer_solution_list_link.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_correct_answer_solution_list_modal.png" width="500" />
+  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_correct_answer_solution_list_modal.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_forum_solution_list.png" width="500" />
+  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_forum_solution_list.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_incorrect_answer_closest_solution.png" width="500" />
+  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_incorrect_answer_closest_solution.png" width="500" />
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_correct_answer_listening_correction.png" width="500" />
+  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_correct_answer_listening_correction.png" width="500" />
 
 ### Keyboard shortcuts
 
