@@ -7,6 +7,7 @@
 ![ESLint](https://github.com/blmage/duolingo-solution-viewer/workflows/ESLint/badge.svg)
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/idffaipgnlkhfhibgnodeiogpgojcmfm)](https://chrome.google.com/webstore/detail/duolingo-solution-viewer/idffaipgnlkhfhibgnodeiogpgojcmfm)
 [![Mozilla Add-on](https://img.shields.io/amo/v/duolingo-solution-viewer)](https://addons.mozilla.org/firefox/addon/duolingo-solution-viewer/)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fblmage%2Fduolingo-solution-viewer.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fblmage%2Fduolingo-solution-viewer?ref=badge_shield)
 
 A browser extension providing access to the complete lists of **accepted solutions** for
 [Duolingo](https://www.duolingo.com)'s **translation / listening challenges**, and restoring
@@ -133,3 +134,7 @@ If you encounter a bug, or if you have a suggestion regarding a new feature, don
 \
 \
 _The country flags on this page were taken from this project: https://yammadev.github.io/flag-icons/ (MIT license)._
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fblmage%2Fduolingo-solution-viewer.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fblmage%2Fduolingo-solution-viewer?ref=badge_large)
