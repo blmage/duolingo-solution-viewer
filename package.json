@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "aphrodite": "^2.4.0",
-    "dexie": "^3.0.1",
+    "dexie": "^3.0.2",
     "diff": "^4.0.2",
     "fetch-retry": "^4.0.1",
     "immutable": "^4.0.0-rc.12",
