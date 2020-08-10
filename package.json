@@ -42,6 +42,6 @@
     "rollup": "^2.23.1",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-strict-alias": "^1.0.0",
-    "rollup-plugin-terser": "^6.1.0"
+    "rollup-plugin-terser": "^7.0.0"
   }
 }
