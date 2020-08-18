@@ -105,7 +105,7 @@ const BASE_STYLE_SHEETS = {
     [WRAPPER]: {
       cursor: 'pointer',
       float: 'right',
-      marginTop: '2px',
+      marginRight: '20px',
       userSelect: 'none',
     },
   }),
