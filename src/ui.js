@@ -66,18 +66,18 @@ const LISTENING_CHALLENGE_WRAPPER = LISTENING_CHALLENGE_TYPES
 
 /**
  * A CSS selector for the result wrapper of the current challenge screen.
- * It is currently located just before the wrapper of the "Continue" button.
+ * It is currently the previous sibling of the wrapper of the "Continue" button.
  *
  * @type {string}
  */
-const RESULT_WRAPPER_SELECTOR = '._1Ag8k';
+const RESULT_WRAPPER_SELECTOR = '._1tuLI';
 
 /**
  * The class name which is applied to the result wrapper when the user has given a correct answer.
  *
  * @type {string}
  */
-const RESULT_WRAPPER_CORRECT_CLASS_NAME = '_1WH_r';
+const RESULT_WRAPPER_CORRECT_CLASS_NAME = '_3e9O1';
 
 /**
  * Some of the possible CSS selectors for the statement of the current challenge (holding the sentence to translate),
@@ -104,7 +104,7 @@ const CHALLENGE_STATEMENT_HINT_SELECTOR = '[data-test="hint-popover"]';
  *
  * @type {string}
  */
-const CHALLENGE_SOLUTION_TRANSLATION_SELECTOR = '.vpbSG > *:last-child > .TnCw3';
+const CHALLENGE_SOLUTION_TRANSLATION_SELECTOR = '._3mObn > *:last-child > ._1UqAr';
 
 /**
  * A CSS selector for all the different kinds of answer input which are not based on the word bank.
@@ -121,7 +121,7 @@ const ANSWER_INPUT_SELECTOR = [
  *
  * @type {string}
  */
-const ANSWER_SELECTED_TOKEN_CONTAINER_SELECTOR = '._3vVWl';
+const ANSWER_SELECTED_TOKEN_CONTAINER_SELECTOR = '.PcKtj';
 
 /**
  * A CSS selector for a answer token selected from the word bank.
@@ -135,21 +135,21 @@ const ANSWER_SELECTED_TOKEN_SELECTOR = '[data-test="challenge-tap-token"]';
  *
  * @type {string}
  */
-const CHALLENGE_FOOTER_SELECTOR = '._1obm2';
+const CHALLENGE_FOOTER_SELECTOR = '._2Fc1K';
 
 /**
  * A CSS selector for the solution wrapper of the current challenge screen, holding the answer key to the challenge.
  *
  * @type {string}
  */
-const CHALLENGE_SOLUTION_WRAPPER_SELECTOR = '.vpbSG';
+const CHALLENGE_SOLUTION_WRAPPER_SELECTOR = '._2ez4I';
 
 /**
  * A CSS selector for the list of action links of the current challenge screen.
  *
  * @type {string}
  */
-const CHALLENGE_ACTION_LINK_LIST_SELECTOR = '._1Xpok';
+const CHALLENGE_ACTION_LINK_LIST_SELECTOR = '._2AOD4';
 
 /**
  * A CSS selector for the fixed page header used in the forum. We use the class names with the most styles.

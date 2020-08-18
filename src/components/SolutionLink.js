@@ -67,12 +67,12 @@ const CLASS_NAMES = {
   [CONTEXT_CHALLENGE]: {
     // Copied from the wrapper of the "Report" and "Discuss" icons and links.
     // The class name responsible for the result color is ignored here.
-    [WRAPPER]: [ '_2KzUW' ],
+    [WRAPPER]: [ '_13CKi' ],
     // Copied from the "Report" and "Discuss" icons.
     // The class name responsible for the background image is ignored here.
-    [ICON]: [ '_2wZWI' ],
+    [ICON]: [ '_1eGRT' ],
     // Copied from the "Report" and "Discuss" titles.
-    [TITLE]: [ '_1kYcS', '_1BWZU' ]
+    [TITLE]: [ '_2472G', '_3yAjN' ]
   },
   [CONTEXT_FORUM]: {
     // Copied from the direct wrapper of the "Give Lingot" link.
@@ -83,12 +83,12 @@ const CLASS_NAMES = {
   [RESULT_CORRECT]: {
     // Copied from the wrapper of the "Report" and "Discuss" icons and links when the result is correct.
     // Adds the "correct" color.
-    [WRAPPER]: [ '_11OI0' ],
+    [WRAPPER]: [ '_3NwXb' ],
   },
   [RESULT_INCORRECT]: {
     // Copied from the wrapper of the "Report" and "Discuss" icons and links when the result is incorrect.
     // Adds the "incorrect" color.
-    [WRAPPER]: [ '_1uM9m' ],
+    [WRAPPER]: [ '_1BszG' ],
   },
 };
 
@@ -96,8 +96,8 @@ const CLASS_NAMES = {
 // We do not add those class names to the icon elements because we already apply the right colors on them using
 // inline styles. Custom themes targeting those class names may also apply their own filters, giving unwanted results.
 const ICON_RESULT_CLASS_NAMES = {
-  [RESULT_CORRECT]: [ '_1vlYi' ],
-  [RESULT_INCORRECT]: [ '_3HTPX' ],
+  [RESULT_CORRECT]: [ '_3NwXb' ],
+  [RESULT_INCORRECT]: [ '_1BszG' ],
 };
 
 const BASE_STYLE_SHEETS = {

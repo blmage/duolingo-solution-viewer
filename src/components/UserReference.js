@@ -185,30 +185,30 @@ const CLASS_NAMES = {
   [CONTEXT_CHALLENGE]: {
     [EDIT_FIELD]: [
       // Copied from the text answer field.
-      '_2mhBk',
-      '_1JtWw',
-      '_1tY-d',
-      '_66Mfn',
-      '_2NQKM',
+      '_2EMUT',
+      '_1QDX9',
+      'st_Fn',
+      '_2ti2i',
+      'sXpqy',
     ],
     [BUTTON]: [
       // Copied from the special letter buttons provided for some languages (such as French).
       // The class responsible for the small and square dimensions is ignored here.
-      '_3ZQ9H',
-      '_3lE5Q',
-      '_18se6',
-      'vy3TL',
-      '_3iIWE',
-      '_1Mkpg',
-      '_1Dtxl',
-      '_1sVAI',
-      'sweRn',
-      '_1BWZU',
-      '_1LIf4',
-      'QVrnU',
+      '_3iVqs',
+      '_2A7uO',
+      '_2gwtT',
+      '_1nlVc',
+      '_2fOC9',
+      't5wFJ',
+      '_3dtSu',
+      '_25Cnc',
+      '_3yAjN',
+      '_3Ev3S',
+      '_1figt',
     ],
-    // Adds the main (link) color.
-    [COMMIT_BUTTON]: [ '_2rA41' ],
+    // Found in the "app" stylesheet. Adds the main link color.
+    // Use a class located after the one responsible for the color and background of the button.
+    [COMMIT_BUTTON]: [ '_2__FI' ],
   },
   [CONTEXT_FORUM]: {
     // Copied from the (heading) wrapper of the "Translation:" subtitle and the translation value.

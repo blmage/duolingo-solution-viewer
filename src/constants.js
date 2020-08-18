@@ -101,14 +101,15 @@ export const IMAGE_CDN_DEFAULT_BASE_URL = 'https://d35aaqx5ub95lt.cloudfront.net
  *
  * @type {string}
  */
-export const MENU_ICON_SELECTOR = 'img.iZYCc';
+export const MENU_ICON_SELECTOR = 'img._1TuHK';
 
 /**
  * The class names used by the original sentence icon element.
+ * It can currently be found by searching for "type-sentence.svg" in the "session" stylesheet.
  *
  * @type {string[]}
  */
-export const SENTENCE_ICON_CLASS_NAMES = [ 'FtLT3' ];
+export const SENTENCE_ICON_CLASS_NAMES = [ '_2seqj' ];
 
 /**
  * The name of the meta tag in which to store the URL of the solution icon.

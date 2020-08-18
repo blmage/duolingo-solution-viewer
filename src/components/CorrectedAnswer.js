@@ -70,18 +70,18 @@ const REMOVED_TOKEN = 'removed_token';
 const CLASS_NAMES = {
   [BASE]: {
     // Copied from the direct wrapper of the "Meaning" title and the corresponding value.
-    [WRAPPER]: [ '_36Uyg' ],
+    [WRAPPER]: [ '_2ez4I' ],
     // Copied from the solution translation.
-    [VALUE]: [ 'TnCw3' ],
+    [VALUE]: [ '_1UqAr' ],
   },
   [RESULT_CORRECT]: {
     // Adds the "correct" color.
-    [WRAPPER]: [ '_11xjL ' ],
+    [WRAPPER]: [ '_1Nmv6 ' ],
     // Adds the "incorrect" color.
-    [ADDED_TOKEN]: [ '_2QxbX' ],
+    [ADDED_TOKEN]: [ '_1sqiF' ],
   },
   [RESULT_INCORRECT]: {
-    [WRAPPER]: [ '_2QxbX' ],
+    [WRAPPER]: [ '_1sqiF' ],
   },
 };
 

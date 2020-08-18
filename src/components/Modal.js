@@ -139,35 +139,35 @@ const CONTENT = 'content';
 const CLASS_NAMES = {
   [BASE]: {
     // Copied from the "Report" modal overlay.
-    // The class names responsible for the opacity/animation are used below.
-    [OVERLAY]: [ '_16E8f', '_18rH6', '_3wo9p' ],
+    // The class names responsible for the opacity and animation are used below.
+    [OVERLAY]: [ '_2Rpqh', '_36g-h', '_1xa0a' ],
     // Copied from the global wrapper of the "Report" modal content.
     // The class names responsible for the opacity/animation are also used below.
-    [WRAPPER]: [ '_3Xf7y', 'w4pY4', '_1qa4z', '_3wo9p' ],
+    [WRAPPER]: [ '_1hEOp', '_13Rl7', '_3lUbm', '_1xa0a' ],
     // Copied from the closing button of the "Report" modal.
-    [CLOSE_BUTTON]: [ '_2YJA9' ],
-    [SIZE_BUTTON]: [ '_2YJA9' ],
+    [CLOSE_BUTTON]: [ 'FrL-W' ],
+    [SIZE_BUTTON]: [ 'FrL-W' ],
     // Copied from the direct wrapper of the "Report" modal content.
-    [CONTENT]: [ '_2vnDy' ],
+    [CONTENT]: [ '_2D1-v' ],
   },
   [STATE_PENDING]: {
     // Found in the "app" stylesheet, or by debugging the modal animation.
     // Applies full transparency and disable pointer events.
-    [OVERLAY]: [ '_2WcLD' ],
-    [WRAPPER]: [ '_2WcLD' ],
+    [OVERLAY]: [ '_1VSis' ],
+    [WRAPPER]: [ '_1VSis' ],
   },
   [STATE_OPENING]: {
     // Found in the "app" stylesheet, or by debugging the modal animation.
     // Applies full opacity.
-    [OVERLAY]: [ '_39TEz' ],
-    [WRAPPER]: [ '_2WcLD' ],
+    [OVERLAY]: [ '_2vfOI' ],
+    [WRAPPER]: [ '_1VSis' ],
   },
   [STATE_OPENED]: {
-    [OVERLAY]: [ '_39TEz' ],
-    [WRAPPER]: [ '_39TEz' ],
+    [OVERLAY]: [ '_2vfOI' ],
+    [WRAPPER]: [ '_2vfOI' ],
   },
   [STATE_CLOSING]: {
-    [OVERLAY]: [ '_2WcLD' ],
+    [OVERLAY]: [ '_1VSis' ],
   },
 };
 

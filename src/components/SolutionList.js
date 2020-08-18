@@ -316,13 +316,13 @@ const PAGE_SIZE_OPTION = 'page_size_option';
 
 const CLASS_NAMES = {
   [CONTEXT_CHALLENGE]: {
-    // Found in the "ltr" stylesheet. Adds the main link color.
-    [SORT_LINK]: [ '_2rA41' ],
+    // Found in the "app" stylesheet. Adds the main link color.
+    [SORT_LINK]: [ '_1yq6r' ],
     // Found in the "app" stylesheet. Adds the page background color.
-    [PAGINATION_WRAPPER]: [ '_1qa4z' ],
-    [PAGE_SIZE_LINK]: [ '_2rA41' ],
-    [PAGE_SIZE_SELECT_WRAPPER]: [ '_2rA41' ],
-    [PAGE_SIZE_SELECT]: [ '_2rA41' ],
+    [PAGINATION_WRAPPER]: [ '_77Bg3' ],
+    [PAGE_SIZE_LINK]: [ '_1yq6r' ],
+    [PAGE_SIZE_SELECT_WRAPPER]: [ '_1yq6r' ],
+    [PAGE_SIZE_SELECT]: [ '_1yq6r' ],
   },
   [CONTEXT_FORUM]: {
     // Copied from the (heading) wrapper of the "Translation:" subtitle and the translation.
