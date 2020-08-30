@@ -69,13 +69,13 @@ window.addEventListener('message', event => {
           action: actionType,
           result: ACTION_RESULT_SUCCESS,
           value,
-        })
+        }, '*')
       }).catch(() => {
         event.source.postMessage({
           type: MESSAGE_TYPE_ACTION_RESULT,
           action: actionType,
           result: ACTION_RESULT_FAILURE,
-        })
+        }, '*')
       });
     } else if (MESSAGE_TYPE_UI_EVENT_NOTIFICATION === event.data.type) {
       const eventType = event.data.event || null;
