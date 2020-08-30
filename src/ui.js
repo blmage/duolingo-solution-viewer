@@ -159,7 +159,7 @@ const CHALLENGE_ACTION_LINK_LIST_SELECTOR = '._2AOD4';
  *
  * @type {string}
  */
-const FORUM_FIXED_PAGE_HEADER_SELECTOR = '._2Jt0i, ._2i8Km';
+const FORUM_FIXED_PAGE_HEADER_SELECTOR = '._1K9ZC, ._2Jt0i, ._2i8Km';
 
 /**
  * A CSS selector for the wrapper of the original post in a forum discussion.
