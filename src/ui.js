@@ -1,3 +1,5 @@
+import 'core-js/features/array/flat-map';
+import 'core-js/features/object/from-entries';
 import { h, render } from 'preact';
 import { IntlProvider } from 'preact-i18n';
 import { isArray, maxBy } from 'lodash';

@@ -1,3 +1,5 @@
+import 'core-js/features/array/flat-map';
+import 'core-js/features/string/match-all';
 import { get, isArray, isString, maxBy, minBy, set } from 'lodash';
 import { _, it } from 'param.macro';
 import wrapFetchWithRetry from 'fetch-retry';
