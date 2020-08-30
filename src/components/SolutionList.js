@@ -319,7 +319,7 @@ const CLASS_NAMES = {
     // Found in the "app" stylesheet. Adds the main link color.
     [SORT_LINK]: [ '_1yq6r' ],
     // Found in the "app" stylesheet. Adds the page background color.
-    [PAGINATION_WRAPPER]: [ '_77Bg3' ],
+    [PAGINATION_WRAPPER]: [ '_3lUbm' ],
     [PAGE_SIZE_LINK]: [ '_1yq6r' ],
     [PAGE_SIZE_SELECT_WRAPPER]: [ '_1yq6r' ],
     [PAGE_SIZE_SELECT]: [ '_1yq6r' ],
@@ -330,9 +330,8 @@ const CLASS_NAMES = {
     // Copied from the "Reply" links. Only the class name which adds the color is used here.
     [SINGLE_SORT_TYPE_LABEL]: [ 'uFNEM' ],
     [SOLUTION]: [ '_2qRu2' ],
-    // Found in the "ltr" stylesheet. Adds the main link color and a cursor pointer.
-    [PAGE_SIZE_SELECT_WRAPPER]: [ '_1xt6R' ],
-    [PAGE_SIZE_SELECT]: [ '_1xt6R' ],
+    // Found in the "ltr" stylesheet. Adds the main link color (unwanted styles are reset below).
+    [PAGE_SIZE_SELECT_WRAPPER]: [ '_1bO3u' ],
   },
 };
 
@@ -365,7 +364,7 @@ const STYLE_SHEETS = {
       whiteSpace: 'nowrap',
       '@media (any-pointer: coarse)': {
         display: 'inline-block',
-        padding: '0 1em',
+        padding: '0.125em 1em',
         position: 'relative',
         ':active': {
           transform: 'translate3d(0, 2px, 0)',
@@ -436,8 +435,9 @@ const STYLE_SHEETS = {
     [PAGE_SIZE_SELECT_WRAPPER]: {
       display: 'none',
       marginLeft: '0.5em',
+      padding: '0',
       position: 'relative',
-      // This fixes the display of the border with Darklingo++.
+      // Fixes the display of the border with Darklingo++.
       transform: 'translate3d(0, 0, 0)',
       ':active': {
         transform: 'translate3d(0, 2px, 0)',
@@ -503,6 +503,9 @@ const STYLE_SHEETS = {
     },
     [SINGLE_SORT_TYPE_LABEL]: {
       fontWeight: 'normal',
-    }
+    },
+    [PAGE_SIZE_SELECT]: {
+      color: 'inherit',
+    },
   }),
 };
