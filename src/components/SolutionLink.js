@@ -67,10 +67,10 @@ const CLASS_NAMES = {
   [CONTEXT_CHALLENGE]: {
     // Copied from the wrapper of the "Report" and "Discuss" icons and links.
     // The class name responsible for the result color is ignored here.
-    [WRAPPER]: [ '_13CKi' ],
+    [WRAPPER]: [ '_13CKi', '_3CCt9' ],
     // Copied from the "Report" and "Discuss" icons.
     // The class name responsible for the background image is ignored here.
-    [ICON]: [ '_1eGRT' ],
+    [ICON]: [ '_1eGRT', 'sf9Rc' ],
     // Copied from the "Report" and "Discuss" titles.
     [TITLE]: [ '_2472G', '_3yAjN' ]
   },
@@ -83,12 +83,12 @@ const CLASS_NAMES = {
   [RESULT_CORRECT]: {
     // Copied from the wrapper of the "Report" and "Discuss" icons and links when the result is correct.
     // Adds the "correct" color.
-    [WRAPPER]: [ '_3NwXb' ],
+    [WRAPPER]: [ '_3NwXb', '_34Jmg' ],
   },
   [RESULT_INCORRECT]: {
     // Copied from the wrapper of the "Report" and "Discuss" icons and links when the result is incorrect.
     // Adds the "incorrect" color.
-    [WRAPPER]: [ '_1BszG' ],
+    [WRAPPER]: [ '_1BszG', '_2tfS2' ],
   },
 };
 

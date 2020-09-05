@@ -151,7 +151,7 @@ const CHALLENGE_SOLUTION_WRAPPER_SELECTOR = '._2ez4I';
  *
  * @type {string}
  */
-const CHALLENGE_ACTION_LINK_LIST_SELECTOR = '._2AOD4';
+const CHALLENGE_ACTION_LINK_LIST_SELECTOR = '._2AOD4, ._3MD8I';
 
 /**
  * A CSS selector for the fixed page header used in the forum. We use the class names with the most styles.
