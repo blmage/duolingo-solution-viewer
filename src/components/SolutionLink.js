@@ -92,12 +92,12 @@ const CLASS_NAMES = {
   },
 };
 
-// Copied from the "Report" icons.
+// Copied from the wrapper of the "Report" and "Discuss" icons and links.
 // We do not add those class names to the icon elements because we already apply the right colors on them using
 // inline styles. Custom themes targeting those class names may also apply their own filters, giving unwanted results.
 const ICON_RESULT_CLASS_NAMES = {
-  [RESULT_CORRECT]: [ '_3NwXb' ],
-  [RESULT_INCORRECT]: [ '_1BszG' ],
+  [RESULT_CORRECT]: [ '_3NwXb', '_34Jmg' ],
+  [RESULT_INCORRECT]: [ '_1BszG', '_2tfS2' ],
 };
 
 const BASE_STYLE_SHEETS = {
@@ -125,17 +125,13 @@ const getChallengeResultStyleSheet = moize(
         'background-position',
         'background-repeat',
         'background-size',
+        'color',
       ]
-    );
-
-    const wrapperStyles = getStylesByClassNames(
-      CLASS_NAMES[CONTEXT_CHALLENGE][WRAPPER].concat(CLASS_NAMES[result][WRAPPER] || []),
-      [ 'color' ]
     );
 
     return StyleSheet.create({
       [ICON]: {
-        backgroundColor: wrapperStyles['color'] || DEFAULT_RESULT_COLORS[result] || '',
+        backgroundColor: iconStyles['color'] || DEFAULT_RESULT_COLORS[result] || '',
         maskImage: getSolutionIconCssUrl() || '',
         maskOrigin: iconStyles['background-origin'],
         maskPosition: iconStyles['background-position'],
