@@ -609,16 +609,14 @@ async function handleListeningChallengeResult(result, userAnswer) {
 
   const solutionTranslationWrapper = document.querySelector(CHALLENGE_SOLUTION_TRANSLATION_SELECTOR);
 
-  if (!solutionTranslationWrapper) {
-    return false;
-  }
-
   return sendActionRequestToContentScript(
     ACTION_TYPE_GET_CURRENT_LISTENING_CHALLENGE,
     {
       result,
       userAnswer,
-      solutionTranslation: solutionTranslationWrapper.innerText,
+      solutionTranslation: !solutionTranslationWrapper
+        ? null
+        : solutionTranslationWrapper.innerText.trim(),
     }
   ).catch(() => false).then(data =>
     isObject(data)

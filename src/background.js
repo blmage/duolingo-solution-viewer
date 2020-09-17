@@ -530,16 +530,18 @@ async function handleCurrentTranslationChallengeRequest(senderId, data, sendResu
  * @returns {Promise<void>} A promise for the result of the action.
  */
 async function handleCurrentListeningChallengeRequest(senderId, data, sendResult) {
-  if (
-    isObject(data)
-    && isString(data.solutionTranslation)
-    && isObject(sessionListeningChallenges[senderId])
-  ) {
-    const solutionTranslation = normalizeString(data.solutionTranslation).trim();
+  if (isObject(data) && isObject(sessionListeningChallenges[senderId])) {
+    let challenges;
     const userAnswer = !isString(data.userAnswer) ? '' : normalizeString(data.userAnswer).trim();
-    let challenges = sessionListeningChallenges[senderId][solutionTranslation];
 
-    if (!isArray(challenges) || (0 === challenges.length)) {
+    if (isString(data.solutionTranslation)) {
+      const solutionTranslation = normalizeString(data.solutionTranslation).trim();
+      challenges = sessionListeningChallenges[senderId][solutionTranslation];
+    } else {
+      challenges = Object.values(sessionListeningChallenges[senderId]).flat();
+    }
+
+    if (0 === challenges.length) {
       return;
     }
 
