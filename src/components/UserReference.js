@@ -44,9 +44,8 @@ const UserReference =
      onChange = noop,
      isEditable = true,
    }) => {
-    const [ isEditing, setIsEditing ] = useState(false);
-    const [ editedReference, setEditedReference ] = useState(reference);
     const editInput = useRef(null);
+    const [ isEditing, setIsEditing ] = useState(false);
 
     const valueKeys = [
       VALUE,
@@ -76,26 +75,22 @@ const UserReference =
 
     const commitEdit = useCallback(event => {
       discardEvent(event);
-      const newReference = editedReference.trim();
 
-      if (
-        ('' !== newReference)
-        && (newReference !== reference)
-        && (editedReference !== reference)
-      ) {
-        onChange(editedReference);
-      } else {
-        setEditedReference(reference)
+      if (editInput.current) {
+        const newReference = String(editInput.current.value || '').trim();
+
+        if (('' !== newReference) && (newReference !== reference)) {
+          onChange(newReference);
+        }
       }
 
       setIsEditing(false);
-    }, [ reference, onChange, setIsEditing, editedReference ]);
+    }, [ reference, onChange, setIsEditing ]);
 
     const rollbackEdit = useCallback(event => {
       discardEvent(event);
       setIsEditing(false);
-      setEditedReference(reference);
-    }, [ reference, setIsEditing, setEditedReference ]);
+    }, [ setIsEditing ]);
 
     const onEditKeyDown = useCallback(event => {
       if ('Enter' === event.key) {
@@ -104,11 +99,6 @@ const UserReference =
         rollbackEdit(event);
       }
     }, [ commitEdit, rollbackEdit ]);
-
-    const onEditKeyUp = useCallback(event => {
-      discardEvent(event);
-      setEditedReference(event.target.value);
-    }, [ setEditedReference ]);
 
     // Focuses the input when we just have switched to edit mode.
     useEffect(() => {
@@ -142,12 +132,10 @@ const UserReference =
             ) : ( // Editing.
               <EditWrapper>
                 <textarea ref={editInput}
-                          dir="auto"
+                          defaultValue={reference}
                           onKeyDown={onEditKeyDown}
-                          onKeyUp={onEditKeyUp}
-                          className={getElementClassNames(EDIT_FIELD)}>
-                  {editedReference}
-                </textarea>
+                          dir="auto"
+                          className={getElementClassNames(EDIT_FIELD)} />
                 <button onClick={commitEdit}
                         style={buttonInlineStyles[COMMIT_BUTTON] || ''}
                         className={getElementClassNames([ BUTTON, COMMIT_BUTTON, additionalButtonClass ])}>
