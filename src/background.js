@@ -353,7 +353,8 @@ async function getDiscussionCommentId(discussionId, fromLanguage, toLanguage) {
         discussionId,
         fromLanguage,
         toLanguage
-      )
+      ),
+      { credentials: 'include' }
     );
 
     const data = await response.json();
