@@ -88,7 +88,7 @@ const CLASS_NAMES = {
 const STYLE_SHEETS = {
   [BASE]: StyleSheet.create({
     [WRAPPER]: {
-      marginBottom: '10px',
+      margin: '10px 0',
     },
     [REMOVED_TOKEN]: {
       textDecoration: 'underline',

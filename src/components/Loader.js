@@ -33,6 +33,7 @@ const STYLE_SHEETS = {
     [WRAPPER]: {
       alignItems: 'center',
       display: 'inline-flex',
+      height: '100%',
       justifyContent: 'space-between',
     },
     [BALL]: {
@@ -43,7 +44,7 @@ const STYLE_SHEETS = {
       backgroundColor: 'currentColor',
       borderRadius: '100%',
       height: '8px',
-      margin: '0 5px',
+      margin: '0 4px',
       width: '8px',
       ':nth-child(1)': {
         animationDelay: '-0.32s',

@@ -37,6 +37,8 @@ const SolutionLink =
 
     const counts = getSolutionsI18nCounts(solutions);
 
+    const Wrapper = (CONTEXT_CHALLENGE === context) ? 'button' : 'a';
+
     return (
       <IntlProvider scope="solution_link">
         {isLoading ? (
@@ -44,14 +46,14 @@ const SolutionLink =
             <Loader />
           </div>
         ) : (
-          <a className={getElementClassNames(WRAPPER)} onClick={onClick}>
+          <Wrapper className={getElementClassNames(WRAPPER)} onClick={onClick}>
             <div className={getElementClassNames(ICON)} />
             <span className={getElementClassNames(TITLE)}>
               <Text id="label" plural={counts.plural} fields={{ count: counts.display }}>
                 Solutions ({counts.display})
               </Text>
             </span>
-          </a>
+          </Wrapper>
         )}
       </IntlProvider>
     );
@@ -67,12 +69,12 @@ const CLASS_NAMES = {
   [CONTEXT_CHALLENGE]: {
     // Copied from the wrapper of the "Report" and "Discuss" icons and links.
     // The class name responsible for the result color is ignored here.
-    [WRAPPER]: [ '_13CKi', '_3CCt9' ],
+    [WRAPPER]: [ '_3CCt9', '_2kfEr', '_1nlVc', '_2fOC9', 'UCrz7', 't5wFJ' ],
     // Copied from the "Report" and "Discuss" icons.
     // The class name responsible for the background image is ignored here.
     [ICON]: [ '_1eGRT', 'sf9Rc' ],
     // Copied from the "Report" and "Discuss" titles.
-    [TITLE]: [ '_2472G', '_3yAjN' ]
+    [TITLE]: [ '_28V9T', '_3yAjN' ]
   },
   [CONTEXT_FORUM]: {
     // Copied from the direct wrapper of the "Give Lingot" link.
@@ -101,6 +103,11 @@ const ICON_RESULT_CLASS_NAMES = {
 };
 
 const BASE_STYLE_SHEETS = {
+  [CONTEXT_CHALLENGE]: StyleSheet.create({
+    [WRAPPER]: {
+      height: '100%',
+    },
+  }),
   [CONTEXT_FORUM]: StyleSheet.create({
     [WRAPPER]: {
       cursor: 'pointer',
