@@ -101,12 +101,15 @@ const CHALLENGE_STATEMENT_SELECTORS = [
 const CHALLENGE_STATEMENT_HINT_SELECTOR = '[data-test="hint-popover"]';
 
 /**
- * A CSS selector for the translated solution of the current challenge.
+ * Possible CSS selectors for the translated solution of the current challenge.
  * In case it might help, the ClosestSolution component targets the same value.
  *
- * @type {string}
+ * @type {string[]}
  */
-const CHALLENGE_SOLUTION_TRANSLATION_SELECTOR = '._3mObn > *:last-child > ._1UqAr';
+const CHALLENGE_SOLUTION_TRANSLATION_SELECTORS = [
+  '._3mObn > *:last-child > ._1UqAr > *:last-child',
+  '._3mObn > *:last-child > ._1UqAr',
+];
 
 /**
  * A CSS selector for all the different kinds of answer input which are not based on the word bank.
@@ -607,7 +610,7 @@ async function handleListeningChallengeResult(result, userAnswer) {
     return false;
   }
 
-  const solutionTranslationWrapper = document.querySelector(CHALLENGE_SOLUTION_TRANSLATION_SELECTOR);
+  const solutionTranslationWrapper = querySelectors(CHALLENGE_SOLUTION_TRANSLATION_SELECTORS);
 
   return sendActionRequestToContentScript(
     ACTION_TYPE_GET_CURRENT_LISTENING_CHALLENGE,

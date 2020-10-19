@@ -3,7 +3,7 @@
   "description": "A browser extension providing access to the complete lists of accepted solutions for Duolingo's translation challenges.",
   "license": "MIT",
   "author": "blmage",
-  "version": "3.0.5",
+  "version": "3.0.6",
   "scripts": {
     "build": "rollup -c --environment production",
     "build-debug": "rollup -c --environment development",
