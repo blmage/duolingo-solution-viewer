@@ -1,11 +1,11 @@
 import { h } from 'preact';
+import { useMemo } from 'preact/hooks';
 import { useKey, useKeyPress } from 'preact-use';
 import { IntlProvider, Localizer, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
-import { isNumber } from 'lodash';
 import Paginator from 'paginator';
-import { BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, useStyles, useThrottledCallback } from './base';
-import { isInputFocused, noop } from '../functions';
+import { isAnyInputFocused, isNumber, noop } from '../functions';
+import { BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, useStyles, useThrottledCallback } from './index';
 
 const Pagination =
   ({
@@ -14,17 +14,18 @@ const Pagination =
      totalItemCount = 0,
      itemCountPerPage = 20,
      displayedPageCount = 5,
-     onChange = noop,
+     onPageChange = noop,
    }) => {
-    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
+    const paginator = useMemo(() => (
+      new Paginator(itemCountPerPage, displayedPageCount)
+    ), [ itemCountPerPage, displayedPageCount ]);
 
-    const paginator = new Paginator(itemCountPerPage, displayedPageCount);
     const paginationData = paginator.build(totalItemCount, activePage);
 
     const [ isControlPressed ] = useKeyPress('Control');
 
     const onPreviousKey = useThrottledCallback((data, goToFirst, callback) => {
-      if (isInputFocused()) {
+      if (isAnyInputFocused()) {
         return;
       }
 
@@ -35,10 +36,10 @@ const Pagination =
           callback(data.previous_page);
         }
       }
-    }, 50, [ paginationData, isControlPressed, onChange ]);
+    }, 50, [ paginationData, isControlPressed, onPageChange ]);
 
     const onNextKey = useThrottledCallback((data, goToLast, callback) => {
-      if (isInputFocused()) {
+      if (isAnyInputFocused()) {
         return;
       }
 
@@ -49,16 +50,18 @@ const Pagination =
           callback(data.next_page);
         }
       }
-    }, 50, [ paginationData, isControlPressed, onChange ]);
+    }, 50, [ paginationData, isControlPressed, onPageChange ]);
 
     useKey('ArrowLeft', onPreviousKey, {}, [ onPreviousKey ]);
     useKey('ArrowRight', onNextKey, {}, [ onNextKey ]);
+
+    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
 
     if (totalItemCount <= itemCountPerPage) {
       return null;
     }
 
-    const renderButton = ({ key, label, title, titleKey, titleFields = {}, disabled, onClick }) => {
+    const renderButton = ({ key, disabled, label, title, titleKey, titleFields = {}, onClick }) => {
       let buttonClassNames = getElementClassNames(BUTTON);
 
       if (isNumber(label)) {
@@ -74,12 +77,12 @@ const Pagination =
       return (
         <div key={key} className={getElementClassNames(ITEM)}>
           <Localizer>
-            <button disabled={disabled}
-                    onClick={onClick}
-                    className={buttonClassNames}
-                    title={
-                      <Text id={titleKey} fields={titleFields}>{title}</Text>
-                    }>
+            <button
+              title={<Text id={titleKey} fields={titleFields}>{title}</Text>}
+              disabled={disabled}
+              onClick={onClick}
+              className={buttonClassNames}
+            >
               <span className={getElementClassNames(BUTTON_LABEL)}>{label}</span>
             </button>
           </Localizer>
@@ -94,7 +97,7 @@ const Pagination =
         title: 'Go to first page',
         titleKey: 'go_to_first',
         disabled: !paginationData.has_previous_page,
-        onClick: () => onChange(1),
+        onClick: () => onPageChange(1),
       }),
       renderButton({
         key: 'previous',
@@ -102,7 +105,7 @@ const Pagination =
         title: 'Go to previous page',
         titleKey: 'go_to_previous',
         disabled: !paginationData.has_previous_page,
-        onClick: () => onChange(paginationData.previous_page),
+        onClick: () => onPageChange(paginationData.previous_page),
       }),
     ];
 
@@ -115,7 +118,7 @@ const Pagination =
           titleKey: 'go_to_page',
           titleFields: { page },
           disabled: paginationData.current_page === page,
-          onClick: () => onChange(page),
+          onClick: () => onPageChange(page),
         }),
       );
     }
@@ -127,7 +130,7 @@ const Pagination =
         title: 'Go to next page',
         titleKey: 'go_to_next',
         disabled: !paginationData.has_next_page,
-        onClick: () => onChange(paginationData.next_page),
+        onClick: () => onPageChange(paginationData.next_page),
       }),
 
       renderButton({
@@ -136,7 +139,7 @@ const Pagination =
         title: 'Go to last page',
         titleKey: 'go_to_last',
         disabled: paginationData.current_page === paginationData.total_pages,
-        onClick: () => onChange(paginationData.total_pages),
+        onClick: () => onPageChange(paginationData.total_pages),
       }),
     );
 

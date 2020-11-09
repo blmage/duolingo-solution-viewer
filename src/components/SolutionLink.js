@@ -1,41 +1,28 @@
 import { h } from 'preact';
 import { IntlProvider, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
-import moize from 'moize';
-import { CONTEXT_CHALLENGE, CONTEXT_FORUM, useStyles } from './base';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { RESULT_CORRECT, RESULT_INCORRECT, RESULT_NONE } from '../constants';
+import { discardEvent, } from '../functions';
+import * as Solution from '../solutions';
+import { CONTEXT_CHALLENGE, CONTEXT_FORUM, useStyles } from './index';
 import Loader from './Loader';
-import { RESULT_CORRECT, RESULT_INCORRECT, DEFAULT_RESULT_COLORS, RESULT_NONE } from '../constants';
-
-import {
-  discardEvent,
-  getSolutionsI18nCounts,
-  getSolutionIconCssUrl,
-  getStylesByClassNames,
-} from '../functions';
 
 const SolutionLink =
   ({
      context = CONTEXT_CHALLENGE,
+     solutions = [],
      result = RESULT_NONE,
      isLoading = false,
-     solutions = [],
      onClick = discardEvent,
    }) => {
-    const STYLE_SHEETS = Object.assign({}, BASE_STYLE_SHEETS, (CONTEXT_FORUM === context)
-      ? {}
-      : {
-        [RESULT_CORRECT]: getChallengeResultStyleSheet(RESULT_CORRECT),
-        [RESULT_INCORRECT]: getChallengeResultStyleSheet(RESULT_INCORRECT),
-      }
-    );
-
     const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context, result ]);
 
     if (!isLoading && (0 === solutions.length)) {
       return null;
     }
 
-    const counts = getSolutionsI18nCounts(solutions);
+    const counts = Solution.getI18nCounts(solutions);
 
     const Wrapper = (CONTEXT_CHALLENGE === context) ? 'button' : 'a';
 
@@ -46,8 +33,15 @@ const SolutionLink =
             <Loader />
           </div>
         ) : (
-          <Wrapper className={getElementClassNames(WRAPPER)} onClick={onClick}>
-            <div className={getElementClassNames(ICON)} />
+          <Wrapper onClick={onClick} className={getElementClassNames(WRAPPER)}>
+            {(CONTEXT_CHALLENGE === context)
+            && (
+              <FontAwesomeIcon
+                icon={[ 'far', 'key' ]}
+                size={'w-18'}
+                className={getElementClassNames(ICON)}
+              />
+            )}
             <span className={getElementClassNames(TITLE)}>
               <Text id="label" plural={counts.plural} fields={{ count: counts.display }}>
                 Solutions ({counts.display})
@@ -94,15 +88,7 @@ const CLASS_NAMES = {
   },
 };
 
-// Copied from the wrapper of the "Report" and "Discuss" icons and links.
-// We do not add those class names to the icon elements because we already apply the right colors on them using
-// inline styles. Custom themes targeting those class names may also apply their own filters, giving unwanted results.
-const ICON_RESULT_CLASS_NAMES = {
-  [RESULT_CORRECT]: [ '_3NwXb', '_34Jmg' ],
-  [RESULT_INCORRECT]: [ '_1BszG', '_2tfS2' ],
-};
-
-const BASE_STYLE_SHEETS = {
+const STYLE_SHEETS = {
   [CONTEXT_CHALLENGE]: StyleSheet.create({
     [WRAPPER]: {
       height: '100%',
@@ -117,34 +103,3 @@ const BASE_STYLE_SHEETS = {
     },
   }),
 };
-
-/**
- * @function
- * @param {string} result A result type.
- * @returns {object} The corresponding stylesheet applicable on a challenge page.
- */
-const getChallengeResultStyleSheet = moize(
-  result => {
-    const iconStyles = getStylesByClassNames(
-      CLASS_NAMES[CONTEXT_CHALLENGE][ICON].concat(ICON_RESULT_CLASS_NAMES[result] || []),
-      [
-        'background-origin',
-        'background-position',
-        'background-repeat',
-        'background-size',
-        'color',
-      ]
-    );
-
-    return StyleSheet.create({
-      [ICON]: {
-        backgroundColor: iconStyles['color'] || DEFAULT_RESULT_COLORS[result] || '',
-        maskImage: getSolutionIconCssUrl() || '',
-        maskOrigin: iconStyles['background-origin'],
-        maskPosition: iconStyles['background-position'],
-        maskRepeat: iconStyles['background-repeat'],
-        maskSize: iconStyles['background-size'],
-      }
-    });
-  }
-);

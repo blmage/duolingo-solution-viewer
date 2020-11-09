@@ -3,75 +3,45 @@ import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { IntlProvider, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import moize from 'moize';
-import { BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, useStyles } from './base';
 import { discardEvent, noop } from '../functions';
+import { BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, useStyles } from './index';
 
 const FORUM_FOLLOW_BUTTON_SELECTOR = '._13Bfz button';
 const FORUM_NEW_POST_BUTTONS_SELECTOR = '._1KvMS textarea + div button';
 
 /**
  * @function
- * @returns {object|null} When in the context of a forum discussion, the inline styles applied to the new post buttons.
+ * @returns {string|null} When in the context of a forum discussion, the inline styles applied to the follow button.
  */
-const getForumNewPostButtonsInlineStyles = moize(
-  () => {
-    const postButtons = Array.from(document.querySelectorAll(FORUM_NEW_POST_BUTTONS_SELECTOR));
-
-    return (2 !== postButtons.length)
-      ? null
-      : {
-        [COMMIT_BUTTON]: String(postButtons[0].getAttribute('style') || ''),
-        [ROLLBACK_BUTTON]: String(postButtons[1].getAttribute('style') || ''),
-      };
-  }
-);
+const getForumFollowButtonInlineStyles = moize(() => {
+  const followButton = document.querySelector(FORUM_FOLLOW_BUTTON_SELECTOR);
+  return String(followButton && followButton.getAttribute('style') || '');
+});
 
 /**
  * @function
- * @returns {string|null} When in the context of a forum discussion, the inline styles applied to the follow button.
+ * @returns {object|null} When in the context of a forum discussion, the inline styles applied to the new post buttons.
  */
-const getForumFollowButtonInlineStyles = moize(
-  () => {
-    const followButton = document.querySelector(FORUM_FOLLOW_BUTTON_SELECTOR);
-    return String(followButton && followButton.getAttribute('style') || '');
-  }
-);
+const getForumNewPostButtonsInlineStyles = moize(() => {
+  const postButtons = Array.from(document.querySelectorAll(FORUM_NEW_POST_BUTTONS_SELECTOR));
+
+  return (2 !== postButtons.length)
+    ? null
+    : {
+      [COMMIT_BUTTON]: String(postButtons[0].getAttribute('style') || ''),
+      [ROLLBACK_BUTTON]: String(postButtons[1].getAttribute('style') || ''),
+    };
+});
 
 const UserReference =
   ({
      context = CONTEXT_CHALLENGE,
      reference = '',
-     onChange = noop,
      isEditable = true,
+     onUpdate = noop,
    }) => {
-    const editInput = useRef(null);
+    const editInput = useRef();
     const [ isEditing, setIsEditing ] = useState(false);
-
-    const valueKeys = [
-      VALUE,
-      isEditable && EDITABLE_VALUE,
-      ('' === reference) && EMPTY_VALUE,
-    ].filter(Boolean);
-
-    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
-
-    let buttonInlineStyles = {};
-    let additionalButtonClass = null;
-
-    if (CONTEXT_FORUM === context) {
-      buttonInlineStyles = getForumNewPostButtonsInlineStyles();
-
-      if (null === buttonInlineStyles) {
-        const inlineStyles = getForumFollowButtonInlineStyles();
-
-        buttonInlineStyles = {
-          [COMMIT_BUTTON]: inlineStyles,
-          [ROLLBACK_BUTTON]: inlineStyles,
-        };
-
-        additionalButtonClass = FALLBACK_BUTTON;
-      }
-    }
 
     const commitEdit = useCallback(event => {
       discardEvent(event);
@@ -80,12 +50,12 @@ const UserReference =
         const newReference = String(editInput.current.value || '').trim();
 
         if (('' !== newReference) && (newReference !== reference)) {
-          onChange(newReference);
+          onUpdate(newReference);
         }
       }
 
       setIsEditing(false);
-    }, [ reference, onChange, setIsEditing ]);
+    }, [ reference, onUpdate, setIsEditing ]);
 
     const rollbackEdit = useCallback(event => {
       discardEvent(event);
@@ -107,6 +77,7 @@ const UserReference =
           if (document.activeElement !== editInput.current.focused) {
             const length = editInput.current.value.length;
             editInput.current.focus();
+            // Place the cursor at the end of the text.
             editInput.current.setSelectionRange(length + 1, length + 1);
           }
         });
@@ -117,6 +88,32 @@ const UserReference =
       ? [ 'div', 'h3', 'p', 'p' ]
       : [ 'h2', 'span', 'span', Fragment ];
 
+    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
+
+    let buttonInlineStyles = {};
+    let additionalButtonClass = null;
+
+    if (CONTEXT_FORUM === context) {
+      buttonInlineStyles = getForumNewPostButtonsInlineStyles();
+
+      if (null === buttonInlineStyles) {
+        const inlineStyles = getForumFollowButtonInlineStyles();
+
+        buttonInlineStyles = {
+          [COMMIT_BUTTON]: inlineStyles,
+          [ROLLBACK_BUTTON]: inlineStyles,
+        };
+
+        additionalButtonClass = FALLBACK_BUTTON;
+      }
+    }
+
+    const valueKeys = [
+      VALUE,
+      isEditable && EDITABLE_VALUE,
+      ('' === reference) && EMPTY_VALUE,
+    ].filter(Boolean);
+
     return (
       <IntlProvider scope="user_reference">
         <Wrapper className={getElementClassNames(WRAPPER)}>
@@ -125,26 +122,33 @@ const UserReference =
           </Title>
           {!isEditing
             ? ( // Not editing.
-              <Value onClick={() => isEditable && setIsEditing(true)}
-                     className={getElementClassNames(valueKeys)}>
+              <Value onClick={() => isEditable && setIsEditing(true)} className={getElementClassNames(valueKeys)}>
                 {('' !== reference) ? reference : <Text id="none">None yet</Text>}
               </Value>
             ) : ( // Editing.
               <EditWrapper>
-                <textarea ref={editInput}
-                          defaultValue={reference}
-                          onKeyDown={onEditKeyDown}
-                          dir="auto"
-                          className={getElementClassNames(EDIT_FIELD)} />
-                <button onClick={commitEdit}
-                        style={buttonInlineStyles[COMMIT_BUTTON] || ''}
-                        className={getElementClassNames([ BUTTON, COMMIT_BUTTON, additionalButtonClass ])}>
+                <textarea
+                  ref={editInput}
+                  defaultValue={reference}
+                  dir="auto"
+                  onKeyDown={onEditKeyDown}
+                  className={getElementClassNames(EDIT_FIELD)}
+                />
+
+                <button
+                  onClick={commitEdit}
+                  style={buttonInlineStyles[COMMIT_BUTTON] || ''}
+                  className={getElementClassNames([ BUTTON, COMMIT_BUTTON, additionalButtonClass ])}
+                >
                   <Text id="update">Update</Text>
                 </button>
+
                 <span className={getElementClassNames(BUTTON_SPACER)}>
-                  <button onClick={rollbackEdit}
-                          style={buttonInlineStyles[ROLLBACK_BUTTON] || ''}
-                          className={getElementClassNames([ BUTTON, ROLLBACK_BUTTON, additionalButtonClass ])}>
+                  <button
+                    onClick={rollbackEdit}
+                    style={buttonInlineStyles[ROLLBACK_BUTTON] || ''}
+                    className={getElementClassNames([ BUTTON, ROLLBACK_BUTTON, additionalButtonClass ])}
+                  >
                     <Text id="cancel">Cancel</Text>
                   </button>
                 </span>

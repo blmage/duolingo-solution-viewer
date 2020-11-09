@@ -24,7 +24,7 @@ export const DEFAULT_LOCALE = 'en';
  *
  * @type {string[]}
  */
-export const TRANSLATION_CHALLENGE_TYPES = [
+export const UI_TRANSLATION_CHALLENGE_TYPES = [
   'name',
   'translate',
   'completeReverseTranslation',
@@ -35,7 +35,7 @@ export const TRANSLATION_CHALLENGE_TYPES = [
  *
  * @type {string[]}
  */
-export const LISTENING_CHALLENGE_TYPES = [
+export const UI_LISTENING_CHALLENGE_TYPES = [
   'listen',
   'listenTap',
 ];
@@ -45,7 +45,7 @@ export const LISTENING_CHALLENGE_TYPES = [
  *
  * @type {string[]}
  */
-export const NAMING_CHALLENGE_TYPES = [
+export const UI_NAMING_CHALLENGE_TYPES = [
   'name',
 ];
 
@@ -54,9 +54,30 @@ export const NAMING_CHALLENGE_TYPES = [
  *
  * @type {string[]}
  */
-export const WORD_BANK_CHALLENGE_TYPES = [
+export const UI_WORD_BANK_CHALLENGE_TYPES = [
   'listenTap',
 ];
+
+/**
+ * The type of challenges that require the user to translate a sentence.
+ *
+ * @type {number}
+ */
+export const CHALLENGE_TYPE_TRANSLATION = 0b001;
+
+/**
+ * The type of challenges that require the user to name a picture.
+ *
+ * @type {number}
+ */
+export const CHALLENGE_TYPE_NAMING = 0b011;
+
+/**
+ * The type of challenges that require the user to recognize a spoken sentence.
+ *
+ * @type {number}
+ */
+export const CHALLENGE_TYPE_LISTENING = 0b100;
 
 /**
  * A unique constant for when a result is unknown.
@@ -78,66 +99,6 @@ export const RESULT_CORRECT = 'correct';
  * @type {string}
  */
 export const RESULT_INCORRECT = 'incorrect';
-
-/**
- * The colors of the original theme (as were last seen) for the different result types.
- *
- * @type {object.<string, string>}
- */
-export const DEFAULT_RESULT_COLORS = {
-  [RESULT_CORRECT]: '#58a700',
-  [RESULT_INCORRECT]: '#ea2b2b',
-};
-
-/**
- * The URL of the image CDN (as was last seen), usable as a fallback.
- *
- * @type {string}
- */
-export const IMAGE_CDN_DEFAULT_BASE_URL = 'https://d35aaqx5ub95lt.cloudfront.net/';
-
-/**
- * A CSS selector for menu icons.
- *
- * @type {string}
- */
-export const MENU_ICON_SELECTOR = 'img._1TuHK';
-
-/**
- * The class names used by the original sentence icon element.
- * It can currently be found by searching for "type-sentence.svg" in the "session" stylesheet.
- *
- * @type {string[]}
- */
-export const SENTENCE_ICON_CLASS_NAMES = [ '_2seqj' ];
-
-/**
- * The name of the meta tag in which to store the URL of the solution icon.
- *
- * @type {string}
- */
-export const SOLUTION_ICON_URL_META_NAME = `${EXTENSION_PREFIX}-solution-icon-url`;
-
-/**
- * The path of the close icon on the image CDN.
- *
- * @type {string}
- */
-export const CLOSE_ICON_CDN_PATH = 'images/x.svg';
-
-/**
- * A RegExp for the URL that is used by Duolingo to start a new practice session.
- *
- * @type {RegExp}
- */
-export const NEW_SESSION_URL_REGEXP = /\/[\d]{4}-[\d]{2}-[\d]{2}\/sessions/g;
-
-/**
- * A RegExp for the URLs of forum comments.
- *
- * @type {RegExp}
- */
-export const FORUM_COMMENT_URL_REGEXP = /forum\.duolingo\.com\/comment\/([\d]+)/;
 
 /**
  * The result of failed background actions.
@@ -182,11 +143,12 @@ export const ACTION_TYPE_GET_CURRENT_TRANSLATION_CHALLENGE = 'get_current_transl
 export const ACTION_TYPE_GET_CURRENT_LISTENING_CHALLENGE = 'get_current_listening_challenge';
 
 /**
- * The type of the background action usable to match the solutions of a challenge with a user answer.
- * 
+ * The type of the background action usable to update the user answer / reference associated to a given challenge from
+ * a running practice session.
+ *
  * @type {string}
  */
-export const ACTION_TYPE_MATCH_CHALLENGE_WITH_USER_ANSWER = 'match_challenge_with_user_answer';
+export const ACTION_TYPE_UPDATE_CURRENT_CHALLENGE_USER_REFERENCE = 'update_current_challenge_user_reference';
 
 /**
  * The type of the background action usable to fetch the challenge discussed by a forum comment.
@@ -196,18 +158,12 @@ export const ACTION_TYPE_MATCH_CHALLENGE_WITH_USER_ANSWER = 'match_challenge_wit
 export const ACTION_TYPE_GET_COMMENT_CHALLENGE = 'get_comment_challenge';
 
 /**
- * The type of the background action usable to update the challenges addressed by some forum discussions.
+ * The type of the background action usable to update the user answer / reference associated to the challenge
+ * corresponding to a given forum comment.
  *
  * @type {string}
  */
-export const ACTION_TYPE_UPDATE_DISCUSSION_CHALLENGES = 'update_discussion_challenges';
-
-/**
- * The type of the background action usable to update the user answer/reference associated to a forum comment.
- *
- * @type {string}
- */
-export const ACTION_TYPE_UPDATE_COMMENT_USER_REFERENCE = 'update_comment_user_reference';
+export const ACTION_TYPE_UPDATE_COMMENT_CHALLENGE_USER_REFERENCE = 'update_comment_challenge_user_reference';
 
 /**
  * The types of the available background actions.
@@ -217,10 +173,9 @@ export const ACTION_TYPE_UPDATE_COMMENT_USER_REFERENCE = 'update_comment_user_re
 export const ACTION_TYPES = [
   ACTION_TYPE_GET_CURRENT_TRANSLATION_CHALLENGE,
   ACTION_TYPE_GET_CURRENT_LISTENING_CHALLENGE,
-  ACTION_TYPE_MATCH_CHALLENGE_WITH_USER_ANSWER,
+  ACTION_TYPE_UPDATE_CURRENT_CHALLENGE_USER_REFERENCE,
   ACTION_TYPE_GET_COMMENT_CHALLENGE,
-  ACTION_TYPE_UPDATE_DISCUSSION_CHALLENGES,
-  ACTION_TYPE_UPDATE_COMMENT_USER_REFERENCE,
+  ACTION_TYPE_UPDATE_COMMENT_CHALLENGE_USER_REFERENCE,
 ];
 
 /**
@@ -245,7 +200,7 @@ export const EVENT_TYPE_SESSION_LOADED = 'session_loaded';
 export const EVENT_TYPE_SOUND_PLAYED = 'sound_played';
 
 /**
- * The types of the different events that can occur on the page and are meaningful to the extension.
+ * The types of the different events that can occur on the UI and are meaningful to the extension.
  *
  * @type {string[]}
  */
@@ -266,3 +221,45 @@ export const EMPTY_CHALLENGE = {
   toLanguage: '',
   discussionId: '',
 };
+
+/**
+ * A word match result indicating that a word is not present anywhere in another.
+ *
+ * @type {number}
+ */
+export const WORD_MATCH_NONE = 0b0000;
+
+/**
+ * A word match result indicating that a word is present somewhere in another.
+ *
+ * @type {number}
+ */
+export const WORD_MATCH_ANYWHERE = 0b0001;
+
+/**
+ * A word match result indicating that a word is present at the start of another.
+ *
+ * @type {number}
+ */
+export const WORD_MATCH_START = 0b0011;
+
+/**
+ * A word match result indicating that a word is present at the end of another.
+ *
+ * @type {number}
+ */
+export const WORD_MATCH_END = 0b0101;
+
+/**
+ * A word match result indicating that a word is equal to another.
+ *
+ * @type {number}
+ */
+export const WORD_MATCH_EXACT = 0b1111;
+
+/**
+ * The URL of the image CDN as was last seen, usable as a fallback.
+ *
+ * @type {string}
+ */
+export const IMAGE_CDN_DEFAULT_BASE_URL = 'https://d35aaqx5ub95lt.cloudfront.net/';

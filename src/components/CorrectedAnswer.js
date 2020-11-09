@@ -3,8 +3,8 @@ import { useCallback, useEffect, useState } from 'preact/hooks';
 import { IntlProvider, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import { _ } from 'param.macro';
-import { BASE, useStyles } from './base';
 import { RESULT_CORRECT, RESULT_INCORRECT } from '../constants';
+import { BASE, useStyles } from './index';
 
 const DISPLAY_MODE_ORIGINAL = 'original';
 const DISPLAY_MODE_CORRECTED = 'corrected';
@@ -12,6 +12,7 @@ const DISPLAY_MODE_CORRECTED = 'corrected';
 const CorrectedAnswer = ({ diffTokens = [], result = RESULT_CORRECT }) => {
   const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ result ]);
 
+  // Renders a diff token.
   const renderToken = useCallback((token, displayMode) => {
     let elementKey = null;
 
@@ -29,13 +30,17 @@ const CorrectedAnswer = ({ diffTokens = [], result = RESULT_CORRECT }) => {
       }
     }
 
-    return <span className={elementKey && getElementClassNames(elementKey)}>{token.value}</span>;
+    return (
+      <span className={getElementClassNames(elementKey)}>
+        {token.value}
+      </span>
+    );
   }, [ getElementClassNames ]);
 
   const [ originalAnswer, setOriginalAnswer ] = useState([]);
   const [ correctedAnswer, setCorrectedAnswer ] = useState([]);
 
-  // Refreshes both answers when the diff tokens have changed.
+  // Refreshes both versions of the answer when the diff tokens change.
   useEffect(() => {
     setOriginalAnswer(diffTokens.map(renderToken(_, DISPLAY_MODE_ORIGINAL)));
     setCorrectedAnswer(diffTokens.map(renderToken(_, DISPLAY_MODE_CORRECTED)));

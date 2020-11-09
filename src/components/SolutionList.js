@@ -1,10 +1,21 @@
-import { h } from 'preact';
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { IntlProvider, Localizer, Text } from 'preact-i18n';
+import { Fragment, h } from 'preact';
+import { forwardRef } from 'preact/compat';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { IntlProvider, Localizer, Text, useText } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
-import { identity } from 'lodash';
-import moize from 'moize';
 import { it } from 'param.macro';
+import moize from 'moize';
+
+import {
+  WORD_MATCH_ANYWHERE,
+  WORD_MATCH_END,
+  WORD_MATCH_EXACT,
+  WORD_MATCH_NONE,
+  WORD_MATCH_START,
+} from '../constants';
+
+import { boundIndicesOf, identity, invertComparison, noop, } from '../functions';
+import * as Solution from '../solutions.js';
 
 import {
   BASE,
@@ -13,20 +24,13 @@ import {
   useLocalStorage,
   useLocalStorageList,
   useStyles,
-} from './base';
+} from './index';
 
 import Pagination from './Pagination';
+import WordFilterInput from './WordFilterInput';
 
-import {
-  compareSolutionReferences,
-  compareSolutionScores,
-  getSolutionDisplayableString,
-  invertComparison,
-  noop,
-} from '../functions';
-
-const SORT_TYPE_ALPHABETICAL = 'alphabetical';
 const SORT_TYPE_SIMILARITY = 'similarity';
+const SORT_TYPE_ALPHABETICAL = 'alphabetical';
 
 const SORT_TYPES = {
   [SORT_TYPE_SIMILARITY]: {
@@ -45,7 +49,7 @@ const SORT_TYPES = {
 
 /**
  * @function
- * @param {boolean} isScoreAvailable Whether similarity scores for solutions are available.
+ * @param {boolean} isScoreAvailable Whether similarity scores are available on solutions.
  * @returns {string[]} The available sort types.
  */
 const getAvailableSortTypes = moize(isScoreAvailable => {
@@ -79,220 +83,395 @@ const DEFAULT_PAGE_SIZE = 20;
 const PAGE_SIZES = [ 10, 20, 50, 200, PAGE_SIZE_ALL ];
 
 /**
+ * @function
  * @param {number|string} sizeA A page size.
  * @param {number|string} sizeB Another page size.
  * @returns {boolean} Whether the two page sizes are equivalent.
  */
-function isEqualPageSizes(sizeA, sizeB) {
-  return String(sizeA) === String(sizeB);
-}
+const isEqualPageSizes = (sizeA, sizeB) => String(sizeA) === String(sizeB);
 
-const SolutionList =
+const ListSortLinks =
   ({
-     context = CONTEXT_CHALLENGE,
-     solutions = [],
-     isScoreAvailable = true,
-     onPageChange = noop,
+     context,
+     availableSortTypes,
+     sortType,
+     nextSortType,
+     sortDirection,
+     nextSortDirection,
+     onSortTypeToggle,
+     onSortDirectionToggle,
    }) => {
     const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
 
-    const [ page, setRawPage ] = useState(1);
-    const shouldTriggerPageChange = useRef();
-    const [ pageSize, setRawPageSize ] = useLocalStorage('page_size', DEFAULT_PAGE_SIZE);
-
-    const setPage = useCallback(page => {
-      setRawPage(page);
-      shouldTriggerPageChange.current = true;
-    }, [ setRawPage ]);
-
-    const setPageSize = useCallback(size => {
-      setRawPageSize(size);
-
-      if (PAGE_SIZE_ALL === size) {
-        setRawPage(1);
-      } else {
-        // Update the current page to keep the same solution at the top of the list.
-        const sizeValue = Number(size);
-
-        if (PAGE_SIZES.indexOf(sizeValue) === -1) {
-          return;
-        }
-
-        const oldSize = (PAGE_SIZE_ALL === pageSize)
-          ? solutions.length
-          : Math.min(pageSize, solutions.length);
-
-        setRawPage(Math.ceil(((page - 1) * oldSize + 1) / sizeValue));
-      }
-
-      shouldTriggerPageChange.current = true;
-    }, [ page, pageSize, solutions.length, setRawPageSize ]);
-
-    const sortTypes = getAvailableSortTypes(isScoreAvailable);
-
     const {
-      state: sortType,
-      nextState: nextSortType,
-      next: setNextSortType,
-    } = useLocalStorageList(
-      'sort-type',
-      sortTypes,
-      sortTypes[0]
+      sortTypeLabel,
+      nextSortTypeTitle,
+      nextSortDirectionTitle,
+    } = useText({
+      sortTypeLabel: (
+        <Text id={SORT_TYPES[sortType].labelId}>
+          {SORT_TYPES[sortType].defaultLabel}
+        </Text>
+      ),
+      nextSortTypeTitle: (
+        <Text id={SORT_TYPES[nextSortType].actionLabelId}>
+          {SORT_TYPES[nextSortType].defaultActionLabel}
+        </Text>
+      ),
+      nextSortDirectionTitle: (
+        <Text id={SORT_DIRECTIONS[nextSortDirection].actionLabelId}>
+          {SORT_DIRECTIONS[nextSortDirection].defaultActionLabel}
+        </Text>
+      ),
+    });
+
+    return (
+      <div className={getElementClassNames(TITLE_LINK_WRAPPER)}>
+        <Localizer>
+          {(1 === availableSortTypes.length)
+            ? ( // Single sort type
+              <span className={getElementClassNames([ SORT_TYPE_LABEL, SINGLE_SORT_TYPE_LABEL ])}>
+                {sortTypeLabel}
+              </span>
+            ) : ( // Multiple sort types
+              <a
+                title={nextSortTypeTitle}
+                onClick={onSortTypeToggle}
+                className={getElementClassNames(SORT_LINK)}
+              >
+                <span className={getElementClassNames(SORT_TYPE_LABEL)}>
+                  {sortTypeLabel}
+                </span>
+              </a>
+            )}
+
+          <a
+            title={nextSortDirectionTitle}
+            onClick={onSortDirectionToggle}
+            className={getElementClassNames(SORT_LINK)}
+          >
+            <span className={getElementClassNames(SORT_DIRECTION_LABEL)}>
+              {SORT_DIRECTIONS[sortDirection].label}
+            </span>
+          </a>
+        </Localizer>
+      </div>
     );
+  };
 
-    const {
-      state: sortDirection,
-      nextState: nextSortDirection,
-      next: setNextSortDirection,
-    } = useLocalStorageList(
-      'sort-direction',
-      Object.keys(SORT_DIRECTIONS),
-      SORT_DIRECTION_DESC
-    );
-
-    const [ sortedSolutions, setSortedSolutions ] = useState([]);
-
-    // Sorts the current solutions whenever necessary.
-    useEffect(() => {
-      const compareSolutions = SORT_TYPE_SIMILARITY === sortType
-        ? (SORT_DIRECTION_ASC === sortDirection ? invertComparison : identity)(compareSolutionScores)
-        : (SORT_DIRECTION_DESC === sortDirection ? invertComparison : identity)(compareSolutionReferences);
-
-      setSortedSolutions(solutions.sort(compareSolutions));
-    }, [ solutions, sortType, sortDirection ]);
-
-    const [ solutionItems, setSolutionItems ] = useState([]);
-
-    const renderSolutionItem = useCallback(value => (
-      <li className={getElementClassNames(SOLUTION)}>
-        {getSolutionDisplayableString(value)}
-      </li>
-    ), [ getElementClassNames ]);
-
-    // Refreshes the rendered list items whenever necessary.
-    useEffect(() => {
-      const pageSolutions = (PAGE_SIZE_ALL === pageSize)
-        ? sortedSolutions
-        : sortedSolutions.slice((page - 1) * pageSize, page * pageSize);
-
-      setSolutionItems(pageSolutions.map(renderSolutionItem));
-    }, [ sortedSolutions, sortType, sortDirection, page, pageSize, renderSolutionItem ]);
-
-    // Triggers the page change callback asynchronously, so that the changes have been applied when it is run.
-    useEffect(() => {
-      if (shouldTriggerPageChange.current) {
-        setTimeout(onPageChange());
-        shouldTriggerPageChange.current = false;
-      }
-    }, [ solutionItems, onPageChange, shouldTriggerPageChange ]);
+const ListPagination =
+  ({
+     context,
+     solutionCount,
+     page,
+     pageSize,
+     onPageChange,
+     onPageSizeChange,
+   }) => {
+    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
 
     const getSizeLabel = size => (PAGE_SIZE_ALL !== size)
       ? `${size}`
       : <Text id="all">all</Text>;
 
-    const renderSizeLink = useCallback(size => isEqualPageSizes(size, pageSize)
-      ? ( // Same page size
-        <span className={getElementClassNames(CURRENT_PAGE_SIZE)}>
-          {getSizeLabel(size)}
-        </span>
-      ) : ( // Different page size
-        <a onClick={() => setPageSize(size)} className={getElementClassNames(PAGE_SIZE_LINK)}>
-          {getSizeLabel(size)}
-        </a>
-      ),
-      [ pageSize, setPageSize, getElementClassNames ]
-    );
+    const renderSizeLink = useCallback(size => (
+      isEqualPageSizes(size, pageSize)
+        ? ( // Same page size
+          <span className={getElementClassNames(CURRENT_PAGE_SIZE)}>
+            {getSizeLabel(size)}
+          </span>
+        ) : ( // Different page size
+          <a onClick={() => onPageSizeChange(size)} className={getElementClassNames(PAGE_SIZE_LINK)}>
+            {getSizeLabel(size)}
+          </a>
+        )
+    ), [ pageSize, onPageSizeChange, getElementClassNames ]);
 
     const renderSizeOption = useCallback(size => (
-      <option value={size}
-              selected={isEqualPageSizes(size, pageSize)}
-              className={getElementClassNames(PAGE_SIZE_OPTION)}>
+      <option
+        value={size}
+        selected={isEqualPageSizes(size, pageSize)}
+        className={getElementClassNames(PAGE_SIZE_OPTION)}
+      >
         {getSizeLabel(size)}
       </option>
     ), [ pageSize, getElementClassNames ]);
 
-    if (0 === solutions.length) {
-      return null;
-    }
-
     const [ firstIndex, lastIndex ] = (PAGE_SIZE_ALL === pageSize)
-      ? [ 1, solutions.length ]
-      : [ (page - 1) * pageSize + 1, Math.min(solutions.length, page * pageSize) ];
+      ? [ 1, solutionCount ]
+      : [ (page - 1) * pageSize + 1, Math.min(solutionCount, page * pageSize) ];
 
     return (
-      <IntlProvider scope="solution_list">
-        <div>
-          <h3 className={getElementClassNames(TITLE)}>
-            <span className={getElementClassNames(TITLE_TEXT)}>
-              <Text id="correct_solutions">Correct solutions:</Text>
-            </span>
-            <div className={getElementClassNames(TITLE_LINK_WRAPPER)}>
-              <Localizer>
-                {(sortTypes.length > 1)
-                  ? ( // Multiple sort types
-                    <a className={getElementClassNames(SORT_LINK)}
-                       onClick={setNextSortType}
-                       title={
-                         <Text id={SORT_TYPES[nextSortType].actionLabelId}>
-                           {SORT_TYPES[nextSortType].defaultActionLabel}
-                         </Text>
-                       }>
-                      <span className={getElementClassNames(SORT_TYPE_LABEL)}>
-                        <Text id={SORT_TYPES[sortType].labelId}>
-                          {SORT_TYPES[sortType].defaultLabel}
-                        </Text>
-                      </span>
-                    </a>
-                  ) : ( // Single sort type
-                    <span className={getElementClassNames([ SORT_TYPE_LABEL, SINGLE_SORT_TYPE_LABEL ])}>
-                      <Text id={SORT_TYPES[sortType].labelId}>
-                        {SORT_TYPES[sortType].defaultLabel}
-                      </Text>
-                    </span>
-                  )}
-                <a className={getElementClassNames(SORT_LINK)}
-                   onClick={setNextSortDirection}
-                   title={
-                     <Text id={SORT_DIRECTIONS[nextSortDirection].actionLabelId}>
-                       {SORT_DIRECTIONS[nextSortDirection].defaultActionLabel}
-                     </Text>
-                   }>
-                  <span className={getElementClassNames(SORT_DIRECTION_LABEL)}>
-                    {SORT_DIRECTIONS[sortDirection].label}
-                  </span>
-                </a>
-              </Localizer>
-            </div>
-          </h3>
-          <ul>{solutionItems}</ul>
-          <div className={getElementClassNames(PAGINATION_WRAPPER)}>
-            {(PAGE_SIZE_ALL !== pageSize) && (
-              <Pagination activePage={page}
-                          itemCountPerPage={pageSize}
-                          totalItemCount={solutions.length}
-                          onChange={setPage}
-                          context={context} />
-            )}
-            <div className={getElementClassNames(PAGINATION_FOOTER)}>
-              <div className={getElementClassNames(PAGINATION_STATE)}>
-                {firstIndex} - {lastIndex} / {solutions.length}
-              </div>
-              <div className={getElementClassNames(PAGINATION_SIZE_WRAPPER)}>
-                <Text id="per_page">per page:</Text>
-                {PAGE_SIZES.map(renderSizeLink)}
-                <div className={getElementClassNames(PAGE_SIZE_SELECT_WRAPPER)}>
-                  <select onChange={event => setPageSize(event.target.value)}
-                          className={getElementClassNames(PAGE_SIZE_SELECT)}>
-                    {PAGE_SIZES.map(renderSizeOption)}
-                  </select>
-                </div>
-              </div>
+      <div className={getElementClassNames(PAGINATION_WRAPPER)}>
+        {(PAGE_SIZE_ALL !== pageSize) && (
+          <Pagination
+            activePage={page}
+            itemCountPerPage={pageSize}
+            totalItemCount={solutionCount}
+            onPageChange={onPageChange}
+            context={context}
+          />
+        )}
+
+        <div className={getElementClassNames(PAGINATION_FOOTER)}>
+          <div className={getElementClassNames(PAGINATION_STATE)}>
+            {firstIndex} - {lastIndex} / {solutionCount}
+          </div>
+
+          <div className={getElementClassNames(PAGINATION_SIZE_WRAPPER)}>
+            <Text id="per_page">per page:</Text>
+
+            {PAGE_SIZES.map(renderSizeLink)}
+
+            <div className={getElementClassNames(PAGE_SIZE_SELECT_WRAPPER)}>
+              <select
+                onChange={event => onPageSizeChange(event.target.value)}
+                className={getElementClassNames(PAGE_SIZE_SELECT)}
+              >
+                {PAGE_SIZES.map(renderSizeOption)}
+              </select>
             </div>
           </div>
         </div>
-      </IntlProvider>
-    );
+      </div>
+    )
   };
+
+const SolutionList =
+  forwardRef(
+    (
+      {
+        context = CONTEXT_CHALLENGE,
+        solutions = [],
+        matchingData = {},
+        onPageChange = noop,
+      },
+      listRef
+    ) => {
+      const isScoreAvailable = useMemo(() => {
+        return solutions.some('score' in it);
+      }, [ solutions ]);
+
+      const sortTypes = getAvailableSortTypes(isScoreAvailable);
+
+      const {
+        state: sortType,
+        nextState: nextSortType,
+        next: setNextSortType,
+      } = useLocalStorageList(
+        'sort-type',
+        sortTypes,
+        sortTypes[0]
+      );
+
+      const {
+        state: sortDirection,
+        nextState: nextSortDirection,
+        next: setNextSortDirection,
+      } = useLocalStorageList(
+        'sort-direction',
+        Object.keys(SORT_DIRECTIONS),
+        SORT_DIRECTION_DESC
+      );
+
+      // 1. Sort the solutions.
+
+      const sortedSolutions = useMemo(() => (
+        solutions.slice()
+          .sort(
+            SORT_TYPE_SIMILARITY === sortType
+              ? (SORT_DIRECTION_ASC === sortDirection ? invertComparison : identity)(Solution.compareByScore)
+              : (SORT_DIRECTION_ASC === sortDirection ? identity : invertComparison)(Solution.compareByReference)
+          )
+      ), [ solutions, sortType, sortDirection ]);
+
+      // 2. Filter the solutions.
+
+      const filterCache = useRef({}).current;
+      const [ filters, setFilters ] = useState([]);
+
+      const filteredSolutions = useMemo(() => {
+        for (const filter of filters) {
+          if (!filterCache[filter.word]) {
+            filterCache[filter.word] = {};
+          }
+        }
+
+        return sortedSolutions.filter(({ matchingData: { id, words } }) => {
+          for (const filter of filters) {
+            let start = 0;
+            let matches = WORD_MATCH_NONE;
+            let isMatched = false;
+
+            if (filterCache[filter.word][id]) {
+              [ start, matches ] = filterCache[filter.word][id];
+              isMatched = (filter.matchMode & matches) === filter.matchMode;
+            }
+
+            let index = start;
+
+            while ((index < words.length) && !isMatched) {
+              const word = words[index];
+              const [ first, last ] = boundIndicesOf(word, filter.word);
+
+              if (first >= 0) {
+                if (first === 0) {
+                  if (last + filter.word.length === word.length) {
+                    matches = WORD_MATCH_EXACT;
+                    index = words.length;
+                  } else {
+                    matches |= WORD_MATCH_START;
+                  }
+                } else if (last + filter.word.length === word.length) {
+                  matches |= WORD_MATCH_END;
+                } else if (first + last >= 0) {
+                  matches |= WORD_MATCH_ANYWHERE;
+                }
+              }
+
+              ++index;
+              isMatched = (filter.matchMode & matches) === filter.matchMode;
+            }
+
+            if (index > start) {
+              filterCache[filter.word][id] = [ index, matches ];
+            }
+
+            if (isMatched === filter.isExcluded) {
+              return false;
+            }
+          }
+
+          return true;
+        })
+      }, [ sortedSolutions, filterCache, filters ]);
+
+      // 3. Paginate and render the current solutions.
+
+      const [ rawPage, setRawPage ] = useState(1);
+      const shouldTriggerPageChange = useRef(false);
+      const [ pageSize, setRawPageSize ] = useLocalStorage('page_size', DEFAULT_PAGE_SIZE);
+
+      const page = (PAGE_SIZE_ALL === pageSize)
+        ? 1
+        : Math.min(rawPage, Math.ceil(filteredSolutions.length / pageSize));
+
+      const setPage = useCallback(page => {
+        setRawPage(page);
+        shouldTriggerPageChange.current = true;
+      }, [ setRawPage ]);
+
+      const setPageSize = useCallback(size => {
+        setRawPageSize(size);
+
+        if (PAGE_SIZE_ALL === size) {
+          setRawPage(1);
+        } else {
+          // Update the current page to keep the same solution at the top of the list.
+          const sizeValue = Number(size);
+
+          if (PAGE_SIZES.indexOf(sizeValue) === -1) {
+            return;
+          }
+
+          const oldSize = (PAGE_SIZE_ALL === pageSize)
+            ? filteredSolutions.length
+            : Math.min(pageSize, filteredSolutions.length);
+
+          setRawPage(Math.ceil(((page - 1) * oldSize + 1) / sizeValue));
+        }
+
+        shouldTriggerPageChange.current = true;
+      }, [ page, pageSize, filteredSolutions.length, setRawPageSize ]);
+
+      const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
+
+      const solutionItems = useMemo(() => {
+        const renderSolutionItem = solution => (
+          <li className={getElementClassNames(SOLUTION)}>
+            {Solution.getDisplayableString(solution)}
+          </li>
+        );
+
+        const pageSolutions = (PAGE_SIZE_ALL === pageSize)
+          ? filteredSolutions
+          : filteredSolutions.slice((page - 1) * pageSize, page * pageSize);
+
+        return pageSolutions.map(renderSolutionItem);
+      }, [ page, pageSize, filteredSolutions, getElementClassNames ]);
+
+      // Triggers the "page change" callback asynchronously,
+      // to make sure it is run only when the changes have been applied to the UI.
+      useEffect(() => {
+        if (shouldTriggerPageChange.current) {
+          setTimeout(onPageChange());
+          shouldTriggerPageChange.current = false;
+        }
+      }, [ solutionItems, onPageChange, shouldTriggerPageChange ]);
+
+      if (0 === solutions.length) {
+        return null;
+      }
+
+      return (
+        <IntlProvider scope="solution_list">
+          <div>
+            <h3 className={getElementClassNames(TITLE)}>
+            <span className={getElementClassNames(TITLE_TEXT)}>
+              <Text id="filter">Filter:</Text>
+            </span>
+
+              <WordFilterInput
+                context={context}
+                filters={filters}
+                matchingData={matchingData}
+                onChange={setFilters}
+              />
+            </h3>
+
+            <div ref={listRef}>
+              <h3 className={getElementClassNames(TITLE)}>
+              <span className={getElementClassNames(TITLE_TEXT)}>
+                <Text id="correct_solutions">Correct solutions:</Text>
+              </span>
+
+                <ListSortLinks
+                  context={context}
+                  availableSortTypes={sortTypes}
+                  sortType={sortType}
+                  nextSortType={nextSortType}
+                  sortDirection={sortDirection}
+                  nextSortDirection={nextSortDirection}
+                  onSortTypeToggle={() => setNextSortType()}
+                  onSortDirectionToggle={() => setNextSortDirection()}
+                />
+              </h3>
+
+              {(0 === filteredSolutions.length)
+                ? (
+                  <div>
+                    <Text id="no_matching_solution">There is no matching solution.</Text>
+                  </div>
+                ) : (
+                  <Fragment>
+                    <ul>{solutionItems}</ul>
+
+                    <ListPagination
+                      context={context}
+                      solutionCount={filteredSolutions.length}
+                      page={page}
+                      pageSize={pageSize}
+                      onPageChange={setPage}
+                      onPageSizeChange={setPageSize}
+                    />
+                  </Fragment>
+                )}
+            </div>
+          </div>
+        </IntlProvider>
+      );
+    }
+  );
 
 export default SolutionList;
 
@@ -393,6 +572,10 @@ const STYLE_SHEETS = {
     [SORT_DIRECTION_LABEL]: {
       fontSize: '1.2em',
       fontWeight: '900',
+    },
+    [SINGLE_SORT_TYPE_LABEL]: {
+      fontWeight: 'normal',
+      marginRight: '0.5em',
     },
     [SOLUTION]: {
       padding: '0.4em 0.5em 0.3em',
@@ -500,9 +683,6 @@ const STYLE_SHEETS = {
     [SORT_TYPE_LABEL]: {
       marginRight: '0.5em',
       textTransform: 'none',
-    },
-    [SINGLE_SORT_TYPE_LABEL]: {
-      fontWeight: 'normal',
     },
     [PAGE_SIZE_SELECT]: {
       color: 'inherit',

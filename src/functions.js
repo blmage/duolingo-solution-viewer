@@ -1,39 +1,57 @@
-import moize from 'moize';
-import { it } from 'param.macro';
-import Cookies from 'js-cookie';
-
-import {
-  ACTION_RESULT_SUCCESS,
-  DEFAULT_LOCALE, EXTENSION_CODE,
-  IMAGE_CDN_DEFAULT_BASE_URL,
-  MENU_ICON_SELECTOR,
-  MESSAGE_TYPE_ACTION_REQUEST,
-  MESSAGE_TYPE_ACTION_RESULT,
-  MESSAGE_TYPE_UI_EVENT_NOTIFICATION,
-  SENTENCE_ICON_CLASS_NAMES,
-  SOLUTION_ICON_URL_META_NAME,
-} from './constants';
+import { _, lift } from 'param.macro';
+import { EXTENSION_CODE } from './constants';
 
 /**
  * A function which does nothing.
+ *
+ * @function
+ * @returns {void}
  */
-export function noop() {
-}
+export const noop = () => {
+};
+
+/**
+ * @function
+ * @param {*} value A value.
+ * @returns {*} The same value.
+ */
+export const identity = _;
 
 /**
  * @param {Promise} promise A promise to run solely for its effects, ignoring its result.
+ * @returns {void}
  */
-export function runPromiseForEffects(promise) {
+export const runPromiseForEffects = promise => {
   promise.then(noop).catch(noop);
 }
 
 /**
+ * @function
+ * @param {*} value A value.
+ * @returns {boolean} Whether the given value is a valid, finite number.
+ */
+export const isNumber = value => (typeof value === 'number') && Number.isFinite(value);
+
+/**
+ * @function
+ * @param {*} value A value.
+ * @returns {boolean} Whether the given value is a string.
+ */
+export const isString = (typeof _ === 'string');
+
+/**
+ * @function
+ * @param {*} value The tested value.
+ * @returns {boolean} Whether the given value is an array.
+ */
+export const isArray = Array.isArray;
+
+/**
+ * @function
  * @param {*} value The tested value.
  * @returns {boolean} Whether the given value is an object. This excludes Arrays, but not Dates or RegExps.
  */
-export function isObject(value) {
-  return ('object' === typeof value) && !!value && !Array.isArray(value);
-}
+export const isObject = value => ('object' === typeof value) && !!value && !isArray(value);
 
 /**
  * @param {object} object A Plain Old Javascript Object.
@@ -50,6 +68,172 @@ export function isEmptyObject(object) {
 }
 
 /**
+ * @function
+ * @param {*} x A value.
+ * @param {*} y Another value.
+ * @returns {boolean} Whether the first value is larger than the second.
+ */
+const gt = (_ > _);
+
+/**
+ * @function
+ * @param {*} x A value.
+ * @param {*} y Another value.
+ * @returns {boolean} Whether the first value is smaller than the second.
+ */
+const lt = (_ < _);
+
+/**
+ * @param {Array} values A list of values.
+ * @param {Function} getter A getter for the calculated values to compare.
+ * @param {Function} comparer A function usable to compare any two calculated values, and determine which one to keep.
+ * @returns {*|undefined} The value in the list whose corresponding calculated value was selected.
+ */
+export function extremumBy(values, getter, comparer) {
+  let selected;
+  let extremum;
+
+  if (isArray(values)) {
+    for (let i = 0, l = values.length; i < l; i++) {
+      const calculated = getter(values[i]);
+
+      if ((undefined === extremum) || comparer(calculated, extremum)) {
+        selected = values[i];
+        extremum = calculated;
+      }
+    }
+  }
+
+  return selected;
+}
+
+/**
+ * @function
+ * @param {Array} values A list of values.
+ * @param {Function} getter A getter for the calculated values to compare.
+ * @returns {*|undefined} The value in the list whose corresponding calculated value is the largest.
+ */
+export const maxBy = extremumBy(_, _, gt);
+
+/**
+ * @function
+ * @param {Array} values A list of values.
+ * @param {Function} getter A getter for the calculated values to compare and return.
+ * @returns {*|undefined} The largest calculated value from the values in the list.
+ */
+export const maxOf = (values, getter) => {
+  const value = maxBy(values, getter);
+  return (undefined === value) ? value : getter(value);
+}
+
+/**
+ * @function
+ * @param {Array} values A list of values.
+ * @returns {*|undefined} The largest value in the list.
+ */
+export const max = maxOf(_, identity);
+
+/**
+ * @function
+ * @param {Array} values A list of values.
+ * @param {Function} getter A getter for the calculated values to compare.
+ * @returns {*|undefined} The value in the list whose corresponding calculated value is the smallest.
+ */
+export const minBy = extremumBy(_, _, lt);
+
+/**
+ * @function
+ * @param {Array} values A list of values.
+ * @param {Function} getter A getter for the calculated values to compare and return.
+ * @returns {*|undefined} The smallest calculated value from the values in the list.
+ */
+export const minOf = (values, getter) => {
+  const value = minOf(values, getter);
+  return (undefined === value) ? value : getter(value);
+}
+
+/**
+ * @function
+ * @param {Array} values A list of values.
+ * @returns {*|undefined} The smallest value in the list.
+ */
+export const min = minOf(_, identity);
+
+/**
+ * @function
+ * @param {Array} values A list of values.
+ * @param {Function} getter A getter for the calculated values to be summed up.
+ * @returns {number} The sum of the calculated values from the values in the list.
+ */
+export const sumOf = (values, getter) => values.reduce((result, value) => result + getter(value), 0);
+
+/**
+ * @function
+ * @param {number[]} values A list of numbers.
+ * @returns {number} The sum of the numbers in the list.
+ */
+export const sum = sumOf(_, identity);
+
+/**
+ * @param {Array} values A list of values.
+ * @param {Function} getter A getter for the calculated values on which to group the values in the list.
+ * @returns {Object<string, Array>} An object from calculated values to the corresponding subset of original values.
+ */
+export function groupBy(values, getter) {
+  const result = {};
+
+  for (let i = 0, l = values.length; i < l; i++) {
+    const value = values[i];
+    const key = String(getter(value));
+
+    if (!(key in result)) {
+      result[key] = [];
+    }
+
+    result[key].push(values[i])
+  }
+
+  return result;
+}
+
+/**
+ * @function
+ * @param {Array} values A list of values.
+ * @param {Function} isEquivalentTo A function usable to test if two values are equivalent.
+ * @returns {Array} The given list of values, in which equivalent adjacent values have been deduplicated.
+ */
+export function dedupeAdjacentBy(values, isEquivalentTo) {
+  const result = values.slice(0, 1);
+  let baseIndex = 0;
+
+  for (let i = 1, l = values.length; i < l; i++) {
+    if (!isEquivalentTo(values[baseIndex], values[i])) {
+      baseIndex = i;
+      result.push(values[i]);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * @function
+ * @param {Array} values A list of values.
+ * @returns {Array} The given list of values, in which equal adjacent values have been deduplicated.
+ */
+export const dedupeAdjacent = dedupeAdjacentBy(_, lift(_ === _));
+
+/**
+ * @function
+ * @param {Array[]} xss A list of arrays.
+ * @returns {Array[]} The cartesian product of the given arrays.
+ */
+export const cartesianProduct = xss => (0 === xss.length)
+  ? []
+  : xss.reduce((yss, xs) => yss.flatMap(ys => xs.map(x => [ ...ys, x ])), [ [] ]);
+
+
+/**
  * @param {Function} compare A comparison function.
  * @returns {Function} The inverse of the given comparison function.
  */
@@ -61,21 +245,30 @@ export function invertComparison(compare) {
 }
 
 /**
- * @param {string} string A string.
- * @returns {string} A Unicode-normalized version of the given string, in which redundant spaces have been removed.
+ * @param {string} string The string to normalize.
+ * @param {boolean} removeExtraSpaces Whether leading / trailing / redundant spaces should be removed.
+ * @param {boolean} removeDiacritics Whether diacritics should be removed.
+ * @returns {string} The given string, without extra spaces and / or diacritics, and normalized using NFC.
  */
-export function normalizeString(string) {
-  return string.normalize().replace(/(\s)\1+/g, '$1');
+export function normalizeString(string, removeExtraSpaces = true, removeDiacritics = false) {
+  let result = !removeDiacritics
+    ? string
+    : string.normalize('NFD').replace(/\p{M}/ug, '');
+
+  result = result.normalize('NFC');
+
+  return !removeExtraSpaces
+    ? result
+    : result.trim().replace(/(\s)\1+/g, '$1');
 }
 
 /**
- * Compares two strings using a pre-defined set of collation rules.
+ * Compares two strings using a sensible set of collation rules.
  *
  * @param {string} x A string.
  * @param {string} y Another string.
  * @param {string} locale The locale to use for the comparison.
- * @returns {number}
- * A negative value if x comes before y, a positive value if x comes before y, and 0 if both strings are equivalent.
+ * @returns {number} -1 if x comes before y, 1 if x comes after y, and 0 if both strings are equal.
  */
 export function compareStrings(x, y, locale) {
   return x.localeCompare(y, locale, {
@@ -87,8 +280,65 @@ export function compareStrings(x, y, locale) {
 }
 
 /**
+ * @param {string} string A string.
+ * @returns {string[]} The words (sequences of letters and / or numbers) contained in the given string.
+ */
+export function getStringWords(string) {
+  const words = string.match(/([\p{L}\p{N}]+)/ug);
+  return !words ? [] : Array.from(words);
+}
+
+/**
+ * @param {string} string A string.
+ * @param {string} substring The substring to search in the given string.
+ * @returns {[number, number]} The leftmost and rightmost indices of the given substring in the given string.
+ */
+export function boundIndicesOf(string, substring) {
+  if (string === substring) {
+    return [ 0, 0 ];
+  }
+
+  if (substring.length >= string.length) {
+    return [ -1, -1 ];
+  }
+
+  const firstIndex = string.indexOf(substring);
+
+  if ((firstIndex === -1) || (firstIndex + substring.length + 1 > string.length)) {
+    return [ firstIndex, firstIndex ];
+  }
+
+  return [ firstIndex, string.lastIndexOf(substring) ];
+}
+
+/**
+ * @param {Function} mergeValues A function usable to merge two values.
+ * @param {Map[]} maps A list of maps.
+ * @returns {Map}
+ * A new map that contains all the keys of the given maps.
+ * If a key occurs in two or more maps, the given function will be used to merge the corresponding values.
+ */
+export function mergeMapsWith(mergeValues, ...maps) {
+  const result = new Map();
+  const [ base, ...additional ] = maps;
+
+  for (const [ key, value ] of base) {
+    result.set(key, value);
+  }
+
+  for (const map of additional) {
+    for (const [ key, value ] of map) {
+      const existing = result.get(key);
+      result.set(key, existing === undefined ? value : mergeValues(existing, value));
+    }
+  }
+
+  return result;
+}
+
+/**
  * @param {string[]} selectors A list of selectors.
- * @returns {Element|null} The first element to match any of the selectors, in order.
+ * @returns {Element|null} The first element to match any of the selectors, tested in order.
  */
 export function querySelectors(selectors) {
   for (let i = 0, l = selectors.length; i < l; i++) {
@@ -111,7 +361,7 @@ let uniqueIdCounter = 1;
 
 /**
  * @param {string} prefix The prefix to prepend to the generated ID.
- * @returns {string} A unique/unused element ID.
+ * @returns {string} A unique / unused element ID.
  */
 export function getUniqueElementId(prefix) {
   let elementId;
@@ -127,7 +377,7 @@ export function getUniqueElementId(prefix) {
  * @param {Element} element The element to toggle.
  * @param {boolean|null} displayed The state of the element, if it should be forced.
  */
-export function toggleElement(element, displayed = null) {
+export function toggleElementDisplay(element, displayed = null) {
   if (element instanceof Element) {
     if (element.style.display === 'none') {
       if (false !== displayed) {
@@ -140,7 +390,7 @@ export function toggleElement(element, displayed = null) {
 }
 
 /**
- * @param {Event} event The UI event to completely discard.
+ * @param {Event} event The UI event to discard.
  */
 export function discardEvent(event) {
   event.preventDefault();
@@ -148,93 +398,60 @@ export function discardEvent(event) {
 }
 
 /**
- * @returns {boolean} Whether the currently focused element is an input.
+ * @returns {boolean} Whether the currently focused element (if any) is an input.
  */
-export function isInputFocused() {
+export function isAnyInputFocused() {
   return !document.activeElement
     ? false
-    : ([ 'input', 'select', 'textarea' ].indexOf(document.activeElement.tagName.toLowerCase()) >= 0);
+    : [ 'input', 'select', 'textarea' ].indexOf(document.activeElement.tagName.toLowerCase()) >= 0;
 }
 
 /**
  * @param {Element} element An element.
- * @param {number} threshold The minimum scroll height for an ancestor to be considered scrollable.
- * @returns {Element} The first ancestor of the given element which has a scrollbar.
+ * @param {number} threshold The minimum scroll height for a parent to be returned.
+ * @returns {Element} The first parent of the given element that has a scrollbar with sufficient scroll height.
  */
-export function getScrollableAncestor(element, threshold = 10) {
-  let parent = element.parentNode;
+export function getParentWithScrollbar(element, threshold = 10) {
+  let parent = element.parentElement;
 
   while (parent) {
     if ((parent.clientHeight > 0) && (parent.scrollHeight - threshold > parent.clientHeight)) {
       return parent;
     }
 
-    parent = parent.parentNode;
+    parent = parent.parentElement;
   }
 
   return document.body;
 }
 
 /**
- * @function
- * @param {string[]} classNames A set of class names.
- * @param {string[]} styleNames The names of the styles whose values should be returned.
- * @returns {object} A subset of the computed style values applied by the given set of class names.
+ * @param {Element} element An element.
+ * @returns {boolean} Whether the given element is scrollable.
  */
-export const getStylesByClassNames = moize(
-  (classNames, styleNames) => {
-    const styles = {};
-
-    const element = document.createElement('div');
-    element.style.display = 'none';
-    classNames.forEach(className => element.classList.add(className));
-
-    document.body.appendChild(element);
-    const computedStyle = getComputedStyle(element);
-
-    styleNames.forEach(name => {
-      styles[name] = computedStyle.getPropertyValue(name) || '';
-    });
-
-    element.remove();
-
-    return styles;
+function isScrollableElement(element) {
+  try {
+    const { overflow, overflowX, overflowY } = getComputedStyle(element);
+    return /(auto|scroll)/i.test(overflow + overflowX + overflowY);
+  } catch (error) {
+    return false;
   }
-);
+}
 
 /**
- * @function
- * @returns {string} The base URL of the image CDN.
+ * @param {Element} element An element.
+ * @returns {Node[]} The parents of the given element that are scrollable.
  */
-export const getImageCdnBaseUrl = moize(
-  () => {
-    const menuIcon = document.querySelector(MENU_ICON_SELECTOR);
-    return `${new URL(menuIcon && menuIcon.src || IMAGE_CDN_DEFAULT_BASE_URL).origin}/`;
+export function getScrollableParents(element) {
+  let parent = element.parentElement;
+  const scrollableParents = [ document ];
+
+  while (parent && (parent !== document.body)) {
+    isScrollableElement(parent) && scrollableParents.push(parent);
+    parent = parent.parentElement;
   }
-);
 
-/**
- * @function
- * @returns {string|null} The CSS URL of the solution icon, if it can be determined.
- */
-export const getSolutionIconCssUrl = moize(
-  () => {
-    const solutionIconMeta = document.querySelector(`meta[name="${SOLUTION_ICON_URL_META_NAME}"]`);
-    const solutionIconUrl = (solutionIconMeta && solutionIconMeta.getAttribute('content') || '').trim();
-
-    return (solutionIconUrl && `url(${solutionIconUrl})`)
-      || getStylesByClassNames(SENTENCE_ICON_CLASS_NAMES, [ 'background-image' ])['background-image']
-      || null;
-  }
-);
-
-/**
- * @returns {string} The tag of the current language used for the UI.
- */
-export function getUiLocale() {
-  return String(isObject(window.duo) && window.duo.uiLanguage || '').trim()
-    || String(Cookies.get('ui_language') || '').trim()
-    || DEFAULT_LOCALE;
+  return scrollableParents;
 }
 
 /**
@@ -258,115 +475,4 @@ export function logError(error, prefix) {
 
     loggingIframe.contentWindow.console.error(`[${EXTENSION_CODE}] ${prefix || ''}`, error);
   }
-}
-
-/**
- * Sends an action request to the content script.
- *
- * @param {string} action The action key.
- * @param {*} value The action payload.
- * @returns {Promise} A promise for the result of the action.
- */
-export async function sendActionRequestToContentScript(action, value) {
-  return new Promise((resolve, reject) => {
-    const resultListener = event => {
-      if (
-        (event.source === window)
-        && event.data
-        && (MESSAGE_TYPE_ACTION_RESULT === event.data.type)
-        && (action === event.data.action)
-      ) {
-        if (event.data.result === ACTION_RESULT_SUCCESS) {
-          resolve(event.data.value || null);
-        } else {
-          reject();
-        }
-
-        event.stopPropagation();
-        window.removeEventListener('message', resultListener);
-      }
-    };
-
-    window.addEventListener('message', resultListener);
-
-    window.postMessage({
-      type: MESSAGE_TYPE_ACTION_REQUEST,
-      action,
-      value,
-    }, '*');
-  });
-}
-
-/**
- * Sends an event notification to the content script.
- *
- * @param {string} event The event key.
- * @param {*} value The event payload.
- */
-export function sendEventNotificationToContentScript(event, value) {
-  window.postMessage({
-    type: MESSAGE_TYPE_UI_EVENT_NOTIFICATION,
-    event,
-    value,
-  }, '*');
-}
-
-// Below are some utility functions that would better be located in 'solutions.js' if the tree-shaking was efficient
-// enough (which is not currently the case).
-
-/**
- * @param {import('./solutions.js').Solution} solution A solution.
- * @returns {string} A user-friendly string summarizing the given solution.
- */
-export function getSolutionDisplayableString(solution) {
-  return solution.tokens.reduce((result, choices) => {
-    return result + ((1 === choices.length) ? choices[0] : `[${choices.join(' / ')}]`);
-  }, '');
-}
-
-/**
- * @param {import('./solutions.js').Solution} x A solution.
- * @param {import('./solutions.js').Solution} y Another solution.
- * @returns {number}
- * The result of the alphabetical comparison between the solution references. A negative value if x comes before y,
- * a positive value if x comes after y, and 0 if both solutions have equivalent references.
- */
-export function compareSolutionReferences(x, y) {
-  let result = compareStrings(x.reference, y.reference, x.locale);
-
-  if (0 === result) {
-    result = y.isComplex - x.isComplex;
-  }
-
-  return result;
-}
-
-/**
- * @param {import('./solutions.js').Solution} x A solution.
- * @param {import('./solutions.js').Solution} y Another solution.
- * @returns {number}
- * The result of the comparison between the similarity scores of the solutions. A negative value if x comes before y,
- * a positive value if x comes after y, and 0 if both solutions are similar.
- */
-export function compareSolutionScores(x, y) {
-  const result = (y.score || 0) - (x.score || 0);
-  // Note to self: this is the right order.
-  return (0 !== result) ? result : compareSolutionReferences(x, y);
-}
-
-/**
- * @param {import('./solutions.js').Solution[]} solutions A set of solutions.
- * @returns {{display: string, plural: number}}
- * An object holding a displayable count and a number usable for pluralization.
- */
-export function getSolutionsI18nCounts(solutions) {
-  let plural = solutions.length;
-  let display = plural.toString();
-
-  if (solutions.some(!!it.isComplex)) {
-    ++plural;
-    display += '+';
-  }
-
-  return { display, plural };
 }

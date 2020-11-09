@@ -1,6 +1,6 @@
 import { h } from 'preact';
 import { StyleSheet } from 'aphrodite';
-import { BASE, useStyles } from './base';
+import { BASE, useStyles } from './index';
 
 const Loader = () => {
   const getElementClassNames = useStyles({}, STYLE_SHEETS);
@@ -19,15 +19,6 @@ export default Loader;
 const WRAPPER = 'wrapper';
 const BALL = 'ball';
 
-const animationKeyFrames = {
-  '0%, 80%, 100%': {
-    opacity: 0.25,
-  },
-  '40%': {
-    opacity: 1,
-  },
-};
-
 const STYLE_SHEETS = {
   [BASE]: StyleSheet.create({
     [WRAPPER]: {
@@ -37,9 +28,19 @@ const STYLE_SHEETS = {
       justifyContent: 'space-between',
     },
     [BALL]: {
-      animationName: [ animationKeyFrames ],
-      animationDuration: '1.6s',
+      animationDuration: '2s',
       animationIterationCount: 'infinite',
+      animationName: [
+        {
+          '0%, 80%, 100%': {
+            opacity: 0.25,
+          },
+          '40%': {
+            opacity: 1,
+            transform: 'scale(1.2)',
+          },
+        }
+      ],
       animationTimingFunction: 'ease-in-out',
       backgroundColor: 'currentColor',
       borderRadius: '100%',
@@ -47,10 +48,10 @@ const STYLE_SHEETS = {
       margin: '0 4px',
       width: '8px',
       ':nth-child(1)': {
-        animationDelay: '-0.32s',
+        animationDelay: '-0.4s',
       },
       ':nth-child(2)': {
-        animationDelay: '-0.16s',
+        animationDelay: '-0.2s',
       },
     },
   }),

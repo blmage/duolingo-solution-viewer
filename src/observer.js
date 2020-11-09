@@ -1,7 +1,15 @@
-import { isObject, logError, sendEventNotificationToContentScript } from './functions';
-import { EVENT_TYPE_SESSION_LOADED, EVENT_TYPE_SOUND_PLAYED, NEW_SESSION_URL_REGEXP } from './constants';
+import { sendEventNotificationToContentScript } from './ipc';
+import { isObject, logError } from './functions';
+import { EVENT_TYPE_SESSION_LOADED, EVENT_TYPE_SOUND_PLAYED } from './constants';
 
 // This module must be kept as short as possible, we need it to be evaluated as soon as possible.
+
+/**
+ * A RegExp for the URL that is used by Duolingo to start a new practice session.
+ *
+ * @type {RegExp}
+ */
+const NEW_SESSION_URL_REGEXP = /\/[\d]{4}-[\d]{2}-[\d]{2}\/sessions/g;
 
 const originalXhrOpen = XMLHttpRequest.prototype.open;
 

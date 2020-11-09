@@ -1,19 +1,9 @@
 import 'core-js/features/array/flat-map';
 import 'core-js/features/string/match-all';
-import { get, isArray, isString, maxBy, minBy, set } from 'lodash';
 import { _, it } from 'param.macro';
-import wrapFetchWithRetry from 'fetch-retry';
 import sleep from 'sleep-promise';
+import wrapFetchWithRetry from 'fetch-retry';
 import Dexie from 'dexie';
-
-import {
-  isEmptyObject,
-  isObject,
-  normalizeString,
-  runPromiseForEffects,
-} from './functions';
-
-import * as solution from './solutions';
 
 import {
   ACTION_RESULT_FAILURE,
@@ -21,22 +11,32 @@ import {
   ACTION_TYPE_GET_COMMENT_CHALLENGE,
   ACTION_TYPE_GET_CURRENT_LISTENING_CHALLENGE,
   ACTION_TYPE_GET_CURRENT_TRANSLATION_CHALLENGE,
-  ACTION_TYPE_MATCH_CHALLENGE_WITH_USER_ANSWER,
-  ACTION_TYPE_UPDATE_COMMENT_USER_REFERENCE,
-  ACTION_TYPE_UPDATE_DISCUSSION_CHALLENGES,
+  ACTION_TYPE_UPDATE_CURRENT_CHALLENGE_USER_REFERENCE,
+  ACTION_TYPE_UPDATE_COMMENT_CHALLENGE_USER_REFERENCE,
+  CHALLENGE_TYPE_LISTENING,
+  CHALLENGE_TYPE_NAMING,
+  CHALLENGE_TYPE_TRANSLATION,
   EVENT_TYPE_SESSION_LOADED,
   EVENT_TYPE_SOUND_PLAYED,
   EXTENSION_CODE,
-  LISTENING_CHALLENGE_TYPES,
   MESSAGE_TYPE_ACTION_REQUEST,
   MESSAGE_TYPE_UI_EVENT_NOTIFICATION,
-  NAMING_CHALLENGE_TYPES,
   RESULT_CORRECT,
-  TRANSLATION_CHALLENGE_TYPES,
-  WORD_BANK_CHALLENGE_TYPES,
 } from './constants';
 
-const database = new Dexie(EXTENSION_CODE);
+import {
+  isArray,
+  isNumber,
+  isObject,
+  isString,
+  maxOf,
+  minBy,
+  normalizeString,
+  runPromiseForEffects,
+} from './functions';
+
+import * as Challenge from './challenges';
+import * as Solution from './solutions';
 
 /**
  * @param {string[]} fields A list of field names.
@@ -59,11 +59,13 @@ const FIELD_USER_REFERENCE = 'user_reference';
 const INDEX_CHALLENGE_PRIORITY = getCompoundIndex([ FIELD_LAST_ACCESS_AT, FIELD_INVERTED_SIZE ]);
 
 /**
- * The maximum (serialized) size for storable challenges.
+ * An arbitrary maximum (serialized) size for storable challenges.
  *
  * @type {number}
  */
 const MAX_CHALLENGE_SIZE = 1024 * 1024;
+
+const database = new Dexie(EXTENSION_CODE);
 
 database.version(1)
   .stores({
@@ -102,76 +104,53 @@ const fetchWithRetry = wrapFetchWithRetry(fetch, {
 /**
  * @param {string} table The table in which to insert/update the value.
  * @param {object} value The value to insert/update in the table.
- * @returns {Promise}
+ * @returns {Promise<void>}
  * A promise which will fail or succeed depending on the result of the action.
- * If an error occurs, old challenges will be purged before the action is retried once.
+ * If a quota error occurs, old challenges will be purged before the action is retried once.
  */
 async function putWithRetry(table, value) {
   try {
     await database[table].put(value);
   } catch (error) {
-    let purgedSize = 0;
+    if (
+      (error.name === 'QuotaExceededError')
+      || (error.inner && (error.inner.name === 'QuotaExceededError'))
+    ) {
+      let purgedSize = 0;
 
-    const purgedChallenges = await database[TABLE_COMMENT_CHALLENGES]
-      .orderBy(INDEX_CHALLENGE_PRIORITY)
-      .until(challenge => {
+      const checkPurgedSize = challenge => {
         purgedSize += MAX_CHALLENGE_SIZE - (challenge[FIELD_INVERTED_SIZE] || MAX_CHALLENGE_SIZE);
         return (purgedSize >= MAX_CHALLENGE_SIZE);
-      }, true)
-      .toArray();
+      };
 
-    await database[TABLE_COMMENT_CHALLENGES]
-      .bulkDelete(purgedChallenges.map(it[FIELD_COMMENT_ID]));
+      const purgedIds = await database[TABLE_COMMENT_CHALLENGES]
+        .orderBy(INDEX_CHALLENGE_PRIORITY)
+        .until(checkPurgedSize, true)
+        .toArray()
+        .map(it[FIELD_COMMENT_ID]);
 
-    await database[table].put(value);
+      await database[TABLE_COMMENT_CHALLENGES].bulkDelete(purgedIds);
+      await database[table].put(value);
+    }
   }
 }
 
-// Clean the local storage when upgrading from version 2.0.1.
-
-chrome.storage.local.get(null, values => {
-  if (Object.keys(values || {}).some(it.indexOf('discussion_comment_id') >= 0)) {
-    chrome.storage.local.clear();
-  }
-});
+/**
+ * @param {object} sender The sender of a message.
+ * @returns {string} A unique ID for the given sender.
+ */
+function getSenderId(sender) {
+  const senderTabId = String(sender.tab && sender.tab.id || 'global');
+  const senderFrameId = String(sender.frameId || 'main');
+  return `${senderTabId}-${senderFrameId}`;
+}
 
 /**
- * A practice challenge.
+ * The list of challenges for each practice session running in a tab.
  *
- * @typedef {object} Challenge
- * @property {string} statement The sentence to translate/recognize.
- * @property {import('./solutions.js').Solution[]} solutions The accepted translations.
- * @property {string} fromLanguage The language the user speaks.
- * @property {string} toLanguage The language the user learns.
- * @property {string} discussionId The ID of the forum discussion about the challenge.
- * @property {?number} commentId The ID of the forum comment about the challenge.
- *
- * The following properties are only available for listening challenges:
- * @property {?string} solutionTranslation The translation of the reference solution.
- * @property {?string} ttsMediaUrl The URL of the text-to-speech media.
- * @property {?string} slowTtsMediaUrl The URL of the slow text-to-speech media.
+ * @type {import('./challenges').Challenge[]}
  */
-
-/**
- * The translation challenges for each practice session running in a tab, arranged by statements.
- *
- * @type {object<string, object<string, Challenge>>}
- */
-const sessionTranslationChallenges = {};
-
-/**
- * The naming challenges for each practice session running in a tab.
- *
- * @type {object<string, Challenge[]>}
- */
-const sessionNamingChallenges = {};
-
-/**
- * The listening challenges for each practice session running in a tab, arranged by solution translations.
- *
- * @type {object<string, object<string, Challenge[]>>}
- */
-const sessionListeningChallenges = {};
+const sessionChallenges = [];
 
 /**
  * The current listening challenge for each practice session running in a tab.
@@ -181,158 +160,10 @@ const sessionListeningChallenges = {};
 const sessionCurrentListeningChallenges = {};
 
 /**
- * @param {Challenge} challengeA A listening challenge.
- * @param {Challenge} challengeB Another listening challenge.
- * @returns {boolean} Whether the two given challenges are the same.
- */
-function isSameListeningChallenge(challengeA, challengeB) {
-  return !!challengeA.ttsMediaUrl && (challengeA.ttsMediaUrl === challengeB.ttsMediaUrl)
-    || !!challengeA.slowTtsMediaUrl && (challengeA.slowTtsMediaUrl === challengeB.slowTtsMediaUrl);
-}
-
-/**
- * @param {object} challenge A raw challenge.
- * @returns {import('./solutions.js').Solution[]} The corresponding list of solutions.
- */
-function getChallengeSolutions(challenge) {
-  const grader = isObject(challenge.grader) ? challenge.grader : {};
-  const metaData = isObject(challenge.metadata) ? challenge.metadata : {};
-
-  const locale = String(
-    challenge.targetLanguage
-    || grader.language
-    || metaData.target_language
-    || metaData.language
-    || ''
-  ).trim();
-
-  if (NAMING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0) {
-    if (isArray(challenge.correctSolutions)) {
-      return solution.fromSentences(challenge.correctSolutions, locale);
-    }
-  }
-
-  if (
-    isObject(grader)
-    && isArray(grader.vertices)
-    && (grader.vertices.length > 0)
-  ) {
-    return solution.fromVertices(grader.vertices, locale, !!grader.whitespaceDelimited);
-  }
-
-  if (LISTENING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0) {
-    if (isString(challenge.prompt) && ('' !== challenge.prompt)) {
-      return solution.fromSentences([ challenge.prompt ], locale);
-    }
-  }
-
-  if (WORD_BANK_CHALLENGE_TYPES.indexOf(challenge.type) >= 0) {
-    if (isArray(challenge.correctTokens)) {
-      return solution.fromWordBankTokens(challenge.correctTokens, locale);
-    }
-  }
-
-  return [];
-}
-
-/**
- * Matches a user answer against each solution of a challenge, and updates their similarity scores.
- *
- * @param {Challenge} challenge A challenge.
- * @param {string} userAnswer A user answer to the challenge.
- */
-function addSimilarityScoresToChallenge(challenge, userAnswer) {
-  if ('' === userAnswer) {
-    challenge.solutions.forEach(set(_, 'score', 0));
-  } else {
-    challenge.solutions.forEach(item => set(
-      item,
-      'score',
-      solution.getMatchingScoreWithAnswer(item, userAnswer)
-    ));
-  }
-}
-
-/**
- * Registers the different challenges for a freshly loaded practice session.
- *
- * @param {string} senderId The ID of the tab where the session is running.
- * @param {Array} newChallenges A set of raw challenge data.
- * @param {string} fromLanguage The language the user speaks.
- * @param {string} toLanguage The language the user learns.
- */
-async function registerNewChallenges(senderId, newChallenges, fromLanguage, toLanguage) {
-  const newTranslationChallenges = {};
-  const newNamingChallenges = [];
-  const newListeningChallenges = {};
-  const discussionChallenges = {};
-
-  newChallenges.forEach(challenge => {
-    const solutions = getChallengeSolutions(challenge);
-
-    if (solutions.length > 0) {
-      const statement = normalizeString(String(challenge.prompt || '')).trim();
-      const discussionId = String(challenge.sentenceDiscussionId || '').trim();
-
-      if (
-        ('' !== statement)
-        && (TRANSLATION_CHALLENGE_TYPES.indexOf(challenge.type) >= 0)
-      ) {
-        newTranslationChallenges[statement] = {
-          statement,
-          solutions,
-          fromLanguage,
-          toLanguage,
-          discussionId
-        };
-
-        if (NAMING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0) {
-          newNamingChallenges.push(newTranslationChallenges[statement]);
-        }
-
-        if ('' !== discussionId) {
-          discussionChallenges[discussionId] = newTranslationChallenges[statement];
-        }
-      } else if (
-        (LISTENING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0)
-        && ('' !== String(challenge.solutionTranslation || '').trim())
-      ) {
-        const solutionTranslation = normalizeString(String(challenge.solutionTranslation)).trim();
-        const ttsMediaUrl = String(challenge.tts || '').trim();
-        const slowTtsMediaUrl = String(challenge.slowTts || '').trim();
-
-        if (!newListeningChallenges[solutionTranslation]) {
-          newListeningChallenges[solutionTranslation] = [];
-        }
-
-        newListeningChallenges[solutionTranslation].push({
-          statement,
-          solutions,
-          fromLanguage,
-          toLanguage,
-          discussionId,
-          solutionTranslation,
-          ttsMediaUrl,
-          slowTtsMediaUrl,
-        });
-      }
-    }
-  });
-
-  sessionTranslationChallenges[senderId] = newTranslationChallenges;
-  sessionNamingChallenges[senderId] = newNamingChallenges;
-  sessionListeningChallenges[senderId] = newListeningChallenges;
-  sessionCurrentListeningChallenges[senderId] = null;
-
-  await registerCommentChallenges(Object.values(sessionTranslationChallenges[senderId]));
-}
-
-
-/**
  * @param {string} discussionId The ID of a forum discussion.
  * @param {string} fromLanguage The language the user speaks.
  * @param {string} toLanguage The language the user learns.
- * @returns {string} The URL usable to fetch data about the comment corresponding to the given forum discussion.
+ * @returns {string} The URL usable to fetch data about the first comment from the given forum discussion.
  */
 function getDiscussionCommentDataUrl(discussionId, fromLanguage, toLanguage) {
   return `https://www.duolingo.com/sentence/${discussionId}?learning_language=${toLanguage}&ui_language=${fromLanguage}`;
@@ -342,7 +173,7 @@ function getDiscussionCommentDataUrl(discussionId, fromLanguage, toLanguage) {
  * @param {string} discussionId The ID of a forum discussion.
  * @param {string} fromLanguage The language the user speaks.
  * @param {string} toLanguage The language the user learns.
- * @returns {Promise<number>} A promise for the ID of the comment corresponding to the given forum discussion.
+ * @returns {Promise<number>} A promise for the ID of the first comment from the given forum discussion.
  */
 async function getDiscussionCommentId(discussionId, fromLanguage, toLanguage) {
   const result = await database[TABLE_DISCUSSION_COMMENTS].get(discussionId);
@@ -357,10 +188,9 @@ async function getDiscussionCommentId(discussionId, fromLanguage, toLanguage) {
       { credentials: 'include' }
     );
 
-    const data = await response.json();
-    const commentId = Number(get(data, [ 'comment', 'id' ]));
+    const { comment: { id: commentId } = {} } = await response.json();
 
-    if (commentId > 0) {
+    if (isNumber(commentId) && (commentId > 0)) {
       await putWithRetry(TABLE_DISCUSSION_COMMENTS, {
         [FIELD_COMMENT_ID]: commentId,
         [FIELD_DISCUSSION_ID]: discussionId,
@@ -376,8 +206,8 @@ async function getDiscussionCommentId(discussionId, fromLanguage, toLanguage) {
 }
 
 /**
- * @param {Challenge} challenge A challenge.
- * @returns {Promise<number>} A promise for the ID of the forum comment about the given challenge.
+ * @param {import('./challenges').Challenge} challenge A challenge.
+ * @returns {Promise<number>} A promise for the ID of the first forum comment about the given challenge.
  */
 async function getChallengeCommentId(challenge) {
   if (challenge.commentId > 0) {
@@ -385,7 +215,7 @@ async function getChallengeCommentId(challenge) {
   }
 
   if (!challenge.discussionId) {
-    throw new Error(`The challenge is not associated to a discussion.`);
+    throw new Error('The challenge is not associated to a discussion.');
   }
 
   challenge.commentId = await getDiscussionCommentId(
@@ -398,63 +228,8 @@ async function getChallengeCommentId(challenge) {
 }
 
 /**
- * @param {Challenge} challenge The challenge referred to by the given forum discussion.
- * @returns {Promise<void>} A promise for the result of the update.
- */
-async function registerCommentChallenge(challenge) {
-  const commentId = await getChallengeCommentId(challenge);
-  const challengeSize = JSON.stringify(challenge).length;
-
-  if (challengeSize > MAX_CHALLENGE_SIZE) {
-    throw new Error(
-      `The discussion #${challenge.discussionId} has a challenge whose serialized size exceeds the limit.`
-    );
-  }
-
-  await putWithRetry(TABLE_COMMENT_CHALLENGES, {
-    [FIELD_COMMENT_ID]: commentId,
-    [FIELD_CHALLENGE]: challenge,
-    [FIELD_INVERTED_SIZE]: MAX_CHALLENGE_SIZE - challengeSize,
-    [FIELD_LAST_ACCESS_AT]: getCurrentAccessAt(),
-  });
-}
-
-/**
- * Registers the relations between a set of challenges and the corresponding forum comments.
- *
- * @param {Challenge[]} challenges A set of challenges.
- * @returns {Promise<void>} A promise for the result of the update.
- */
-async function registerCommentChallenges(challenges) {
-  return Promise.all(
-    challenges.map(
-      (challenge, index) => sleep(4500 * index).then(() => registerCommentChallenge(challenge))
-    )
-  );
-}
-
-/**
- * Registers a new user reference for a challenge.
- *
- * @param {Challenge} challenge A challenge.
- * @param {string} reference A user reference.
- * @returns {Promise<void>} A promise for the result of the update.
- */
-async function registerChallengeUserReference(challenge, reference) {
-  const commentId = await getChallengeCommentId(challenge);
-
-  await database[TABLE_COMMENT_CHALLENGES].update(
-    commentId,
-    {
-      [FIELD_USER_REFERENCE]: reference,
-      [FIELD_LAST_ACCESS_AT]: getCurrentAccessAt(),
-    }
-  );
-}
-
-/**
  * @param {number} commentId The ID of a forum comment.
- * @returns {Promise<object>}
+ * @returns {Promise<Challenge>}
  * A promise for the challenge which is referred to by the given forum comment,
  * and the last user reference that it was associated to.
  */
@@ -482,40 +257,144 @@ async function getCommentChallenge(commentId) {
 }
 
 /**
- * @param {object} sender The sender of a message.
- * @returns {string} A unique ID for the given sender.
+ * Registers the relation between a challenge and the corresponding first forum comment.
+ *
+ * @param {import('./challenges').Challenge} challenge A challenge.
+ * @returns {Promise<void>} A promise for the result of the action.
  */
-function getSenderId(sender) {
-  const senderTabId = String(sender.tab && sender.tab.id || 'global');
-  const senderFrameId = String(sender.frameId || 'main');
-  return `${senderTabId}-${senderFrameId}`;
+async function registerCommentChallenge(challenge) {
+  const commentId = await getChallengeCommentId(challenge);
+  const challengeSize = JSON.stringify(challenge).length;
+
+  if (challengeSize > MAX_CHALLENGE_SIZE) {
+    throw new Error(
+      `The discussion #${challenge.discussionId} has a challenge whose serialized size exceeds the limit.`
+    );
+  }
+
+  await putWithRetry(TABLE_COMMENT_CHALLENGES, {
+    [FIELD_COMMENT_ID]: commentId,
+    [FIELD_CHALLENGE]: challenge,
+    [FIELD_INVERTED_SIZE]: MAX_CHALLENGE_SIZE - challengeSize,
+    [FIELD_LAST_ACCESS_AT]: getCurrentAccessAt(),
+  });
+}
+
+/**
+ * Registers the relations between a set of challenges and the corresponding first forum comments.
+ *
+ * @param {import('./challenges').Challenge[]} challenges A set of challenges.
+ * @returns {Promise<void>} A promise for the result of the action.
+ */
+async function registerCommentChallenges(challenges) {
+  return Promise.all(
+    challenges.map(
+      (challenge, index) => sleep(4500 * index).then(() => registerCommentChallenge(challenge))
+    )
+  );
+}
+
+/**
+ * Registers a new user reference for a challenge.
+ *
+ * @param {import('./challenges').Challenge} challenge A challenge.
+ * @param {string} reference A user reference.
+ * @returns {Promise<void>} A promise for the result of the action.
+ */
+async function registerChallengeUserReference(challenge, reference) {
+  const commentId = await getChallengeCommentId(challenge);
+
+  await database[TABLE_COMMENT_CHALLENGES].update(
+    commentId,
+    {
+      [FIELD_USER_REFERENCE]: reference,
+      [FIELD_LAST_ACCESS_AT]: getCurrentAccessAt(),
+    }
+  );
+}
+
+/**
+ * @param {string} sessionId A session ID.
+ * @param {number} challengeType A challenge type.
+ * @param {Function} predicate A predicate on challenges.
+ * @returns {import('./challenges').Challenge|null}
+ * The first challenge of the given type and session to match the given predicate.
+ */
+function findSessionChallengeOfType(sessionId, challengeType, predicate) {
+  return !isArray(sessionChallenges[sessionId])
+    ? null
+    : sessionChallenges[sessionId].find(
+      challenge => Challenge.isOfType(challenge, challengeType) && predicate(challenge)
+    );
+}
+
+/**
+ * @param {string} sessionId A session ID.
+ * @param {number} challengeType A challenge type.
+ * @param {Function} predicate A predicate on challenges.
+ * @returns {import('./challenges').Challenge|null}
+ * The challenges of the given type and session that match the given predicate.
+ */
+function findSessionChallengesOfType(sessionId, challengeType, predicate) {
+  return !isArray(sessionChallenges[sessionId])
+    ? []
+    : sessionChallenges[sessionId].filter(
+      challenge => Challenge.isOfType(challenge, challengeType) && predicate(challenge)
+    );
+}
+
+/**
+ * Parses and registers the challenges of a new practice session that are relevant to the extension.
+ *
+ * @param {string} sessionId A session ID.
+ * @param {object[]} uiChallenges A set of raw challenge data from the UI.
+ * @param {string} fromLanguage The language the user speaks.
+ * @param {string} toLanguage The language the user learns.
+ * @returns {Promise<void>} A promise for the result of the action.
+ */
+async function registerUiChallenges(sessionId, uiChallenges, fromLanguage, toLanguage) {
+  sessionChallenges[sessionId] = Challenge.parseUiChallenges(uiChallenges, fromLanguage, toLanguage);
+
+  await registerCommentChallenges(
+    sessionChallenges[sessionId].filter(Challenge.isOfType(_, CHALLENGE_TYPE_TRANSLATION))
+  );
 }
 
 /**
  * @param {string} senderId The ID of the sender of the request.
  * @param {object} data The request payload.
- * @param {Function} sendResult A callback usable to send the current challenge back to the sender (if any).
+ * @param {Function} sendResult A callback usable to send the current translation challenge back to the sender.
  * @returns {Promise<void>} A promise for the result of the action.
  */
 async function handleCurrentTranslationChallengeRequest(senderId, data, sendResult) {
   if (
     isObject(data)
     && isString(data.statement)
-    && isObject(sessionTranslationChallenges[senderId])
+    && isArray(sessionChallenges[senderId])
   ) {
-    const statement = normalizeString(data.statement).trim();
-    const userAnswer = !isString(data.userAnswer) ? '' : normalizeString(data.userAnswer).trim();
-    let challenge = sessionTranslationChallenges[senderId][statement];
+    const statement = normalizeString(data.statement);
+    const userAnswer = !isString(data.userAnswer) ? '' : normalizeString(data.userAnswer);
 
-    if (!challenge && isArray(sessionNamingChallenges[senderId])) {
-      challenge = sessionNamingChallenges[senderId].find(statement.indexOf(_.statement) >= 0);
+    let challenge = findSessionChallengeOfType(
+      senderId,
+      CHALLENGE_TYPE_TRANSLATION,
+      statement === it.statement
+    );
+
+    if (!challenge) {
+      challenge = findSessionChallengeOfType(
+        senderId,
+        CHALLENGE_TYPE_NAMING,
+        statement.indexOf(it.statement) >= 0
+      );
     }
 
     if (!isObject(challenge)) {
       return;
     }
 
-    addSimilarityScoresToChallenge(challenge, userAnswer);
+    Challenge.addSimilarityScores(challenge, userAnswer);
+
     sendResult(challenge);
 
     if ('' !== userAnswer) {
@@ -527,44 +406,50 @@ async function handleCurrentTranslationChallengeRequest(senderId, data, sendResu
 /**
  * @param {string} senderId The ID of the sender of the request.
  * @param {object} data The request payload.
- * @param {Function} sendResult A callback usable to send the current challenge back to the sender (if any).
+ * @param {Function} sendResult A callback usable to send the current listening challenge back to the sender.
  * @returns {Promise<void>} A promise for the result of the action.
  */
 async function handleCurrentListeningChallengeRequest(senderId, data, sendResult) {
-  if (isObject(data) && isObject(sessionListeningChallenges[senderId])) {
+  if (isObject(data)) {
     let challenges;
-    const userAnswer = !isString(data.userAnswer) ? '' : normalizeString(data.userAnswer).trim();
+    let predicate = () => true;
+    const userAnswer = !isString(data.userAnswer) ? '' : normalizeString(data.userAnswer);
 
     if (isString(data.solutionTranslation)) {
-      const solutionTranslation = normalizeString(data.solutionTranslation).trim();
-      challenges = sessionListeningChallenges[senderId][solutionTranslation];
-    } else {
-      challenges = Object.values(sessionListeningChallenges[senderId]).flat();
+      const solutionTranslation = normalizeString(data.solutionTranslation);
+      predicate = solutionTranslation === it.solutionTranslation;
     }
+
+    challenges = findSessionChallengesOfType(senderId, CHALLENGE_TYPE_LISTENING, predicate);
 
     if (0 === challenges.length) {
       return;
     }
 
     let challenge = (1 === challenges.length)
-      ? challenges[0]
-      : challenges.find(isSameListeningChallenge(_, sessionCurrentListeningChallenges[senderId]));
+      ? challenges.pop()
+      : (
+        sessionCurrentListeningChallenges[senderId]
+        && challenges.find(Challenge.isSameListeningChallenge(_, sessionCurrentListeningChallenges[senderId]))
+      );
 
     if (!isObject(challenge)) {
       return;
     }
 
+    Challenge.addSimilarityScores(challenge, userAnswer);
+
     const result = { challenge };
-    addSimilarityScoresToChallenge(challenge, userAnswer);
 
     if (('' !== userAnswer) && (RESULT_CORRECT === data.result)) {
-      const bestScore = maxBy(challenge.solutions, 'score').score;
+      const bestScore = maxOf(challenge.solutions, it.score);
+      const matchingOptions = challenge.matchingData.matchingOptions;
 
       result.correctionDiff = minBy(
         challenge.solutions
           .filter(bestScore === it.score)
-          .flatMap(solution.getBestMatchingReferencesForAnswer(_, userAnswer))
-          .map(solution.diffReferenceWithAnswer(_, userAnswer))
+          .flatMap(Solution.getBestMatchingReferencesForAnswer(_, userAnswer, matchingOptions))
+          .map(Solution.getReferenceDiffWithAnswer(_, userAnswer, matchingOptions))
           .filter(isArray),
         it.length
       );
@@ -575,32 +460,47 @@ async function handleCurrentListeningChallengeRequest(senderId, data, sendResult
 }
 
 /**
+ * @param {string} senderId The ID of the sender of the request.
  * @param {object} data The request payload.
  * @param {Function} sendResult A callback usable to send the updated challenge back to the sender.
+ * @returns {Promise<void>} A promise for the result of the action.
  */
-function handleChallengeAnswerMatchingRequest(data, sendResult) {
+async function handleCurrentChallengeUserReferenceUpdateRequest(senderId, data, sendResult) {
   if (
     isObject(data)
-    && isObject(data.challenge)
-    && isString(data.userAnswer)
-    && ('' !== data.userAnswer)
+    && isString(data.key)
+    && isString(data.userReference)
+    && ('' !== data.userReference.trim())
   ) {
-    addSimilarityScoresToChallenge(data.challenge, data.userAnswer);
-    sendResult({ challenge: data.challenge });
+    const userReference = data.userReference.trim();
+
+    const challenge = findSessionChallengeOfType(
+      senderId,
+      CHALLENGE_TYPE_TRANSLATION,
+      Challenge.getUniqueKey(_) === data.key
+    );
+
+    if (isObject(challenge)) {
+      await registerChallengeUserReference(challenge, userReference);
+      Challenge.addSimilarityScores(challenge, userReference);
+      sendResult({ challenge, userReference });
+    }
   }
 }
 
 /**
- * @param {object} data The request payload.
- * @param {Function} sendResult A callback usable to send the challenge back to the sender (if any).
- * @returns {Promise<void>} A promise for the result of the action.
+ * @param {number} commentId A forum comment ID.
+ * @param {Function} sendResult A callback usable to send the corresponding challenge back to the sender.
+ * @returns {Promise<void>} A promise for the result of the request.
  */
-async function handleCommentChallengeRequest(data, sendResult) {
-  if (data > 0) {
-    const result = await getCommentChallenge(data);
+async function handleCommentChallengeRequest(commentId, sendResult) {
+  if (commentId > 0) {
+    const result = await getCommentChallenge(commentId);
 
     if (isString(result.userReference) && ('' !== result.userReference)) {
-      addSimilarityScoresToChallenge(result.challenge, result.userReference);
+      Challenge.addSimilarityScores(result.challenge, result.userReference);
+    } else {
+      Challenge.addMatchingData(result.challenge);
     }
 
     sendResult(result);
@@ -609,34 +509,21 @@ async function handleCommentChallengeRequest(data, sendResult) {
 
 /**
  * @param {object} data The request payload.
- * @param {Function} sendResult A callback usable to notify the sender about the success of the update.
+ * @param {Function} sendResult A callback usable to send the updated challenge back to the sender.
  * @returns {Promise<void>} A promise for the result of the action.
  */
-async function handleDiscussionChallengesUpdateRequest(data, sendResult) {
-  if (isObject(data) && !isEmptyObject(data)) {
-    // Don't make the content script/UI script wait for a result it doesn't care about.
-    sendResult();
-    runPromiseForEffects(registerCommentChallenges(data));
-  }
-}
-
-/**
- * @param {object} data The request payload.
- * @param {Function} sendResult A callback usable to send back the updated challenge and reference to the sender.
- * @returns {Promise<void>} A promise for the result of the action.
- */
-async function handleCommentUserReferenceUpdateRequest(data, sendResult) {
+async function handleCommentChallengeUserReferenceUpdateRequest(data, sendResult) {
   if (
     isObject(data)
     && (data.commentId > 0)
     && isString(data.userReference)
-    && ('' !== data.userReference)
+    && ('' !== data.userReference.trim())
   ) {
-    const result = await getCommentChallenge(data.commentId);
-    await registerChallengeUserReference(result.challenge, data.userReference);
-    addSimilarityScoresToChallenge(result.challenge, data.userReference);
-    result.userReference = data.userReference;
-    sendResult(result);
+    const userReference = data.userReference.trim();
+    const { challenge } = await getCommentChallenge(data.commentId);
+    await registerChallengeUserReference(challenge, userReference);
+    Challenge.addSimilarityScores(challenge, userReference);
+    sendResult({ challenge, userReference });
   }
 }
 
@@ -648,11 +535,11 @@ async function handleCommentUserReferenceUpdateRequest(data, sendResult) {
  * @returns {Promise<void>} A promise for the result of the action.
  */
 async function handleActionRequest(action, data, sender, sendResponse) {
-  try {
-    let isResultSent = false;
+  let isResponseSent = false;
 
+  try {
     const sendResult = result => {
-      isResultSent = true;
+      isResponseSent = true;
       sendResponse({ type: ACTION_RESULT_SUCCESS, value: result });
     };
 
@@ -663,42 +550,41 @@ async function handleActionRequest(action, data, sender, sendResponse) {
       case ACTION_TYPE_GET_CURRENT_LISTENING_CHALLENGE:
         await handleCurrentListeningChallengeRequest(getSenderId(sender), data, sendResult);
         break;
-      case ACTION_TYPE_MATCH_CHALLENGE_WITH_USER_ANSWER:
-        handleChallengeAnswerMatchingRequest(data, sendResult);
+      case ACTION_TYPE_UPDATE_CURRENT_CHALLENGE_USER_REFERENCE:
+        await handleCurrentChallengeUserReferenceUpdateRequest(getSenderId(sender), data, sendResult);
         break;
       case ACTION_TYPE_GET_COMMENT_CHALLENGE:
         await handleCommentChallengeRequest(data, sendResult);
         break;
-      case ACTION_TYPE_UPDATE_DISCUSSION_CHALLENGES:
-        await handleDiscussionChallengesUpdateRequest(data, sendResult);
-        break;
-      case ACTION_TYPE_UPDATE_COMMENT_USER_REFERENCE:
-        await handleCommentUserReferenceUpdateRequest(data, sendResult)
+      case ACTION_TYPE_UPDATE_COMMENT_CHALLENGE_USER_REFERENCE:
+        await handleCommentChallengeUserReferenceUpdateRequest(data, sendResult)
         break;
     }
 
-    if (!isResultSent) {
+    if (!isResponseSent) {
       throw new Error(`Could not handle action: "${data.action}".`);
     }
   } catch (error) {
-    sendResponse({ type: ACTION_RESULT_FAILURE });
+    if (!isResponseSent) {
+      sendResponse({ type: ACTION_RESULT_FAILURE });
+    }
   }
 }
 
 /**
- * Registers the corresponding challenges when a practice session is loaded.
+ * Parses and registers challenge data when a practice session is loaded.
  *
- * @param {string} senderId The sender of the event notification.
+ * @param {string} senderId The ID of the sender of the event notification.
  * @param {object} data The event payload.
  * @returns {Promise<void>} A promise for the result of the event handling.
  */
 async function handleSessionLoadedEvent(senderId, data) {
   if (isObject(data)) {
+    const metaData = isObject(data.metadata) ? data.metadata : {};
     const baseChallenges = isArray(data.challenges) ? data.challenges : [];
     const adaptiveChallenges = isArray(data.adaptiveChallenges) ? data.adaptiveChallenges : [];
-    const metaData = isObject(data.metadata) ? data.metadata : {};
 
-    await registerNewChallenges(
+    await registerUiChallenges(
       senderId,
       baseChallenges.concat(adaptiveChallenges),
       String(metaData.ui_language || metaData.from_language || data.fromLanguage || '').trim(),
@@ -708,19 +594,21 @@ async function handleSessionLoadedEvent(senderId, data) {
 }
 
 /**
- * Registers the current listening challenge when a TTS media is played.
+ * Registers the current listening challenge when the corresponding TTS media is played.
  *
- * @param {string} senderId The sender of the event notification.
+ * @param {string} senderId The ID of the sender of the event notification.
  * @param {object} data The event payload.
  */
 function handleSoundPlayedEvent(senderId, data) {
   if (isString(data)) {
     const mediaUrl = data.trim();
 
-    if (isObject(sessionListeningChallenges[senderId])) {
-      const challenge = Object.values(sessionListeningChallenges[senderId])
-        .flat()
-        .find((mediaUrl === it.ttsMediaUrl) || (mediaUrl === it.slowTtsMediaUrl));
+    if ('' !== mediaUrl) {
+      const challenge = findSessionChallengeOfType(
+        senderId,
+        CHALLENGE_TYPE_LISTENING,
+        (mediaUrl === it.ttsMediaUrl) || (mediaUrl === it.slowTtsMediaUrl)
+      );
 
       if (isObject(challenge)) {
         sessionCurrentListeningChallenges[senderId] = challenge;

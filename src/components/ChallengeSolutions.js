@@ -2,30 +2,28 @@ import { h, Fragment } from 'preact';
 import { useCallback, useRef, useState } from 'preact/hooks';
 import { IntlProvider, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
-import { isArray } from 'lodash';
-import { BASE, CONTEXT_CHALLENGE, useStyles } from './base';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { isArray, getParentWithScrollbar, noop } from '../functions';
+import { BASE, CONTEXT_CHALLENGE, useLocalStorage, useStyles } from './index';
 import Loader from './Loader';
 import SolutionList from './SolutionList';
 import UserReference from './UserReference';
-import { getScrollableAncestor, noop } from '../functions';
 
 const ChallengeSolutions =
   ({
      context = CONTEXT_CHALLENGE,
      statement = '',
      solutions = [],
+     matchingData = {},
      userReference = '',
      onUserReferenceUpdate = noop,
      isUserReferenceEditable = true,
-     getScrollOffset = (() => 0),
+     scrollOffsetGetter = (() => 0),
    }) => {
-    const listWrapper = useRef();
-
     const [ isLoading, setIsLoading ] = useState(false);
     const [ currentSolutions, setCurrentSolutions ] = useState(solutions);
     const [ currentUserReference, setCurrentUserReference ] = useState(userReference);
-
-    const getElementClassNames = useStyles({}, STYLE_SHEETS, [ context ]);
+    const [ isUserReferencePinned, setIsUserReferencedPinned ] = useLocalStorage('user_reference_pinned', false);
 
     // Updates the user reference and waits for a new list of solutions.
     const updateUserReference = useCallback(newReference => {
@@ -34,12 +32,14 @@ const ChallengeSolutions =
 
       Promise.resolve(onUserReferenceUpdate(newReference))
         .then(solutions => {
-          isArray(solutions)
-            ? setCurrentSolutions(solutions)
-            : setCurrentUserReference(currentUserReference);
-        }).catch(() => {
-          setCurrentUserReference(currentUserReference);
-        }).then(() => {
+          if (isArray(solutions)) {
+            setCurrentSolutions(solutions)
+          } else {
+            setCurrentUserReference(currentUserReference);
+          }
+        }).catch(() => (
+          setCurrentUserReference(currentUserReference)
+        )).then(() => {
           setIsLoading(false);
         });
     }, [
@@ -50,14 +50,30 @@ const ChallengeSolutions =
       setCurrentUserReference,
     ]);
 
+    const listWrapper = useRef();
+    const referenceWrapper = useRef();
+
     // Scrolls to the top of the solution list whenever it changes.
     const onSolutionListChange = useCallback(() => {
       if (listWrapper.current) {
-        const parent = getScrollableAncestor(listWrapper.current);
-        const offset = getScrollOffset() || 0;
-        parent.scrollTo({ top: listWrapper.current.offsetTop - offset - 10, behavior: 'smooth' });
+        const parent = getParentWithScrollbar(listWrapper.current);
+
+        const top = listWrapper.current.offsetTop
+          - 10
+          - scrollOffsetGetter()
+          - (!isUserReferencePinned || !referenceWrapper.current ? 0 : referenceWrapper.current.offsetHeight);
+
+        parent.scrollTo({ top, behavior: 'smooth' });
       }
-    }, [ getScrollOffset, listWrapper, currentSolutions ]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [ // eslint-disable-line react-hooks/exhaustive-deps
+      scrollOffsetGetter,
+      isUserReferencePinned,
+      listWrapper,
+      referenceWrapper,
+      currentSolutions,
+    ]);
+
+    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
 
     if (0 === currentSolutions.length) {
       return null;
@@ -73,21 +89,51 @@ const ChallengeSolutions =
             <p>{statement}</p>
           </Fragment>
         )}
-        <UserReference context={context}
-                       reference={currentUserReference}
-                       onChange={updateUserReference}
-                       isEditable={isUserReferenceEditable && !isLoading} />
-        <div ref={listWrapper}>
+
+        <div
+          ref={referenceWrapper}
+          className={getElementClassNames([
+            REFERENCE_WRAPPER,
+            isUserReferencePinned && REFERENCE_WRAPPER__PINNED
+          ])}
+        >
+          <UserReference
+            context={context}
+            reference={currentUserReference}
+            onUpdate={updateUserReference}
+            isEditable={isUserReferenceEditable && !isLoading}
+          />
+          {(CONTEXT_CHALLENGE === context)
+          && (
+            <div
+              onClick={() => setIsUserReferencedPinned(!isUserReferencePinned)}
+              className={getElementClassNames([
+                PIN_BUTTON,
+                isUserReferencePinned && PIN_BUTTON__PINNED
+              ])}
+            >
+              <FontAwesomeIcon
+                icon={[ 'far', 'thumbtack' ]}
+                className={getElementClassNames(PIN_BUTTON_ICON)}
+              />
+            </div>
+          )}
+        </div>
+
+        <div>
           {isLoading
             ? (
               <div className={getElementClassNames(LOADER)}>
                 <Loader />
               </div>
             ) : (
-              <SolutionList context={context}
-                            solutions={currentSolutions}
-                            isScoreAvailable={'' !== currentUserReference}
-                            onPageChange={onSolutionListChange} />
+              <SolutionList
+                ref={listWrapper}
+                context={context}
+                solutions={currentSolutions}
+                matchingData={matchingData}
+                onPageChange={onSolutionListChange}
+              />
             )}
         </div>
       </IntlProvider>
@@ -97,12 +143,60 @@ const ChallengeSolutions =
 export default ChallengeSolutions;
 
 const LOADER = 'loader';
+const REFERENCE_WRAPPER = 'reference_wrapper';
+const REFERENCE_WRAPPER__PINNED = 'reference_wrapper__pinned';
+const PIN_BUTTON = 'pin_button';
+const PIN_BUTTON__PINNED = 'pin_button__pinned';
+const PIN_BUTTON_ICON = 'pin_button_icon';
+
+const CLASS_NAMES = {
+  [CONTEXT_CHALLENGE]: {
+    [REFERENCE_WRAPPER__PINNED]: [
+      // Found in the "app" stylesheet. Adds the page background color.
+      '_3lUbm',
+      // Copied by searching for the main (link) color without side-effects.
+      '_2__FI',
+    ],
+    // Copied from the closing button of the "Report" modal.
+    [PIN_BUTTON]: [ 'FrL-W' ],
+  },
+};
 
 const STYLE_SHEETS = {
   [BASE]: StyleSheet.create({
     [LOADER]: {
       padding: '0 0 18px',
       textAlign: 'center',
+    },
+  }),
+  [CONTEXT_CHALLENGE]: StyleSheet.create({
+    [REFERENCE_WRAPPER]: {
+      paddingRight: '40px',
+      position: 'relative',
+    },
+    [REFERENCE_WRAPPER__PINNED]: {
+      position: 'sticky',
+      top: 0,
+      zIndex: 1,
+      // Use an absolute border to preserve margin collapse.
+      ':after': {
+        background: 'inherit',
+        bottom: '-8px',
+        content: '""',
+        display: 'block',
+        height: '8px',
+        left: 0,
+        position: 'absolute',
+        width: '100%',
+      },
+    },
+    [PIN_BUTTON]: {
+      border: 0,
+      top: '50%',
+      transform: 'translateY(-50%) rotate(90deg)',
+    },
+    [PIN_BUTTON__PINNED]: {
+      transform: 'translateY(-50%) rotate(0)',
     },
   }),
 };

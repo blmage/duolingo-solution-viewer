@@ -1,16 +1,15 @@
 import { h } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { IntlProvider, Localizer, Text } from 'preact-i18n';
+import { IntlProvider, Text, useText } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
-import { BASE, useLocalStorageList, useStyles } from './base';
-import { CLOSE_ICON_CDN_PATH } from '../constants';
-import { discardEvent, getImageCdnBaseUrl, noop } from '../functions';
+import { discardEvent, noop } from '../functions';
+import { BASE, useImageCdnUrl, useLocalStorageList, useStyles } from './index';
 
-const STATE_PENDING = Symbol('pending');
-const STATE_OPENING = Symbol('opening');
-const STATE_OPENED = Symbol('opened');
-const STATE_CLOSING = Symbol('closing');
-const STATE_CLOSED = Symbol('closed');
+const STATE_PENDING = 'pending';
+const STATE_OPENING = 'opening';
+const STATE_OPENED = 'opened';
+const STATE_CLOSING = 'closing';
+const STATE_CLOSED = 'closed';
 
 const MODAL_SIZE_DEFAULT = 'default';
 const MODAL_SIZE_FIT_TO_CONTENT = 'fit_to_content';
@@ -34,10 +33,15 @@ const MODAL_SIZES = {
   },
 };
 
+/**
+ * The path of the close icon on the image CDN.
+ *
+ * @type {string}
+ */
+const CLOSE_ICON_CDN_PATH = 'images/x.svg';
+
 const Modal = ({ children, onClose = noop }) => {
   const [ modalState, setModalState ] = useState(STATE_PENDING);
-  const contentWrapper = useRef();
-  const openedTimeout = useRef(null);
 
   const {
     state: modalSize,
@@ -49,7 +53,8 @@ const Modal = ({ children, onClose = noop }) => {
     MODAL_SIZE_DEFAULT
   );
 
-  const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ modalState, modalSize ]);
+  const contentWrapper = useRef();
+  const openedTimeout = useRef(null);
 
   // Closes the modal with an effect similar to Duolingo's.
   const closeModal = useCallback(() => {
@@ -67,7 +72,7 @@ const Modal = ({ children, onClose = noop }) => {
     }
   }, [ modalState, onClose ]);
 
-  // Closes the modal when the 'Escape' key is pressed.
+  // Closes the modal when the "Escape" key is pressed.
   useEffect(() => {
     if ([ STATE_CLOSING, STATE_CLOSED ].indexOf(modalState) === -1) {
       const handleKeyDown = event => {
@@ -78,6 +83,7 @@ const Modal = ({ children, onClose = noop }) => {
       };
 
       document.addEventListener('keydown', handleKeyDown);
+
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
   }, [ modalState, closeModal ]);
@@ -97,29 +103,34 @@ const Modal = ({ children, onClose = noop }) => {
     }
   }, [ contentWrapper ]);
 
+  const { modalSizeTitle } = useText({
+    modalSizeTitle: (
+      <Text id={MODAL_SIZES[nextModalSize].actionTitleId}>
+        {MODAL_SIZES[nextModalSize].defaultActionTitle}
+      </Text>
+    )
+  });
+
+  const closeIconUrl = useImageCdnUrl(CLOSE_ICON_CDN_PATH);
+  const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ modalState, modalSize ]);
+
   if (STATE_CLOSED === modalState) {
     return null;
   }
 
   return (
     <IntlProvider scope="modal">
-      <div className={getElementClassNames(OVERLAY)} onClick={closeModal}>
-        <div className={getElementClassNames(WRAPPER)} role="dialog" tabIndex="-1" onClick={discardEvent}>
-          <div className={getElementClassNames(CLOSE_BUTTON)} onClick={closeModal}>
-            <img src={getImageCdnBaseUrl() + CLOSE_ICON_CDN_PATH} />
+      <div onClick={closeModal} className={getElementClassNames(OVERLAY)}>
+        <div role="dialog" tabIndex="-1" onClick={discardEvent} className={getElementClassNames(WRAPPER)}>
+          <div onClick={closeModal} className={getElementClassNames(CLOSE_BUTTON)}>
+            <img src={closeIconUrl} />
           </div>
-          <Localizer>
-            <div onClick={setNextModalSize}
-                 className={getElementClassNames(SIZE_BUTTON)}
-                 title={
-                   <Text id={MODAL_SIZES[nextModalSize].actionTitleId}>
-                     {MODAL_SIZES[nextModalSize].defaultActionTitle}
-                   </Text>
-                 }>
-              {MODAL_SIZES[nextModalSize].actionLabel}
-            </div>
-          </Localizer>
-          <div ref={contentWrapper} className={getElementClassNames(CONTENT)} tabIndex="0">
+
+          <div title={modalSizeTitle} onClick={setNextModalSize} className={getElementClassNames(SIZE_BUTTON)}>
+            {MODAL_SIZES[nextModalSize].actionLabel}
+          </div>
+
+          <div ref={contentWrapper} tabIndex="0" className={getElementClassNames(CONTENT)}>
             {children}
           </div>
         </div>
