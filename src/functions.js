@@ -1,4 +1,4 @@
-import { _, lift } from 'param.macro';
+import { _ } from 'param.macro';
 import { EXTENSION_CODE } from './constants';
 
 /**
