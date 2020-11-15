@@ -5,6 +5,7 @@ import TextDiff from 'diff';
 import {
   cartesianProduct,
   compareStrings,
+  dedupeAdjacent,
   dedupeAdjacentBy,
   getStringWords,
   groupBy,
@@ -81,17 +82,14 @@ const compareTokenStrings = moize(compareStrings);
 
 /**
  * @param {Vertex[]} vertices A list of vertices taken from a solution graph, and corresponding to a single token.
- * @param {string} locale The locale to use for comparing token values.
+ * @param {string} locale The locale of the vertices.
  * @param {boolean} isWhitespaceDelimited Whether tokens are whitespace-delimited.
- * @returns {{ token: Token, solutionBase: { isComplex: boolean, reference: string }}}
- * The parsed token, and the corresponding solution data.
+ * @returns {Vertex[]} The given list, from which duplicate / invalid / irrelevant vertices have been excluded.
  */
-function parseTokenVertices(vertices, locale, isWhitespaceDelimited) {
-  let isComplex;
-  let reference;
-  let values = vertices.map(vertex => String(vertex.orig || vertex.lenient || ''));
+function cleanTokenVertices(vertices, locale, isWhitespaceDelimited) {
+  let result = vertices;
 
-  // Sometimes invalid non-auto non-typo copies of valid tokens occur in graphs.
+  // Sometimes, invalid non-auto non-typo copies of valid tokens occur in graphs.
   // Filter out as many of these copies as possible.
 
   // Filter out copies corresponding to incorrectly expanded contractions,
@@ -99,38 +97,68 @@ function parseTokenVertices(vertices, locale, isWhitespaceDelimited) {
   // This can only be done safely when the language uses whitespace-delimited tokens,
   // because the corresponding solutions are not accepted due to tokenization.
   if (isWhitespaceDelimited) {
-    values = values.filter(!/[^\s]\s+[^\s]/.test(_));
+    result = result.filter(!/[^\s]\s+[^\s]/.test(_));
   }
 
-  // Filter out copies containing "&" as an incorrectly contracted variant of "and" within English words.
   if (locale === 'en') {
-    values = values.filter(value => (
+    // Filter out copies containing "&" as an incorrectly contracted variant of "and" within English words.
+    result = result.filter(value => (
       (value.length === 1)
       || (value.indexOf('&') === -1)
       || !/(^|[^&\s])&([^&\s]|$)/.test(value))
     );
+  } else if (locale === 'fr') {
+    // Filter out copies containing "ù" instead of "u" (the only French word with the letter "ù" is "où").
+    result = result.filter(value => (
+      (value === 'où')
+      || (value.indexOf('ù') === -1)
+    ));
   }
 
-  if (values.length > 1) {
-    values = dedupeAdjacentBy(
-      values.sort(compareTokenStrings(_, _, locale)),
-      // Filter out copies containing "ù" as an incorrect variant of "u" within French words.
-      // TODO some incorrect variants also remove punctuation, such as "l'hôtel" becoming "lhotel".
-      locale !== 'fr'
-        ? lift(_ === _)
-        : lift(_ === _.replace('ù', 'u'))
+  if (result.length > 1) {
+    // Filter out exact copies.
+    result = dedupeAdjacent(result.sort(compareTokenStrings(_, _, locale)));
+  }
+
+  if (result.length > 1) {
+    // Filter out copies that are simplified versions of another vertex.
+    // For example: "lhotel" instead of "l'hôtel".
+    result = dedupeAdjacentBy(
+      result,
+      (left, right, simplified) => (
+        (right === simplified)
+          ? -1
+          : (left === simplified) ? 1 : 0
+      ),
+      it.normalize('NFD')
+        .replace(/\p{M}/u, '')
+        .replace(/[^\p{L}\p{N}]/u, '')
     );
-
-    isComplex = values.length > 1;
-    reference = values[0];
-  } else {
-    isComplex = false;
-    reference = values[0] || '';
   }
+
+  return result;
+}
+
+/**
+ * @param {Vertex[]} vertices A list of vertices taken from a solution graph, and corresponding to a single token.
+ * @param {string} locale The locale to use for comparing token values.
+ * @param {boolean} isWhitespaceDelimited Whether tokens are whitespace-delimited.
+ * @returns {{ token: Token, solutionBase: { isComplex: boolean, reference: string }}}
+ * The parsed token, and the corresponding solution data.
+ */
+function parseTokenVertices(vertices, locale, isWhitespaceDelimited) {
+  let token = cleanTokenVertices(
+    vertices.map(vertex => String(vertex.orig || vertex.lenient || '')),
+    locale,
+    isWhitespaceDelimited
+  );
 
   return {
-    token: values,
-    solutionBase: { isComplex, reference },
+    token,
+    solutionBase: {
+      reference: token[0] || '',
+      isComplex: token.length > 1,
+    },
   };
 }
 

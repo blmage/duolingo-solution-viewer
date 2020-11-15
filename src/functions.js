@@ -199,19 +199,43 @@ export function groupBy(values, getter) {
 /**
  * @function
  * @param {Array} values A list of values.
- * @param {Function} isEquivalentTo A function usable to test if two values are equivalent.
+ * @param {Function} choose
+ * A function that will be applied to adjacent values whose calculated value is strictly equal.
+ * Should return:
+ * - -1 to keep only the left value,
+ * -  0 to keep both values,
+ * - +1 to keep only the right value.
+ * @param {Function} map
+ * A function that will be applied to the values before comparing them for strict equality.
  * @returns {Array} The given list of values, in which equivalent adjacent values have been deduplicated.
  */
-export function dedupeAdjacentBy(values, isEquivalentTo) {
-  const result = values.slice(0, 1);
+export function dedupeAdjacentBy(values, choose, map = identity) {
+  if (values.length <= 1) {
+    return values.slice();
+  }
+
+  const result = [];
   let baseIndex = 0;
+  let left = map(values[0]);
 
   for (let i = 1, l = values.length; i < l; i++) {
-    if (!isEquivalentTo(values[baseIndex], values[i])) {
+    const right = map(values[i]);
+
+    const choice = (left !== right)
+      ? 0
+      : choose(values[baseIndex], values[i], left);
+
+    if (-1 !== choice) {
+      if (0 === choice) {
+        result.push(values[baseIndex]);
+      }
+
+      left = right;
       baseIndex = i;
-      result.push(values[i]);
     }
   }
+
+  result.push(values[baseIndex]);
 
   return result;
 }
@@ -221,7 +245,7 @@ export function dedupeAdjacentBy(values, isEquivalentTo) {
  * @param {Array} values A list of values.
  * @returns {Array} The given list of values, in which equal adjacent values have been deduplicated.
  */
-export const dedupeAdjacent = dedupeAdjacentBy(_, lift(_ === _));
+export const dedupeAdjacent = dedupeAdjacentBy(_, () => -1);
 
 /**
  * @function
