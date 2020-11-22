@@ -246,14 +246,17 @@ const WordFilterInput =
 
       // The underlying library used to remove diacritics is based on a fixed list of characters,
       // which lacks some cases such as "ạ" or "ả".
-      return matchSorter(
-        suggestions,
-        normalizeString(word, false, true),
-        {
-          keepDiacritics: true,
-          keys: [ 'searchable' ],
-        }
-      );
+      return {
+        options: matchSorter(
+          suggestions,
+          normalizeString(word, false, true),
+          {
+            keepDiacritics: true,
+            keys: [ 'searchable' ],
+          }
+        ),
+        highlightedQuery: word,
+      };
     }, [ parseWordFilter ]);
 
     const onAddFilter = useCallback(({ id = null, name }, query) => {
