@@ -329,6 +329,7 @@ const WordFilterInput =
             autoresizePortal={sizerContainer}
             classNames={{
               root: getElementClassNames(WRAPPER),
+              rootFocused: getElementClassNames(WRAPPER__ACTIVE),
               selected: getElementClassNames(FILTER_WRAPPER),
               selectedTag: getElementClassNames(FILTER),
               selectedTagName: getElementClassNames(FILTER_WORD),
@@ -345,6 +346,7 @@ const WordFilterInput =
   };
 
 const WRAPPER = 'wrapper';
+const WRAPPER__ACTIVE = 'wrapper__active';
 const FILTER_WRAPPER = 'filter_wrapper';
 const FILTER = 'filter';
 const FILTER_SETTING = 'filter_setting';
@@ -372,6 +374,7 @@ const CLASS_NAMES = {
       '_3blqO',
     ],
     // Copied by searching for the main (link) color without side-effects.
+    [WRAPPER__ACTIVE]: [ '_2__FI' ],
     [SUGGESTION__ACTIVE]: [ '_2__FI' ],
   },
   [CONTEXT_FORUM]: {
@@ -380,6 +383,7 @@ const CLASS_NAMES = {
     // Copied from the breadcrumbs items.
     [FILTER]: [ '_2dkQa' ],
     // Copied by searching for the main (link) color without side-effects.
+    [WRAPPER__ACTIVE]: [ '_1vrtM' ],
     [SUGGESTION__ACTIVE]: [ '_1vrtM' ],
   },
 };
@@ -391,6 +395,9 @@ const STYLE_SHEETS = {
       flexWrap: 'wrap',
       padding: '6px 7px 0',
       resize: 'none',
+    },
+    [WRAPPER__ACTIVE]: {
+      borderColor: 'currentColor',
     },
     [FILTER_WRAPPER]: {
       display: 'flex',
