@@ -1,6 +1,6 @@
 import { h } from 'preact';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { useClickAway } from 'preact-use';
+import { useClickAway, useKey } from 'preact-use';
 import { IntlProvider, Localizer, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -291,9 +291,19 @@ const WordFilterInput =
     // Use a portal for the sizer, in case the input is rendered inside a hidden container.
     const sizerContainer = usePortalContainer();
 
-    // Stop propagation of "keydown" events for the search input,
-    // to prevent Duolingo from handling them when the word bank is active (and calling preventDefault()).
-    const onKeyDown = event => event.stopPropagation();
+    const tagsInput = useRef();
+
+    const onKeyDown = event => {
+      // Stop propagation of "keydown" events for the search input,
+      // to prevent Duolingo from handling them when the word bank is active (and calling preventDefault()).
+      event.stopPropagation();
+
+      if (('Escape' === event.key) && tagsInput.current) {
+        tagsInput.current.blur();
+      }
+    }
+
+    useKey('f', () => tagsInput.current && setTimeout(() => tagsInput.current.focus()));
 
     const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
 
@@ -301,6 +311,7 @@ const WordFilterInput =
       <IntlProvider scope="word_filter">
         <Localizer>
           <ReactTags
+            ref={tagsInput}
             id={`${EXTENSION_CODE}-word-filter-tag`}
             tags={filters}
             suggestions={suggestions}
