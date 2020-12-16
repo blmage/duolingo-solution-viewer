@@ -101,6 +101,8 @@ const FilterSetting = ({ context, setting: { key, values }, currentFilter, onUpd
   const wrapper = useRef();
   const [ isMenuDisplayed, setIsMenuDisplayed ] = useState(false);
 
+  const currentValue = values.find(it.value === currentFilter[key]);
+
   const onCloseMenu = () => setIsMenuDisplayed(false);
 
   const onSelect = value => {
@@ -116,25 +118,6 @@ const FilterSetting = ({ context, setting: { key, values }, currentFilter, onUpd
   useClickAway([ wrapper, menu ], onCloseMenu);
 
   const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
-
-  const renderOption = ({ icon, labelId, defaultLabel }) => {
-    const label = <Text id={labelId}>{defaultLabel}</Text>;
-
-    return (
-      <Localizer>
-        <div title={label} className={getElementClassNames(FILTER_SETTING_ACTION)}>
-          <FontAwesomeIcon
-            icon={icon}
-            fixedWidth
-            className={getElementClassNames(FILTER_SETTING_ACTION_ICON)}
-          />
-          {label}
-        </div>
-      </Localizer>
-    );
-  };
-
-  const currentValue = values.find(it.value === currentFilter[key]);
 
   return (
     <Localizer>
@@ -157,7 +140,6 @@ const FilterSetting = ({ context, setting: { key, values }, currentFilter, onUpd
               context={context}
               options={values}
               getOptionKey={({ value }) => value}
-              renderOption={renderOption}
               onSelect={onSelect}
               onClose={onCloseMenu}
             />

@@ -41,6 +41,8 @@ const TRANSLATIONS = {
       sort_alphabetically: 'Sort alphabetically',
       sort_by_similarity: 'Sort by similarity',
       sort_descending: 'Sort in descending order',
+      view_list_with_word: 'View solutions with "{{word}}"',
+      view_list_without_word: 'View solutions without "{{word}}"',
     },
     user_reference: {
       cancel: 'Cancel',
@@ -96,6 +98,8 @@ const TRANSLATIONS = {
       sort_alphabetically: 'Trier alphabétiquement',
       sort_by_similarity: 'Trier par similarité',
       sort_descending: 'Trier par ordre décroissant',
+      view_list_with_word: 'Voir les solutions avec "{{word}}"',
+      view_list_without_word: 'Voir les solutions sans "{{word}}"',
     },
     user_reference: {
       cancel: 'Annuler',

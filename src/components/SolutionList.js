@@ -1,9 +1,10 @@
 import { Fragment, h } from 'preact';
 import { forwardRef } from 'preact/compat';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useStateRef } from 'preact-use';
 import { IntlProvider, Localizer, Text, useText } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
-import { it } from 'param.macro';
+import { _, it } from 'param.macro';
 import moize from 'moize';
 
 import {
@@ -14,7 +15,15 @@ import {
   WORD_MATCH_START,
 } from '../constants';
 
-import { boundIndicesOf, identity, invertComparison, noop, } from '../functions';
+import {
+  boundIndicesOf,
+  getFixedElementPositioningParent,
+  getWordAt,
+  identity,
+  invertComparison,
+  noop,
+} from '../functions';
+
 import * as Solution from '../solutions.js';
 
 import {
@@ -26,6 +35,7 @@ import {
   useStyles,
 } from './index';
 
+import Dropdown from './Dropdown';
 import Pagination from './Pagination';
 import WordFilterInput from './WordFilterInput';
 
@@ -159,6 +169,65 @@ const ListSortLinks =
     );
   };
 
+const WORD_ACTION_INCLUDE = 'include';
+const WORD_ACTION_EXCLUDE = 'exclude';
+
+const SelectedWordActions =
+  ({
+     context,
+     bbox,
+     word,
+     onAddFilter = noop,
+   }) => {
+    const [ isMenuDisplayed, setIsMenuDisplayed ] = useState(true);
+
+    const onCloseMenu = () => setIsMenuDisplayed(false);
+
+    const onSelect = action => {
+      onCloseMenu();
+
+      onAddFilter({
+        word,
+        matchMode: WORD_MATCH_EXACT,
+        isExcluded: WORD_ACTION_EXCLUDE === action,
+      })
+    };
+
+    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
+
+    const actions = [
+      {
+        action: WORD_ACTION_INCLUDE,
+        icon: 'check',
+        labelId: 'view_list_with_word',
+        defaultLabel: `View solutions with "${word}"`,
+        labelFields: { word },
+      },
+      {
+        action: WORD_ACTION_EXCLUDE,
+        icon: 'times',
+        labelId: 'view_list_without_word',
+        defaultLabel: `View solutions without "${word}"`,
+        labelFields: { word },
+      },
+    ];
+
+    if (!isMenuDisplayed) {
+      return;
+    }
+
+    return (<div style={bbox} className={getElementClassNames(SELECTED_WORD_ACTIONS)}>
+        <Dropdown
+          context={context}
+          options={actions}
+          getOptionKey={({ action }) => action}
+          onSelect={onSelect}
+          onClose={onCloseMenu}
+        />
+      </div>
+    );
+  };
+
 const ListPagination =
   ({
      context,
@@ -288,7 +357,7 @@ const SolutionList =
       // 2. Filter the solutions.
 
       const filterCache = useRef({}).current;
-      const [ filters, setFilters ] = useState([]);
+      const [ filters, filtersRef, setFilters ] = useStateRef([]);
 
       const filteredSolutions = useMemo(() => {
         for (const filter of filters) {
@@ -409,6 +478,86 @@ const SolutionList =
         }
       }, [ solutionItems, onPageChange, shouldTriggerPageChange ]);
 
+      // Detects word selections, and proposes new filter options when relevant.
+      const [ selectedWord, setSelectedWord ] = useState(null);
+
+      useEffect(() => {
+        // Detect when the left button is released to only propose suggestions when a selection has been committed.
+        const onMouseUp = event => {
+          if (listRef.current && (event.button === 0)) {
+            const selection = document.getSelection();
+
+            if (
+              selection.anchorNode
+              && (selection.anchorNode === selection.focusNode)
+              && listRef.current.contains(selection.anchorNode)
+              && (selection.anchorNode.parentNode.nodeName === 'LI')
+            ) {
+              // We are only interested in single-word selections.
+              const words = Solution.getStringMatchableWords(
+                selection.toString().trim(),
+                matchingData.locale,
+                matchingData.matchingOptions
+              );
+
+              if (1 === words.length) {
+                const [ word = '' ] = Solution.getStringMatchableWords(
+                  getWordAt(
+                    selection.anchorNode.wholeText,
+                    Math.floor((selection.anchorOffset + selection.focusOffset) / 2)
+                  ),
+                  matchingData.locale,
+                  matchingData.matchingOptions
+                );
+
+                if ((word.length > 1) && !(filtersRef.current || []).some(it.word === word)) {
+                  const bbox = selection.getRangeAt(0).getBoundingClientRect();
+                  const offsetParent = getFixedElementPositioningParent(listRef.current);
+
+                  if (offsetParent) {
+                    const parentBbox = offsetParent.getBoundingClientRect();
+                    bbox.x -= parentBbox.x;
+                    bbox.y -= parentBbox.y;
+                  }
+
+                  setSelectedWord({
+                    word,
+                    bbox: {
+                      left: `${Math.floor(bbox.x)}px`,
+                      top: `${Math.floor(bbox.y)}px`,
+                      width: `${Math.ceil(bbox.width)}px`,
+                      height: `${Math.ceil(bbox.height)}px`,
+                    },
+                  });
+
+                  return;
+                }
+              }
+            }
+          }
+
+          // Delay hiding the actions dropdown to let "click" events be triggered normally.
+          setTimeout(() => setSelectedWord(null));
+        };
+
+        // Detect change events to ensure that suggestions are hidden when the selection is canceled.
+        const onSelectionChange = () => {
+          const selection = document.getSelection();
+
+          if (!selection || ('None' === selection.type)) {
+            setSelectedWord(null);
+          }
+        };
+
+        document.addEventListener('mouseup', onMouseUp);
+        document.addEventListener('selectionchange', onSelectionChange);
+
+        return () => {
+          document.removeEventListener('mouseup', onMouseUp);
+          document.removeEventListener('selectionchange', onSelectionChange);
+        }
+      });
+
       if (0 === solutions.length) {
         return null;
       }
@@ -456,6 +605,14 @@ const SolutionList =
                   <Fragment>
                     <ul>{solutionItems}</ul>
 
+                    {selectedWord && (
+                      <SelectedWordActions
+                        {...selectedWord}
+                        context={context}
+                        onAddFilter={setFilters([ ...filters, _ ])}
+                      />
+                    )}
+
                     <ListPagination
                       context={context}
                       solutionCount={filteredSolutions.length}
@@ -483,6 +640,7 @@ const SORT_TYPE_LABEL = 'sort_type_label';
 const SORT_DIRECTION_LABEL = 'sort_direction_label';
 const SINGLE_SORT_TYPE_LABEL = 'single_sort_type_label';
 const SOLUTION = 'solution';
+const SELECTED_WORD_ACTIONS = 'selected_word_actions';
 const PAGINATION_WRAPPER = 'pagination';
 const PAGINATION_FOOTER = 'pagination_footer';
 const PAGINATION_STATE = 'pagination_state';
@@ -582,6 +740,9 @@ const STYLE_SHEETS = {
       ':nth-child(odd)': {
         background: 'rgba(0, 0, 0, 0.125)',
       },
+    },
+    [SELECTED_WORD_ACTIONS]: {
+      position: 'fixed',
     },
     [PAGINATION_WRAPPER]: {
       userSelect: 'none',

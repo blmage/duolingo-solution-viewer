@@ -3,16 +3,46 @@ import { createPortal, forwardRef } from 'preact/compat';
 import { useEffect, useRef } from 'preact/hooks';
 import { useMergeRefs } from 'use-callback-ref';
 import { StyleSheet } from 'aphrodite';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { it } from 'param.macro';
 import { discardEvent, getScrollableParents, noop } from '../functions';
 import { BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, usePortalContainer, useStyles } from './index';
+import { Localizer, Text } from "preact-i18n";
+
+export const Item =
+  ({
+     context,
+     icon = null,
+     labelId,
+     labelFields = {},
+     defaultLabel,
+   }) => {
+    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
+
+    const label = <Text id={labelId} fields={labelFields}>{defaultLabel}</Text>;
+
+    return (
+      <Localizer>
+        <div title={label} className={getElementClassNames(ITEM)}>
+          {icon && (
+            <FontAwesomeIcon
+              icon={icon}
+              fixedWidth
+              className={getElementClassNames(ITEM_ICON)}
+            />
+          )}
+          {label}
+        </div>
+      </Localizer>
+    );
+  };
 
 const Dropdown = forwardRef(
   (
     {
       context = CONTEXT_CHALLENGE,
       getOptionKey = ((option, index) => index),
-      renderOption,
+      renderOption = (option => <Item {...option} context={context} />),
       options = [],
       onSelect = noop,
       onClose = noop,
@@ -62,7 +92,7 @@ const Dropdown = forwardRef(
       };
 
       return (
-        <div key={key} onClick={onClick} className={getElementClassNames(ITEM)}>
+        <div key={key} onClick={onClick} className={getElementClassNames(ITEM_WRAPPER)}>
           {renderOption(option)}
         </div>
       );
@@ -92,7 +122,9 @@ const CONTENT = 'content';
 const ARROW = 'arrow';
 const ARROW_ICON = 'arrow_icon';
 const ITEMS = 'items';
+const ITEM_WRAPPER = 'item_wrapper';
 const ITEM = 'item';
+const ITEM_ICON = 'item_icon';
 
 const CLASS_NAMES = {
   // Copied from the "More" / "..." menu in both cases.
@@ -101,7 +133,7 @@ const CLASS_NAMES = {
     [ARROW]: [ '_3fuMA' ],
     [ARROW_ICON]: [ '_2nhmY' ],
     [ITEMS]: [ '_1Q4WV' ],
-    [ITEM]: [ '_2FdDp', '_2wC9B' ],
+    [ITEM_WRAPPER]: [ '_2FdDp', '_2wC9B' ],
   },
   [CONTEXT_FORUM]: {
     [WRAPPER]: [ '_1NClK', 'K_HbT', '_2QXjq' ],
@@ -109,7 +141,7 @@ const CLASS_NAMES = {
     [ARROW_ICON]: [ 'SaEU8' ],
     [ITEMS]: [ '_2iJ6U' ],
     // The class corresponding to the item text is added here to get the correct color.
-    [ITEM]: [ '_21W8z', '_3QGyY', '_21hmH' ],
+    [ITEM_WRAPPER]: [ '_21W8z', '_3QGyY', '_21hmH' ],
   },
 };
 
@@ -123,10 +155,17 @@ const STYLE_SHEETS = {
       visibility: 'hidden',
       zIndex: '1000',
     },
-    [ITEM]: {
+    [ITEM_WRAPPER]: {
       fontWeight: 'normal',
       padding: 0,
       textTransform: 'none',
+    },
+    [ITEM]: {
+      padding: '10px',
+      width: '100%',
+    },
+    [ITEM_ICON]: {
+      marginRight: '10px',
     },
   }),
 };

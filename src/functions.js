@@ -313,6 +313,53 @@ export function getStringWords(string) {
 }
 
 /**
+ * @function
+ * @param {string} character A character.
+ * @type {boolean} Whether the character is todo.
+ */
+const isWordCharacter = /[\p{L}\p{N}]/u.test(_);
+
+/**
+ *
+ * @param {string} string
+ * @param {Number} position
+ * @returns {string}
+ */
+export function getWordAt(string, position) {
+  if (position > string.length) {
+    return '';
+  }
+
+  let word = string.substring(position, position + 1);
+
+  if (!isWordCharacter(word)) {
+    return '';
+  }
+
+  for (let i = position; i > 0; i--) {
+    const char = string.slice(i - 1, i);
+
+    if (!isWordCharacter(char)) {
+      break;
+    }
+
+    word = char + word;
+  }
+
+  for (let i = position + 1, l = string.length; i < l; i++) {
+    const char = string.slice(i, i + 1);
+
+    if (!isWordCharacter(char)) {
+      break;
+    }
+
+    word = word + char;
+  }
+
+  return word;
+}
+
+/**
  * @param {string} string A string.
  * @param {string} substring The substring to search in the given string.
  * @returns {[number, number]} The leftmost and rightmost indices of the given substring in the given string.
@@ -432,8 +479,8 @@ export function isAnyInputFocused() {
 
 /**
  * @param {Element} element An element.
- * @param {number} threshold The minimum scroll height for a parent to be returned.
- * @returns {Element} The first parent of the given element that has a scrollbar with sufficient scroll height.
+ * @param {number} threshold The minimum scroll height, below which a parent is ignored.
+ * @returns {Element} The first parent of the given element that has a scrollbar with a sufficient scroll height.
  */
 export function getParentWithScrollbar(element, threshold = 10) {
   let parent = element.parentElement;
@@ -476,6 +523,26 @@ export function getScrollableParents(element) {
   }
 
   return scrollableParents;
+}
+
+/**
+ * @param {Element} element A fixed element.
+ * @returns {Element|null} The parent of the element which has an effect on its position, if any.
+ */
+export function getFixedElementPositioningParent(element) {
+  let parent = element.parentElement;
+
+  while (parent && (parent !== document.body)) {
+    const styles = window.getComputedStyle(parent);
+
+    if (styles.getPropertyValue('transform') !== 'none') {
+      return parent;
+    }
+
+    parent = parent.parentElement;
+  }
+
+  return null;
 }
 
 /**
