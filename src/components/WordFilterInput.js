@@ -356,16 +356,19 @@ const CLASS_NAMES = {
       '_3blqO',
     ],
     // Copied by searching for the main (link) color without side-effects.
-    [WRAPPER__ACTIVE]: [ '_2__FI' ],
     [SUGGESTION__ACTIVE]: [ '_2__FI' ],
   },
   [CONTEXT_FORUM]: {
-    // Copied from the post text field. The class responsible for the height is ignored here.
-    [WRAPPER]: [ '_2yvtl', 'gFN2J' ],
+    [WRAPPER]: [
+      // Copied from the post text field. The class responsible for the height is ignored here.
+      '_2yvtl',
+      'gFN2J',
+      // Copied by searching for a gray color to get the same result as on the challenge pages.
+      'uFNEM',
+    ],
     // Copied from the breadcrumbs items.
     [FILTER]: [ '_2dkQa' ],
     // Copied by searching for the main (link) color without side-effects.
-    [WRAPPER__ACTIVE]: [ '_1vrtM' ],
     [SUGGESTION__ACTIVE]: [ '_1vrtM' ],
   },
 };
@@ -427,6 +430,9 @@ const STYLE_SHEETS = {
       maxWidth: '100%',
       margin: '1px 0 5px',
       padding: '10px 2px',
+      '::placeholder': {
+        color: 'inherit',
+      },
     },
     [SUGGESTIONS]: {
       left: '50%',
