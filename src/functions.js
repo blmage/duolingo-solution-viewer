@@ -321,9 +321,9 @@ const isWordCharacter = /[\p{L}\p{N}]/u.test(_);
 
 /**
  *
- * @param {string} string
- * @param {Number} position
- * @returns {string}
+ * @param {string} string A string.
+ * @param {number} position A position in the string.
+ * @returns {string} The word that is present in the string at the given position, if any.
  */
 export function getWordAt(string, position) {
   if (position > string.length) {
