@@ -663,21 +663,28 @@ const challengeFooterMutationObserver = new MutationObserver(() => {
 });
 
 // Opens the solution list modal when "S" is pressed, if relevant.
+// Clicks the discussion button when "D" is pressed, if available.
 document.addEventListener('keydown', event => {
   if (
     !event.ctrlKey
-    && (null !== completedChallenge)
     && !isSolutionListModalDisplayed
     && !isAnyInputFocused()
-    && (event.key.toLowerCase() === 's')
   ) {
-    discardEvent(event);
+    const key = event.key.toLowerCase();
 
-    renderChallengeSolutionListModal(
-      completedChallenge.challenge,
-      completedChallenge.result,
-      completedChallenge.userAnswer
-    );
+    if (('s' === key) && (null !== completedChallenge)) {
+      discardEvent(event);
+
+      renderChallengeSolutionListModal(
+        completedChallenge.challenge,
+        completedChallenge.result,
+        completedChallenge.userAnswer
+      );
+    } else if ('d' === key) {
+      const discussionIcon = document.querySelector(CHALLENGE_DISCUSSION_ICON_SELECTOR);
+      const discussionButton = discussionIcon && discussionIcon.closest('button');
+      discussionButton && discussionButton.click();
+    }
   }
 });
 
@@ -829,6 +836,13 @@ const CHALLENGE_SOLUTION_WRAPPER_SELECTOR = '._2ez4I';
  * @type {string}
  */
 const CHALLENGE_ACTION_LINK_LIST_SELECTOR = '._2AOD4, ._3MD8I';
+
+/**
+ * A CSS selector for the discussion button icon of the challenge screen.
+ *
+ * @type {string}
+ */
+const CHALLENGE_DISCUSSION_ICON_SELECTOR = '._1Gda2, ._1BpR_';
 
 /**
  * A CSS selector for the fixed page header used in the forum. We use the class names with the most styles.
