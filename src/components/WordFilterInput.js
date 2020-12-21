@@ -16,7 +16,7 @@ import {
   WORD_MATCH_START
 } from '../constants';
 
-import { discardEvent, identity, noop, normalizeString } from '../functions';
+import { discardEvent, identity, isAnyInputFocused, noop, normalizeString } from '../functions';
 import { getStringMatchableWords } from '../solutions';
 import { addContext, BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, usePortalContainer, useStyles } from './index';
 import Dropdown from './Dropdown';
@@ -285,7 +285,11 @@ const WordFilterInput =
       }
     }
 
-    useKey('f', () => tagsInput.current && setTimeout(() => tagsInput.current.focus()));
+    useKey('f', () =>
+      !isAnyInputFocused()
+      && tagsInput.current
+      && setTimeout(() => tagsInput.current.focus())
+    );
 
     const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
 
