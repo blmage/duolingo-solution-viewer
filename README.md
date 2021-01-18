@@ -27,6 +27,7 @@ the **correction of typos** for listening challenges.
 
 * [**Chrome** extension](https://chrome.google.com/webstore/detail/duolingo-solution-viewer/idffaipgnlkhfhibgnodeiogpgojcmfm)
 * [**Firefox** add-on](https://addons.mozilla.org/firefox/addon/duolingo-solution-viewer/)
+* [**Opera** addon](https://addons.opera.com/fr/extensions/details/duolingo-solution-viewer/)
 
 ### Features
 
