@@ -243,6 +243,13 @@ const WordFilterInput =
       };
     }, [ parseWordFilter ]);
 
+    const tagsInput = useRef();
+
+    const blurTagsInput = useCallback(
+      () => tagsInput.current && setTimeout(() => tagsInput.current.blur()),
+      [ tagsInput ]
+    );
+
     const onAddFilter = useCallback(({ id = null, name }, query) => {
       let filter;
 
@@ -254,7 +261,9 @@ const WordFilterInput =
       }
 
       onChange([ ...filters.filter(it.word !== filter.word), filter ]);
-    }, [ filters, onChange, parseWordFilter ]);
+
+      blurTagsInput();
+    }, [ filters, onChange, parseWordFilter, blurTagsInput ]);
 
     const onUpdateFilter = useCallback((index, filter) => {
       if (filters[index]) {
@@ -275,16 +284,11 @@ const WordFilterInput =
     // Use a portal for the sizer, in case the input is rendered inside a hidden container.
     const sizerContainer = usePortalContainer();
 
-    const tagsInput = useRef();
-
     const onKeyDown = event => {
       // Stop propagation of "keydown" events for the search input,
       // to prevent Duolingo from handling them when the word bank is active (and calling preventDefault()).
       event.stopPropagation();
-
-      if (('Escape' === event.key) && tagsInput.current) {
-        tagsInput.current.blur();
-      }
+      ('Escape' === event.key) && blurTagsInput();
     }
 
     useKey('f', () =>
