@@ -22,6 +22,7 @@ import {
   identity,
   invertComparison,
   noop,
+  scrollElementIntoParentView,
 } from '../functions';
 
 import * as Solution from '../solutions.js';
@@ -314,6 +315,7 @@ const SolutionList =
         solutions = [],
         matchingData = {},
         onPageChange = noop,
+        scrollOffsetGetter = (() => 0),
       },
       listRef
     ) => {
@@ -478,6 +480,14 @@ const SolutionList =
         }
       }, [ solutionItems, onPageChange, shouldTriggerPageChange ]);
 
+      const filterWrapperRef = useRef();
+
+      // Scrolls the filter input into view when it is focused.
+      const onFilterFocus = useCallback(() => {
+        filterWrapperRef.current
+        && scrollElementIntoParentView(filterWrapperRef.current, scrollOffsetGetter(), 'smooth');
+      }, [ scrollOffsetGetter, filterWrapperRef ]);
+
       // Detects word selections, and proposes new filter options when relevant.
       const [ selectedWord, setSelectedWord ] = useState(null);
 
@@ -565,7 +575,7 @@ const SolutionList =
       return (
         <IntlProvider scope="solution_list">
           <div>
-            <h3 className={getElementClassNames(TITLE)}>
+            <h3 ref={filterWrapperRef} className={getElementClassNames(TITLE)}>
             <span className={getElementClassNames(TITLE_TEXT)}>
               <Text id="filter">Filter:</Text>
             </span>
@@ -575,6 +585,7 @@ const SolutionList =
                 filters={filters}
                 matchingData={matchingData}
                 onChange={setFilters}
+                onFocus={onFilterFocus}
               />
             </h3>
 
