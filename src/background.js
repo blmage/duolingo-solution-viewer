@@ -112,10 +112,7 @@ async function putWithRetry(table, value) {
   try {
     await database[table].put(value);
   } catch (error) {
-    if (
-      (error.name === 'QuotaExceededError')
-      || (error.inner && (error.inner.name === 'QuotaExceededError'))
-    ) {
+    if ((error.name === 'QuotaExceededError') || (error.inner?.name === 'QuotaExceededError')) {
       let purgedSize = 0;
 
       const checkPurgedSize = challenge => {
@@ -140,7 +137,7 @@ async function putWithRetry(table, value) {
  * @returns {string} A unique ID for the given sender.
  */
 function getSenderId(sender) {
-  const senderTabId = String(sender.tab && sender.tab.id || 'global');
+  const senderTabId = String(sender.tab?.id || 'global');
   const senderFrameId = String(sender.frameId || 'main');
   return `${senderTabId}-${senderFrameId}`;
 }

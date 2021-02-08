@@ -72,7 +72,7 @@ const MINIMUM_LOADING_DELAY = 250;
  * @returns {string} The current locale used by the UI.
  */
 function getUiLocale() {
-  return String(isObject(window.duo) && window.duo.uiLanguage || '').trim()
+  return String(window.duo?.uiLanguage || '').trim()
     || String(Cookies.get('ui_language') || '').trim()
     || DEFAULT_LOCALE;
 }
@@ -83,7 +83,7 @@ function getUiLocale() {
 function onUiLoaded() {
   let cssLoadedPromise;
 
-  if (isObject(window.duo) && isArray(window.duo.stylesheets)) {
+  if (isArray(window.duo?.stylesheets)) {
     cssLoadedPromise = new Promise(resolve => {
       // Regularly check if any of the stylesheets has been loaded
       // (the "stylesheets" array contain styles for both LTR and RTL directions).
@@ -238,11 +238,7 @@ function renderChallengeSolutionListModal(challenge, result, userAnswer) {
           key: Challenge.getUniqueKey(challenge),
         });
 
-        if (
-          isObject(data)
-          && isObject(data.challenge)
-          && (currentResultWrapper === resultWrapper)
-        ) {
+        if (isObject(data?.challenge) && (currentResultWrapper === resultWrapper)) {
           renderChallengeSolutionLink(data.challenge, result, data.userReference || userReference);
 
           if (isObject(completedChallenge)) {
@@ -314,7 +310,7 @@ function renderChallengeSolutionLink(challenge, result, userAnswer) {
  */
 function renderForumCommentChallenge(commentId, challenge, userReference = '') {
   try {
-    if (forumOpWrapper && forumOpWrapper.isConnected) {
+    if (forumOpWrapper?.isConnected) {
       const actionLinkList = document.querySelector(FORUM_OP_ACTION_LINK_LIST_SELECTOR);
 
       if (actionLinkList) {
@@ -334,11 +330,7 @@ function renderForumCommentChallenge(commentId, challenge, userReference = '') {
               userReference: newReference,
             });
 
-            if (
-              isObject(data)
-              && isObject(data.challenge)
-              && (commentId === forumCommentId)
-            ) {
+            if (isObject(data?.challenge) && (commentId === forumCommentId)) {
               forumCommentData = data;
               return data.challenge.solutions || [];
             }
@@ -440,7 +432,7 @@ let forumCommentData = null;
  */
 function getUserAnswer() {
   const blankFillingAnswer = document.querySelector(BLANK_FILLING_FULL_ANSWER_SELECTOR);
-  let userAnswer = (blankFillingAnswer && String(blankFillingAnswer.textContent).trim()) || '';
+  let userAnswer = String(blankFillingAnswer?.textContent || '').trim();
 
   if ('' !== userAnswer) {
     // The user answer is enclosed within underscores, seemingly used for spacing.
@@ -448,7 +440,7 @@ function getUserAnswer() {
   }
 
   const answerInput = document.querySelector(ANSWER_INPUT_SELECTOR);
-  userAnswer = (answerInput && answerInput.value && String(answerInput.value).trim()) || '';
+  userAnswer = String(answerInput?.value || '').trim();
 
   if ('' === userAnswer) {
     const tokenContainer = document.querySelector(ANSWER_SELECTED_TOKEN_CONTAINER_SELECTOR)
@@ -569,8 +561,7 @@ async function handleListeningChallengeResult(result, userAnswer) {
         : solutionTranslationWrapper.innerText.trim(),
     }
   ).catch(() => false).then(data =>
-    isObject(data)
-    && isObject(data.challenge)
+    isObject(data?.challenge)
     && handleChallengeResult(data.challenge, result, userAnswer, data.correctionDiff)
   );
 }
@@ -598,11 +589,7 @@ function handleDocumentLocationChange(location) {
 
       sendActionRequestToContentScript(ACTION_TYPE_GET_COMMENT_CHALLENGE, commentId)
         .then(data => {
-          if (
-            isObject(data)
-            && isObject(data.challenge)
-            && (forumCommentId === data.commentId)
-          ) {
+          if (isObject(data?.challenge) && (forumCommentId === data.commentId)) {
             forumCommentData = data;
 
             onUiLoaded()

@@ -13,10 +13,9 @@ const FORUM_NEW_POST_BUTTONS_SELECTOR = '._1KvMS textarea + div button';
  * @function
  * @returns {string|null} When in the context of a forum discussion, the inline styles applied to the follow button.
  */
-const getForumFollowButtonInlineStyles = moize(() => {
-  const followButton = document.querySelector(FORUM_FOLLOW_BUTTON_SELECTOR);
-  return String(followButton && followButton.getAttribute('style') || '');
-});
+const getForumFollowButtonInlineStyles = moize(() => String(
+  document.querySelector(FORUM_FOLLOW_BUTTON_SELECTOR)?.getAttribute('style') || ''
+));
 
 /**
  * @function

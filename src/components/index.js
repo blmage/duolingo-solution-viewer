@@ -132,21 +132,23 @@ export const useStyles = (classNames, styleSheets = {}, stateKeys = []) => {
     return keys.flatMap(elementKey => {
       const allClassNames = [];
 
-      if (styleSheets[BASE] && styleSheets[BASE][elementKey]) {
+      if (styleSheets[BASE]?.[elementKey]) {
         allClassNames.push(css(styleSheets[BASE][elementKey]));
       }
 
-      if (classNames[BASE] && classNames[BASE][elementKey]) {
+      if (classNames[BASE]?.[elementKey]) {
         allClassNames.push(...classNames[BASE][elementKey]);
       }
 
       stateKeys.forEach(stateKey => {
-        if (stateKey && styleSheets[stateKey] && styleSheets[stateKey][elementKey]) {
-          allClassNames.push(css(styleSheets[stateKey][elementKey]));
-        }
+        if (stateKey) {
+          if (styleSheets[stateKey]?.[elementKey]) {
+            allClassNames.push(css(styleSheets[stateKey][elementKey]));
+          }
 
-        if (stateKey && classNames[stateKey] && classNames[stateKey][elementKey]) {
-          allClassNames.push(...classNames[stateKey][elementKey]);
+          if (classNames[stateKey]?.[elementKey]) {
+            allClassNames.push(...classNames[stateKey][elementKey]);
+          }
         }
       });
 
@@ -164,7 +166,7 @@ const MENU_ICON_SELECTOR = 'img._1TuHK';
 
 const useImageCdnBaseUrl = createGlobalState(() => {
   const menuIcon = document.querySelector(MENU_ICON_SELECTOR);
-  return `${new URL(menuIcon && menuIcon.src || IMAGE_CDN_DEFAULT_BASE_URL).origin}/`;
+  return `${new URL(menuIcon?.src || IMAGE_CDN_DEFAULT_BASE_URL).origin}/`;
 });
 
 /**
