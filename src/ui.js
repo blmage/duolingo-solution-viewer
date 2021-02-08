@@ -672,6 +672,16 @@ function handleDocumentLocationChange(location) {
 }
 
 /**
+ * Simulates a click on a footer button from the original UI.
+ *
+ * @param {string} iconSelector A CSS selector for the icon of the button.
+ */
+function clickOriginalUiFooterButton(iconSelector) {
+  const button = document.querySelector(iconSelector)?.closest('button');
+  button && renderCompletedChallengeSolutionListModal(false).then(() => button.click()).catch(noop);
+}
+
+/**
  * A mutation observer for the footer of the challenge screen, detecting and handling challenge results.
  *
  * @type {MutationObserver}
@@ -723,9 +733,11 @@ document.addEventListener('keydown', event => {
       discardEvent(event);
       renderCompletedChallengeSolutionListModal(true).catch(noop);
     } else if ('d' === key) {
-      const discussionIcon = document.querySelector(CHALLENGE_DISCUSSION_ICON_SELECTOR);
-      const discussionButton = discussionIcon && discussionIcon.closest('button');
-      discussionButton && discussionButton.click();
+      discardEvent(event);
+      clickOriginalUiFooterButton(CHALLENGE_DISCUSSION_ICON_SELECTOR);
+    } else if ('r' === key) {
+      discardEvent(event);
+      clickOriginalUiFooterButton(CHALLENGE_REPORT_ICON_SELECTOR);
     }
   }
 });
@@ -880,7 +892,14 @@ const CHALLENGE_SOLUTION_WRAPPER_SELECTOR = '._2ez4I';
 const CHALLENGE_ACTION_LINK_LIST_SELECTOR = '._2AOD4, ._3MD8I';
 
 /**
- * A CSS selector for the discussion button icon of the challenge screen.
+ * A CSS selector for the report (flag) icon of the challenge screen.
+ *
+ * @type {string}
+ */
+const CHALLENGE_REPORT_ICON_SELECTOR = '._1NTcn, ._3cRbJ';
+
+/**
+ * A CSS selector for the discussion icon of the challenge screen.
  *
  * @type {string}
  */
