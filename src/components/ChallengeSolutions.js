@@ -1,6 +1,6 @@
 import { h, Fragment } from 'preact';
 import { useCallback, useRef, useState } from 'preact/hooks';
-import { IntlProvider, Text } from 'preact-i18n';
+import { IntlProvider, Localizer, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { isArray, getParentWithScrollbar, noop } from '../functions';
@@ -105,18 +105,27 @@ const ChallengeSolutions =
           />
           {(CONTEXT_CHALLENGE === context)
           && (
-            <div
-              onClick={() => setIsUserReferencedPinned(!isUserReferencePinned)}
-              className={getElementClassNames([
-                PIN_BUTTON,
-                isUserReferencePinned && PIN_BUTTON__PINNED
-              ])}
-            >
-              <FontAwesomeIcon
-                icon={[ 'far', 'thumbtack' ]}
-                className={getElementClassNames(PIN_BUTTON_ICON)}
-              />
-            </div>
+            <IntlProvider scope="user_reference">
+              <Localizer>
+                <div
+                  onClick={() => setIsUserReferencedPinned(!isUserReferencePinned)}
+                  title={(
+                    <Text id={isUserReferencePinned ? 'unpin' : 'pin'}>
+                      {isUserReferencePinned ? 'Unpin' : 'Pin'}
+                    </Text>
+                  )}
+                  className={getElementClassNames([
+                    PIN_BUTTON,
+                    isUserReferencePinned && PIN_BUTTON__PINNED
+                  ])}
+                >
+                  <FontAwesomeIcon
+                    icon={[ 'far', 'thumbtack' ]}
+                    className={getElementClassNames(PIN_BUTTON_ICON)}
+                  />
+                </div>
+              </Localizer>
+            </IntlProvider>
           )}
         </div>
 

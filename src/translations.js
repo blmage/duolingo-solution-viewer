@@ -15,6 +15,7 @@ const TRANSLATIONS = {
       title: 'Corrected answer:',
     },
     modal: {
+      close: 'Close',
       fit_to_content: 'Fit to content',
       maximize: 'Maximize',
       minimize: 'Minimize',
@@ -47,7 +48,9 @@ const TRANSLATIONS = {
     user_reference: {
       cancel: 'Cancel',
       none: 'None yet',
+      pin: 'Pin',
       title: 'Your reference:',
+      unpin: 'Unpin',
       update: 'Update',
     },
     word_filter: {
@@ -72,6 +75,7 @@ const TRANSLATIONS = {
       title: 'Réponse corrigée :',
     },
     modal: {
+      close: 'Fermer',
       fit_to_content: 'Adapter au contenu',
       maximize: 'Maximiser',
       minimize: 'Minimiser',
@@ -104,6 +108,8 @@ const TRANSLATIONS = {
     user_reference: {
       cancel: 'Annuler',
       none: 'Aucune pour l\'instant',
+      pin: 'Épingler',
+      unpin: 'Désépingler',
       update: 'Modifier',
       your_reference: 'Ta référence :',
     },

@@ -1,6 +1,6 @@
 import { h } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { IntlProvider, Text, useText } from 'preact-i18n';
+import { IntlProvider, Localizer, Text, useText } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import { discardEvent, noop } from '../functions';
 import { BASE, useImageCdnUrl, useLocalStorageList, useStyles } from './index';
@@ -123,7 +123,13 @@ const Modal = ({ children, onClose = noop }) => {
       <div onClick={closeModal} className={getElementClassNames(OVERLAY)}>
         <div role="dialog" tabIndex="-1" onClick={discardEvent} className={getElementClassNames(WRAPPER)}>
           <div onClick={closeModal} className={getElementClassNames(CLOSE_BUTTON)}>
-            <img src={closeIconUrl} />
+            <Localizer>
+              <img
+                src={closeIconUrl}
+                alt={<Text id="close">Close</Text>}
+                title={<Text id="close">Close</Text>}
+              />
+            </Localizer>
           </div>
 
           <div title={modalSizeTitle} onClick={setNextModalSize} className={getElementClassNames(SIZE_BUTTON)}>
