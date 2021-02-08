@@ -19,6 +19,7 @@ import {
   isObject,
   logError,
   maxBy,
+  noop,
   querySelectors,
   toggleElementDisplay,
 } from './functions';
@@ -131,7 +132,9 @@ function getComponentWrapper(component, parentElement) {
     componentWrappers[component.name] = wrapper;
   }
 
-  parentElement.appendChild(componentWrappers[component.name]);
+  if (parentElement !== componentWrappers[component.name].parentElement) {
+    parentElement.appendChild(componentWrappers[component.name]);
+  }
 
   return componentWrappers[component.name];
 }
@@ -206,6 +209,13 @@ function renderChallengeSolutionLoader(result) {
 }
 
 /**
+ * Whether a solution list modal is currently being toggled off / on.
+ *
+ * @type {boolean}
+ */
+let isSolutionListModalToggling = false;
+
+/**
  * Whether a solution list modal is currently displayed.
  *
  * @type {boolean}
@@ -216,16 +226,21 @@ let isSolutionListModalDisplayed = false;
  * @param {import('./background.js').Challenge} challenge A challenge.
  * @param {string} result The result of the challenge.
  * @param {string} userAnswer The answer given by the user.
+ * @param {boolean} opened Whether the modal should be opened / closed.
+ * @returns {Promise<void>} A promise for when the modal will have finished opening / closing.
  */
-function renderChallengeSolutionListModal(challenge, result, userAnswer) {
+function renderChallengeSolutionListModal(challenge, result, userAnswer, opened) {
   try {
-    if (isSolutionListModalDisplayed) {
-      return;
+    if (isSolutionListModalToggling) {
+      return Promise.reject();
+    } else if (
+      (isSolutionListModalDisplayed && opened)
+      || (!isSolutionListModalDisplayed && !opened)
+    ) {
+      return Promise.resolve();
     }
 
-    isSolutionListModalDisplayed = true;
     const currentResultWrapper = resultWrapper;
-    const modalKey = new Date().getTime().toString();
 
     const updateUserReference = async userReference => {
       try {
@@ -251,25 +266,61 @@ function renderChallengeSolutionListModal(challenge, result, userAnswer) {
         renderChallengeSolutionLink(challenge, result, userAnswer);
         error && logError(error, 'Could not update the user answer: ');
       }
-    }
-
-    const onModalClose = () => {
-      isSolutionListModalDisplayed = false;
     };
 
-    render(
-      <IntlProvider definition={getTranslations(getUiLocale())}>
-        <Modal key={modalKey} onClose={onModalClose}>
-          <ChallengeSolutions
-            context={CONTEXT_CHALLENGE}
-            {...challenge}
-            userReference={userAnswer}
-            onUserReferenceUpdate={updateUserReference}
-          />
-        </Modal>
-      </IntlProvider>,
-      getComponentWrapper(Modal, document.body)
-    );
+    isSolutionListModalToggling = true;
+
+    return new Promise(resolve => {
+      const uiModalCloseButton = document.querySelector(CHALLENGE_MODAL_CLOSE_BUTTON_SELECTOR);
+
+      if (uiModalCloseButton) {
+        uiModalCloseButton.click();
+        sleep(300).then(resolve);
+        return;
+      }
+
+      resolve();
+    }).finally(() => new Promise((resolve, reject) => {
+      const onRequestClose = () => {
+        if (isSolutionListModalDisplayed) {
+          isSolutionListModalToggling = true;
+          toggleModal(false);
+        }
+      }
+
+      const onAfterOpen = () => {
+        isSolutionListModalToggling = false;
+        isSolutionListModalDisplayed = true;
+        opened ? resolve() : reject();
+      };
+
+      const onAfterClose = () => {
+        isSolutionListModalToggling = false;
+        isSolutionListModalDisplayed = false;
+        opened ? reject() : resolve();
+      };
+
+      const toggleModal = opened => render(
+        <IntlProvider definition={getTranslations(getUiLocale())}>
+          <Modal
+            opened={opened}
+            onRequestClose={onRequestClose}
+            onAfterOpen={onAfterOpen}
+            onAfterClose={onAfterClose}
+          >
+            <ChallengeSolutions
+              context={CONTEXT_CHALLENGE}
+              {...challenge}
+              userReference={userAnswer}
+              onUserReferenceUpdate={updateUserReference}
+            />
+          </Modal>
+        </IntlProvider>,
+        getComponentWrapper(Modal, document.body)
+      );
+
+      toggleModal(opened);
+    }));
   } catch (error) {
     logError(error, 'Could not render the solution list modal: ');
   }
@@ -290,7 +341,7 @@ function renderChallengeSolutionLink(challenge, result, userAnswer) {
           <SolutionLink
             result={result}
             solutions={challenge.solutions}
-            onClick={() => renderChallengeSolutionListModal(challenge, result, userAnswer)}
+            onClick={() => renderChallengeSolutionListModal(challenge, result, userAnswer, true).catch(noop)}
           />
         </IntlProvider>,
         getComponentWrapper(SolutionLink, actionLinkList)
@@ -567,6 +618,21 @@ async function handleListeningChallengeResult(result, userAnswer) {
 }
 
 /**
+ * @param {boolean} opened Whether the modal should be opened / closed.
+ * @returns {Promise<void>} A promise for when the modal will have finished opening / closing.
+ */
+function renderCompletedChallengeSolutionListModal(opened) {
+  return (null === completedChallenge)
+    ? Promise.reject()
+    : renderChallengeSolutionListModal(
+      completedChallenge.challenge,
+      completedChallenge.result,
+      completedChallenge.userAnswer,
+      opened
+    );
+}
+
+/**
  * A RegExp for the URLs of forum comments.
  *
  * @type {RegExp}
@@ -650,21 +716,12 @@ const challengeFooterMutationObserver = new MutationObserver(() => {
 // Opens the solution list modal when "S" is pressed, if relevant.
 // Clicks the discussion button when "D" is pressed, if available.
 document.addEventListener('keydown', event => {
-  if (
-    !event.ctrlKey
-    && !isSolutionListModalDisplayed
-    && !isAnyInputFocused()
-  ) {
+  if (!event.ctrlKey && !isAnyInputFocused()) {
     const key = event.key.toLowerCase();
 
-    if (('s' === key) && (null !== completedChallenge)) {
+    if ('s' === key) {
       discardEvent(event);
-
-      renderChallengeSolutionListModal(
-        completedChallenge.challenge,
-        completedChallenge.result,
-        completedChallenge.userAnswer
-      );
+      renderCompletedChallengeSolutionListModal(true).catch(noop);
     } else if ('d' === key) {
       const discussionIcon = document.querySelector(CHALLENGE_DISCUSSION_ICON_SELECTOR);
       const discussionButton = discussionIcon && discussionIcon.closest('button');
@@ -828,6 +885,13 @@ const CHALLENGE_ACTION_LINK_LIST_SELECTOR = '._2AOD4, ._3MD8I';
  * @type {string}
  */
 const CHALLENGE_DISCUSSION_ICON_SELECTOR = '._1Gda2, ._1BpR_';
+
+/**
+ * A CSS selector for the close button of original modals on the challenge screen.
+ *
+ * @type {string}
+ */
+const CHALLENGE_MODAL_CLOSE_BUTTON_SELECTOR = '#overlays *[data-test="close-button"]';
 
 /**
  * A CSS selector for the fixed page header used in the forum. We use the class names with the most styles.

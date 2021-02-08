@@ -5,7 +5,7 @@ import { StyleSheet } from 'aphrodite';
 import { discardEvent, noop } from '../functions';
 import { BASE, useImageCdnUrl, useLocalStorageList, useStyles } from './index';
 
-const STATE_PENDING = 'pending';
+const STATE_WILL_OPEN = 'will_open';
 const STATE_OPENING = 'opening';
 const STATE_OPENED = 'opened';
 const STATE_CLOSING = 'closing';
@@ -40,44 +40,70 @@ const MODAL_SIZES = {
  */
 const CLOSE_ICON_CDN_PATH = 'images/x.svg';
 
-const Modal = ({ children, onClose = noop }) => {
-  const [ modalState, setModalState ] = useState(STATE_PENDING);
+const Modal =
+  ({
+     children,
+     opened = true,
+     onAfterOpen = noop,
+     onAfterClose = noop,
+     onRequestClose = noop,
+   }) => {
+    const [ modalState, setModalState ] = useState(STATE_CLOSED);
 
-  const {
-    state: modalSize,
-    nextState: nextModalSize,
-    next: setNextModalSize,
-  } = useLocalStorageList(
-    'modal-size',
-    Object.keys(MODAL_SIZES),
-    MODAL_SIZE_DEFAULT
-  );
+    const {
+      state: modalSize,
+      nextState: nextModalSize,
+      next: setNextModalSize,
+    } = useLocalStorageList(
+      'modal-size',
+      Object.keys(MODAL_SIZES),
+      MODAL_SIZE_DEFAULT
+    );
 
-  const contentWrapper = useRef();
-  const openedTimeout = useRef(null);
+    const contentWrapper = useRef();
+    const openedTimeout = useRef(null);
 
-  // Closes the modal with an effect similar to Duolingo's.
-  const closeModal = useCallback(() => {
-    if ([ STATE_CLOSING, STATE_CLOSED ].indexOf(modalState) === -1) {
+    // Opens the modal with an effect similar to Duolingo's.
+    const openModal = useCallback(() => {
+      setModalState(STATE_WILL_OPEN);
+
+      setTimeout(() => setModalState(STATE_OPENING), 1);
+
+      openedTimeout.current = setTimeout(() => {
+        setModalState(STATE_OPENED);
+        setTimeout(() => onAfterOpen());
+        contentWrapper.current?.focus();
+      }, 300);
+    }, [ onAfterOpen, setModalState, openedTimeout ]);
+
+    // Closes the modal with an effect similar to Duolingo's.
+    const closeModal = useCallback(() => {
       setModalState(STATE_CLOSING);
 
       setTimeout(() => {
         setModalState(STATE_CLOSED);
-        onClose();
+        setTimeout(() => onAfterClose());
       }, 300);
 
-      if (openedTimeout.current) {
-        clearTimeout(openedTimeout.current);
-      }
-    }
-  }, [ modalState, onClose ]);
+      openedTimeout.current && clearTimeout(openedTimeout.current);
+    }, [ onAfterClose, setModalState, openedTimeout ]);
 
-  // Closes the modal when the "Escape" key is pressed.
-  useEffect(() => {
-    if ([ STATE_CLOSING, STATE_CLOSED ].indexOf(modalState) === -1) {
+    // Opens / closes the modal when requested.
+    useEffect(() => {
+      const isCurrentlyOpened = [ STATE_WILL_OPEN, STATE_OPENING, STATE_OPENED ].indexOf(modalState) >= 0;
+
+      if (opened && !isCurrentlyOpened) {
+        openModal();
+      } else if (!opened && isCurrentlyOpened) {
+        closeModal();
+      }
+    }, [ opened, modalState, openModal, closeModal ]);
+
+    // Closes the modal when the "Escape" key is pressed.
+    useEffect(() => {
       const handleKeyDown = event => {
         if ('Escape' === event.key) {
-          closeModal();
+          onRequestClose();
           discardEvent(event);
         }
       };
@@ -85,65 +111,49 @@ const Modal = ({ children, onClose = noop }) => {
       document.addEventListener('keydown', handleKeyDown);
 
       return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [ onRequestClose ]);
+
+    const { modalSizeTitle } = useText({
+      modalSizeTitle: (
+        <Text id={MODAL_SIZES[nextModalSize].actionTitleId}>
+          {MODAL_SIZES[nextModalSize].defaultActionTitle}
+        </Text>
+      )
+    });
+
+    const closeIconUrl = useImageCdnUrl(CLOSE_ICON_CDN_PATH);
+    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ modalState, modalSize ]);
+
+    if (STATE_CLOSED === modalState) {
+      return null;
     }
-  }, [ modalState, closeModal ]);
 
-  // Opens the modal with an effect similar to Duolingo's.
-  useEffect(() => {
-    if (STATE_PENDING === modalState) {
-      setTimeout(() => setModalState(STATE_OPENING), 1);
-      openedTimeout.current = setTimeout(() => setModalState(STATE_OPENED), 300);
-    }
-  }, [ modalState ]);
+    return (
+      <IntlProvider scope="modal">
+        <div onClick={onRequestClose} className={getElementClassNames(OVERLAY)}>
+          <div role="dialog" tabIndex="-1" onClick={discardEvent} className={getElementClassNames(WRAPPER)}>
+            <div onClick={onRequestClose} className={getElementClassNames(CLOSE_BUTTON)}>
+              <Localizer>
+                <img
+                  src={closeIconUrl}
+                  alt={<Text id="close">Close</Text>}
+                  title={<Text id="close">Close</Text>}
+                />
+              </Localizer>
+            </div>
 
-  // Focuses the content of the modal when it is displayed, to allow scrolling through it using the arrow keys.
-  useEffect(() => {
-    if (contentWrapper.current) {
-      contentWrapper.current.focus();
-    }
-  }, [ contentWrapper ]);
+            <div title={modalSizeTitle} onClick={setNextModalSize} className={getElementClassNames(SIZE_BUTTON)}>
+              {MODAL_SIZES[nextModalSize].actionLabel}
+            </div>
 
-  const { modalSizeTitle } = useText({
-    modalSizeTitle: (
-      <Text id={MODAL_SIZES[nextModalSize].actionTitleId}>
-        {MODAL_SIZES[nextModalSize].defaultActionTitle}
-      </Text>
-    )
-  });
-
-  const closeIconUrl = useImageCdnUrl(CLOSE_ICON_CDN_PATH);
-  const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ modalState, modalSize ]);
-
-  if (STATE_CLOSED === modalState) {
-    return null;
-  }
-
-  return (
-    <IntlProvider scope="modal">
-      <div onClick={closeModal} className={getElementClassNames(OVERLAY)}>
-        <div role="dialog" tabIndex="-1" onClick={discardEvent} className={getElementClassNames(WRAPPER)}>
-          <div onClick={closeModal} className={getElementClassNames(CLOSE_BUTTON)}>
-            <Localizer>
-              <img
-                src={closeIconUrl}
-                alt={<Text id="close">Close</Text>}
-                title={<Text id="close">Close</Text>}
-              />
-            </Localizer>
-          </div>
-
-          <div title={modalSizeTitle} onClick={setNextModalSize} className={getElementClassNames(SIZE_BUTTON)}>
-            {MODAL_SIZES[nextModalSize].actionLabel}
-          </div>
-
-          <div ref={contentWrapper} tabIndex="0" className={getElementClassNames(CONTENT)}>
-            {children}
+            <div ref={contentWrapper} tabIndex="0" className={getElementClassNames(CONTENT)}>
+              {children}
+            </div>
           </div>
         </div>
-      </div>
-    </IntlProvider>
-  );
-};
+      </IntlProvider>
+    );
+  };
 
 export default Modal;
 
@@ -167,7 +177,7 @@ const CLASS_NAMES = {
     // Copied from the direct wrapper of the "Report" modal content.
     [CONTENT]: [ '_2D1-v' ],
   },
-  [STATE_PENDING]: {
+  [STATE_WILL_OPEN]: {
     // Found in the "app" stylesheet, or by debugging the modal animation.
     // Applies full transparency and disable pointer events.
     [OVERLAY]: [ '_1VSis', 'qSLKO' ],
