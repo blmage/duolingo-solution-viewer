@@ -315,7 +315,7 @@ export function getStringWords(string) {
 /**
  * @type {Function}
  * @param {string} character A character.
- * @type {boolean} Whether the character is todo.
+ * @type {boolean} Whether the given character is a letter or a number, in the broad sense.
  */
 const isWordCharacter = /[\p{L}\p{N}]/u.test(_);
 
@@ -511,9 +511,9 @@ function isScrollableElement(element) {
 
 /**
  * @param {Element} element An element.
- * @returns {Node[]} The parents of the given element that are scrollable.
+ * @returns {Node[]} The ancestors of the given element that are scrollable.
  */
-export function getScrollableParents(element) {
+export function getScrollableAncestors(element) {
   let parent = element.parentElement;
   const scrollableParents = [ document ];
 

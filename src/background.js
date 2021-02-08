@@ -445,8 +445,8 @@ async function handleCurrentListeningChallengeRequest(senderId, data, sendResult
       result.correctionDiff = minBy(
         challenge.solutions
           .filter(bestScore === it.score)
-          .flatMap(Solution.getBestMatchingReferencesForAnswer(_, userAnswer, matchingOptions))
-          .map(Solution.getReferenceDiffWithAnswer(_, userAnswer, matchingOptions))
+          .flatMap(Solution.getBestMatchingVariationsForAnswer(_, userAnswer, matchingOptions))
+          .map(Solution.getVariationDiffWithAnswer(_, userAnswer, matchingOptions))
           .filter(isArray),
         it.length
       );
@@ -486,7 +486,7 @@ async function handleCurrentChallengeUserReferenceUpdateRequest(senderId, data, 
 }
 
 /**
- * @param {number} commentId A forum comment ID.
+ * @param {number} commentId The ID of a forum comment.
  * @param {Function} sendResult A callback usable to send the corresponding challenge back to the sender.
  * @returns {Promise<void>} A promise for the result of the request.
  */
@@ -591,7 +591,7 @@ async function handleSessionLoadedEvent(senderId, data) {
 }
 
 /**
- * Registers the current listening challenge when the corresponding TTS media is played.
+ * Registers the current listening challenge when a corresponding TTS media is played.
  *
  * @param {string} senderId The ID of the sender of the event notification.
  * @param {object} data The event payload.

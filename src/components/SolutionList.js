@@ -458,7 +458,7 @@ const SolutionList =
       const solutionItems = useMemo(() => {
         const renderSolutionItem = solution => (
           <li className={getElementClassNames(SOLUTION)}>
-            {Solution.getDisplayableString(solution)}
+            {Solution.getReaderFriendlySummary(solution)}
           </li>
         );
 

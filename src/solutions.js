@@ -40,8 +40,8 @@ import {
  *
  * @typedef {object} Solution
  * @property {string} locale The language in which the solution is written.
- * @property {string} reference The reference sentence of the solution, usable for sorting.
- * @property {Token[]} tokens The tokens for building all the possible sentences of the solution.
+ * @property {string} reference The first variation of the solution, usable as a reference and for sorting.
+ * @property {Token[]} tokens The tokens for building all the possible variations of the solution.
  * @property {boolean} isComplex Whether the solution contains at least one token with multiple values.
  * @property {?MatchingData} matchingData A set of calculated data about the solution, usable for similarity matching.
  * @property {?number} score The similarity score of the solution, in case it has been matched against a user answer.
@@ -326,9 +326,9 @@ export function fromWordBankTokens(wordTokens, locale) {
 
 /**
  * @param {Solution} solution A solution.
- * @returns {string} A user-friendly string summarizing the given solution.
+ * @returns {string} A reader-friendly string summarizing all the variations of the given solution.
  */
-export function getDisplayableString(solution) {
+export function getReaderFriendlySummary(solution) {
   return solution.tokens.reduce((result, choices) => {
     return result + ((1 === choices.length) ? choices[0] : `[${choices.join(' / ')}]`);
   }, '');
@@ -522,8 +522,8 @@ const mergeWordStats = stats => (0 === stats.length)
  * @param {Solution} solution A solution.
  * @returns {{ shared: WordStats, paths?: WordStats }}
  * The word statistics for the given solution, split into:
- * - "shared": the statistics for the words shared by all the possible sentences,
- * - "paths": for each possible sentence, the statistics for their unshared words.
+ * - "shared": the statistics for the words shared by all the variations,
+ * - "paths": for each variation, the statistics for their unshared words.
  */
 function getSolutionWordStats(solution) {
   if (!solution.matchingData) {
@@ -558,8 +558,8 @@ function getSolutionWordStats(solution) {
  * @param {string} answer A user answer.
  * @param {import('./challenges.js').MatchingOptions} matchingOptions A set of matching options.
  * @returns {number[]}
- * The similarity scores (from 0 to 1) between the given answer and each possible sentence of the given solution.
- * The higher the score, the more a sentence corresponds to the answer.
+ * The similarity scores (from 0 to 1) between the given answer and each variation of the given solution.
+ * The higher the score, the more a variation corresponds to the answer.
  */
 function matchAgainstAnswer(solution, answer, matchingOptions) {
   const solutionWordStats = getSolutionWordStats(solution);
@@ -626,9 +626,9 @@ export const getMatchingScoreWithAnswer = (solution, answer, matchingOptions) =>
  * @param {Solution} solution A solution.
  * @param {string} answer A user answer.
  * @param {import('./challenges.js').MatchingOptions} matchingOptions A set of matching options.
- * @returns {string[]} The reference sentences from the given solution that best match the given answer.
+ * @returns {string[]} The variations from the given solution that best match the given answer.
  */
-export function getBestMatchingReferencesForAnswer(solution, answer, matchingOptions) {
+export function getBestMatchingVariationsForAnswer(solution, answer, matchingOptions) {
   if (!solution.isComplex) {
     return [ solution.reference ];
   }
@@ -679,7 +679,7 @@ export function getBestMatchingReferencesForAnswer(solution, answer, matchingOpt
  */
 
 /**
- * @param {string} reference A solution reference.
+ * @param {string} variation A variant of a solution.
  * @param {string} answer A user answer.
  * @param {string} locale The locale of the solution.
  * @returns {DiffToken[]|null}
@@ -687,9 +687,9 @@ export function getBestMatchingReferencesForAnswer(solution, answer, matchingOpt
  * (ignoring case, insignificant punctuation marks and spaces),
  * or null if they can be considered equivalent.
  */
-export function getReferenceDiffWithAnswer(reference, answer, locale) {
+export function getVariationDiffWithAnswer(variation, answer, locale) {
   const diffTokens = TextDiff.diffChars(
-    normalizeString(reference).toLocaleLowerCase(locale),
+    normalizeString(variation).toLocaleLowerCase(locale),
     normalizeString(answer).toLocaleLowerCase(locale)
   ).flatMap(token => {
     // First run to mark punctuation and separator differences as ignorable.
@@ -776,7 +776,7 @@ export function getReferenceDiffWithAnswer(reference, answer, locale) {
     };
   }, {
     result: [],
-    left: reference,
+    left: variation,
     right: answer,
   });
 

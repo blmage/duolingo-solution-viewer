@@ -147,7 +147,7 @@ function renderChallengeClosestSolution(closestSolution, result) {
     if (solutionWrapper) {
       render(
         <IntlProvider definition={getTranslations(getUiLocale())}>
-          <ClosestSolution solution={Solution.getDisplayableString(closestSolution)} result={result} />
+          <ClosestSolution solution={Solution.getReaderFriendlySummary(closestSolution)} result={result} />
         </IntlProvider>,
         getComponentWrapper(ClosestSolution, solutionWrapper)
       );

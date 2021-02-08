@@ -5,7 +5,7 @@ import { useMergeRefs } from 'use-callback-ref';
 import { StyleSheet } from 'aphrodite';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { it } from 'param.macro';
-import { discardEvent, getScrollableParents, noop } from '../functions';
+import { discardEvent, getScrollableAncestors, noop } from '../functions';
 import { BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, usePortalContainer, useStyles } from './index';
 import { Localizer, Text } from "preact-i18n";
 
@@ -70,14 +70,14 @@ const Dropdown = forwardRef(
         content.current.style.setProperty('left', `${itemsLeft}px`);
         content.current.style.setProperty('visibility', 'visible', 'important');
 
-        const parents = getScrollableParents(wrapper.current);
+        const ancestors = getScrollableAncestors(wrapper.current);
 
         window.addEventListener('resize', onClose);
-        parents.forEach(it.addEventListener('scroll', onClose));
+        ancestors.forEach(it.addEventListener('scroll', onClose));
 
         return () => {
           window.removeEventListener('resize', onClose);
-          parents.forEach(it.removeEventListener('scroll', onClose));
+          ancestors.forEach(it.removeEventListener('scroll', onClose));
         }
       }
     }, [ onClose, wrapper, content ]);
