@@ -192,6 +192,8 @@ const WordFilterInput =
      filters = [],
      matchingData = {},
      onChange = noop,
+     onFocus = noop,
+     onBlur = noop,
    }) => {
     const {
       words: suggestableWords = [],
@@ -308,6 +310,8 @@ const WordFilterInput =
             onUpdate={onUpdateFilter}
             onDelete={onDeleteFilter}
             onKeyDown={onKeyDown}
+            onFocus={onFocus}
+            onBlur={onBlur}
             placeholderText={<Text id="add_word_to_filter">Add a word to filter</Text>}
             removeButtonText={<Text id="click_to_remove_filter">Click to remove filter</Text>}
             tagComponent={addContext(Filter, context)}

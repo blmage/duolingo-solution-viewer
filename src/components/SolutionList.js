@@ -488,6 +488,9 @@ const SolutionList =
         && scrollElementIntoParentView(filterWrapperRef.current, scrollOffsetGetter(), 'smooth');
       }, [ scrollOffsetGetter, filterWrapperRef ]);
 
+      // Focuses the solution list when the filter input loses focus, to ensure that the list is scrollable again.
+      const onFilterBlur = useCallback(() => listRef.current?.closest('[tabindex]')?.focus(), [ listRef ]);
+
       // Detects word selections, and proposes new filter options when relevant.
       const [ selectedWord, setSelectedWord ] = useState(null);
 
@@ -586,6 +589,7 @@ const SolutionList =
                 matchingData={matchingData}
                 onChange={setFilters}
                 onFocus={onFilterFocus}
+                onBlur={onFilterBlur}
               />
             </h3>
 
