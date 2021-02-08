@@ -37,7 +37,7 @@ window.addEventListener('message', event => {
             return result.value;
           });
       } else {
-        resultPromise = new Promise((resolve, reject) => reject());
+        resultPromise = Promise.reject();
       }
 
       resultPromise.then(value => {

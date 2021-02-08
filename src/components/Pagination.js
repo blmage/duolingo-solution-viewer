@@ -68,11 +68,7 @@ const Pagination =
         buttonClassNames += ` ${getElementClassNames(INDEX_BUTTON)}`;
       }
 
-      if (!disabled) {
-        buttonClassNames += ` ${getElementClassNames(ENABLED_BUTTON)}`;
-      } else {
-        buttonClassNames += ` ${getElementClassNames(DISABLED_BUTTON)}`;
-      }
+      buttonClassNames += ` ${getElementClassNames(disabled ? DISABLED_BUTTON : ENABLED_BUTTON)}`;
 
       return (
         <div key={key} className={getElementClassNames(ITEM)}>

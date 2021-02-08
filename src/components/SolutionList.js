@@ -98,7 +98,7 @@ const PAGE_SIZES = [ 10, 20, 50, 200, PAGE_SIZE_ALL ];
  * @param {number|string} sizeB Another page size.
  * @returns {boolean} Whether the two page sizes are equivalent.
  */
-const isEqualPageSizes = (sizeA, sizeB) => String(sizeA) === String(sizeB);
+const isEqualPageSizes = String(_) === String(_);
 
 const ListSortLinks =
   ({
