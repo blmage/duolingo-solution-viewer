@@ -58,7 +58,7 @@ const SORT_TYPES = {
 };
 
 /**
- * @function
+ * @type {Function}
  * @param {boolean} isScoreAvailable Whether similarity scores are available on solutions.
  * @returns {string[]} The available sort types.
  */
@@ -93,7 +93,7 @@ const DEFAULT_PAGE_SIZE = 20;
 const PAGE_SIZES = [ 10, 20, 50, 200, PAGE_SIZE_ALL ];
 
 /**
- * @function
+ * @type {Function}
  * @param {number|string} sizeA A page size.
  * @param {number|string} sizeB Another page size.
  * @returns {boolean} Whether the two page sizes are equivalent.

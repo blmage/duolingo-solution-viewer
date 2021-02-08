@@ -10,7 +10,7 @@ const FORUM_FOLLOW_BUTTON_SELECTOR = '._13Bfz button';
 const FORUM_NEW_POST_BUTTONS_SELECTOR = '._1KvMS textarea + div button';
 
 /**
- * @function
+ * @type {Function}
  * @returns {string|null} When in the context of a forum discussion, the inline styles applied to the follow button.
  */
 const getForumFollowButtonInlineStyles = moize(() => String(
@@ -18,7 +18,7 @@ const getForumFollowButtonInlineStyles = moize(() => String(
 ));
 
 /**
- * @function
+ * @type {Function}
  * @returns {object|null} When in the context of a forum discussion, the inline styles applied to the new post buttons.
  */
 const getForumNewPostButtonsInlineStyles = moize(() => {

@@ -69,7 +69,7 @@ import {
  * A memoized version of {@see compareStrings}, used to efficiently compare words or small strings,
  * which are a sweet spot for memoization.
  *
- * @function
+ * @type {Function}
  * @param {string} x A token string.
  * @param {string} y Another token string.
  * @param {string} locale The locale to use for the comparison.
@@ -386,7 +386,7 @@ export function compareByScore(x, y) {
 }
 
 /**
- * @function
+ * @type {Function}
  * @param {string} string A string.
  * @param {string} locale The locale of the string.
  * @param {import('./challenges.js').MatchingOptions} matchingOptions A set of matching options.
@@ -397,7 +397,7 @@ export const getStringMatchableWords = (string, locale, matchingOptions) => (
 );
 
 /**
- * @function
+ * @type {Function}
  * @param {string} token A token.
  * @param {string} locale The locale of the token.
  * @returns {string[]} A list of the words contained in the token, in which diacritics have been preserved.
@@ -407,7 +407,7 @@ const getTokenMatchableWordsWithDiacritics = moize(
 );
 
 /**
- * @function
+ * @type {Function}
  * @param {string} token A token.
  * @param {string} locale The locale of the token.
  * @returns {string[]} A list of the words contained in the token, in which diacritics have been removed.
@@ -495,7 +495,7 @@ function getWordBigramMap(word) {
 }
 
 /**
- * @function
+ * @type {Function}
  * @param {string} word A word.
  * @returns {WordStats} A set of statistics about the given word.
  */
@@ -506,7 +506,7 @@ const getWordStats = word => ({
 });
 
 /**
- * @function
+ * @type {Function}
  * @param {WordStats[]} stats A set of different word statistics.
  * @returns {WordStats} The union of all the given word statistics.
  */
@@ -610,7 +610,7 @@ function matchAgainstAnswer(solution, answer, matchingOptions) {
 }
 
 /**
- * @function
+ * @type {Function}
  * @param {Solution} solution A solution.
  * @param {string} answer A user answer.
  * @param {import('./challenges.js').MatchingOptions} matchingOptions A set of matching options.

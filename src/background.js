@@ -90,7 +90,7 @@ function getCurrentAccessAt() {
 /**
  * A wrapper around fetch which retries twice when encountering an error.
  *
- * @function
+ * @type {Function}
  * @param {string} url The URL to fetch.
  * @param {?object} options Optional parameters such as method, headers, etc.
  * @returns {Promise} A promise for the result of the request.

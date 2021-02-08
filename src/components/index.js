@@ -27,7 +27,7 @@ export const CONTEXT_CHALLENGE = Symbol('challenge');
 export const CONTEXT_FORUM = Symbol('forum');
 
 /**
- * @function
+ * @type {Function}
  * @param {Function} component A functional component.
  * @param {string }context A context.
  * @returns {Function} The same functional component with the given context forced.
@@ -38,7 +38,7 @@ export const addContext = (component, context) => props => component({ ...props,
  * A variant of the "useLocalStorage" hook from the "react-use" package,
  * which prepends the extension prefix to the storage keys.
  *
- * @function
+ * @type {Function}
  * @param {string} key The base storage key.
  * @param {*} initialValue The initial state value.
  * @param {?object} options A set of options (see the original function).
@@ -51,7 +51,7 @@ export const useLocalStorage = (key, initialValue, options) => {
 /**
  * A hook for circularly iterating over an array and storing the current value in the local storage.
  *
- * @function
+ * @type {Function}
  * @param {string} key The base storage key.
  * @param {Array} stateSet The different state values.
  * @param {*} initialValue The initial state value.
@@ -83,7 +83,7 @@ export const useLocalStorageList = (key, stateSet, initialValue) => {
 /**
  * A hook for globally throttling a callback. The delay is never reset when dependencies change.
  *
- * @function
+ * @type {Function}
  * @param {Function} callback The callback to throttle.
  * @param {number} delay The delay during which any subsequent call will be ignored (in milliseconds).
  * @param {Array} args The arguments to the callback.
@@ -110,7 +110,7 @@ const useRawPortalContainer = createGlobalState(() => {
 });
 
 /**
- * @function
+ * @type {Function}
  * @returns {Element} A container for components which should be rendered outside the DOM hierarchy of their parents.
  */
 export const usePortalContainer = () => useRawPortalContainer()[0];
@@ -119,7 +119,7 @@ export const usePortalContainer = () => useRawPortalContainer()[0];
  * A hook for getting all the class names applicable to an element,
  * based on the current state / context of the component that embeds it.
  *
- * @function
+ * @type {Function}
  * @param {object} classNames Some nested maps from state and element keys to class names.
  * @param {object} styleSheets Some nested maps from state and element keys to style sheets.
  * @param {(string|symbol)[]} stateKeys A list of keys describing the current state / context of the component.
@@ -170,7 +170,7 @@ const useImageCdnBaseUrl = createGlobalState(() => {
 });
 
 /**
- * @function
+ * @type {Function}
  * @param {string} path A path on the image CDN.
  * @returns {string} The corresponding URL.
  */

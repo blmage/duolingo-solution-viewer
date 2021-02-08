@@ -11,6 +11,10 @@ import { EVENT_TYPE_SESSION_LOADED, EVENT_TYPE_SOUND_PLAYED } from './constants'
  */
 const NEW_SESSION_URL_REGEXP = /\/[\d]{4}-[\d]{2}-[\d]{2}\/sessions/g;
 
+
+/**
+ * @type {Function}
+ */
 const originalXhrOpen = XMLHttpRequest.prototype.open;
 
 XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
@@ -33,6 +37,10 @@ XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
   return originalXhrOpen.call(this, method, url, async, user, password);
 };
 
+
+/**
+ * @type {Function}
+ */
 let lastHowlPrototype = null;
 
 setInterval(() => {

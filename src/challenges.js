@@ -47,7 +47,7 @@ import * as Solution from './solutions';
  */
 
 /**
- * @function
+ * @type {Function}
  * @param {Challenge} challenge A challenge.
  * @param {number} type A challenge type.
  * @returns {boolean} Whether the given challenge belongs to the given type.
@@ -55,7 +55,7 @@ import * as Solution from './solutions';
 export const isOfType = (challenge, type) => (challenge.type & type) >= 0;
 
 /**
- * @function
+ * @type {Function}
  * @param {Challenge} challenge A challenge.
  * @returns {string} A unique key for the challenge.
  */

@@ -4,14 +4,14 @@ import { EXTENSION_CODE } from './constants';
 /**
  * A function which does nothing.
  *
- * @function
+ * @type {Function}
  * @returns {void}
  */
 export const noop = () => {
 };
 
 /**
- * @function
+ * @type {Function}
  * @param {*} value A value.
  * @returns {*} The same value.
  */
@@ -26,28 +26,28 @@ export const runPromiseForEffects = promise => {
 }
 
 /**
- * @function
+ * @type {Function}
  * @param {*} value A value.
  * @returns {boolean} Whether the given value is a valid, finite number.
  */
 export const isNumber = value => (typeof value === 'number') && Number.isFinite(value);
 
 /**
- * @function
+ * @type {Function}
  * @param {*} value A value.
  * @returns {boolean} Whether the given value is a string.
  */
 export const isString = (typeof _ === 'string');
 
 /**
- * @function
+ * @type {Function}
  * @param {*} value The tested value.
  * @returns {boolean} Whether the given value is an array.
  */
 export const isArray = Array.isArray;
 
 /**
- * @function
+ * @type {Function}
  * @param {*} value The tested value.
  * @returns {boolean} Whether the given value is an object. This excludes Arrays, but not Dates or RegExps.
  */
@@ -68,7 +68,7 @@ export function isEmptyObject(object) {
 }
 
 /**
- * @function
+ * @type {Function}
  * @param {*} x A value.
  * @param {*} y Another value.
  * @returns {boolean} Whether the first value is larger than the second.
@@ -76,7 +76,7 @@ export function isEmptyObject(object) {
 const gt = (_ > _);
 
 /**
- * @function
+ * @type {Function}
  * @param {*} x A value.
  * @param {*} y Another value.
  * @returns {boolean} Whether the first value is smaller than the second.
@@ -108,7 +108,7 @@ export function extremumBy(values, getter, comparer) {
 }
 
 /**
- * @function
+ * @type {Function}
  * @param {Array} values A list of values.
  * @param {Function} getter A getter for the calculated values to compare.
  * @returns {*|undefined} The value in the list whose corresponding calculated value is the largest.
@@ -116,7 +116,7 @@ export function extremumBy(values, getter, comparer) {
 export const maxBy = extremumBy(_, _, gt);
 
 /**
- * @function
+ * @type {Function}
  * @param {Array} values A list of values.
  * @param {Function} getter A getter for the calculated values to compare and return.
  * @returns {*|undefined} The largest calculated value from the values in the list.
@@ -127,14 +127,14 @@ export const maxOf = (values, getter) => {
 }
 
 /**
- * @function
+ * @type {Function}
  * @param {Array} values A list of values.
  * @returns {*|undefined} The largest value in the list.
  */
 export const max = maxOf(_, identity);
 
 /**
- * @function
+ * @type {Function}
  * @param {Array} values A list of values.
  * @param {Function} getter A getter for the calculated values to compare.
  * @returns {*|undefined} The value in the list whose corresponding calculated value is the smallest.
@@ -142,7 +142,7 @@ export const max = maxOf(_, identity);
 export const minBy = extremumBy(_, _, lt);
 
 /**
- * @function
+ * @type {Function}
  * @param {Array} values A list of values.
  * @param {Function} getter A getter for the calculated values to compare and return.
  * @returns {*|undefined} The smallest calculated value from the values in the list.
@@ -153,14 +153,14 @@ export const minOf = (values, getter) => {
 }
 
 /**
- * @function
+ * @type {Function}
  * @param {Array} values A list of values.
  * @returns {*|undefined} The smallest value in the list.
  */
 export const min = minOf(_, identity);
 
 /**
- * @function
+ * @type {Function}
  * @param {Array} values A list of values.
  * @param {Function} getter A getter for the calculated values to be summed up.
  * @returns {number} The sum of the calculated values from the values in the list.
@@ -168,7 +168,7 @@ export const min = minOf(_, identity);
 export const sumOf = (values, getter) => values.reduce((result, value) => result + getter(value), 0);
 
 /**
- * @function
+ * @type {Function}
  * @param {number[]} values A list of numbers.
  * @returns {number} The sum of the numbers in the list.
  */
@@ -197,7 +197,7 @@ export function groupBy(values, getter) {
 }
 
 /**
- * @function
+ * @type {Function}
  * @param {Array} values A list of values.
  * @param {Function} choose
  * A function that will be applied to adjacent values whose calculated value is strictly equal.
@@ -241,14 +241,14 @@ export function dedupeAdjacentBy(values, choose, map = identity) {
 }
 
 /**
- * @function
+ * @type {Function}
  * @param {Array} values A list of values.
  * @returns {Array} The given list of values, in which equal adjacent values have been deduplicated.
  */
 export const dedupeAdjacent = dedupeAdjacentBy(_, () => -1);
 
 /**
- * @function
+ * @type {Function}
  * @param {Array[]} xss A list of arrays.
  * @returns {Array[]} The cartesian product of the given arrays.
  */
@@ -313,7 +313,7 @@ export function getStringWords(string) {
 }
 
 /**
- * @function
+ * @type {Function}
  * @param {string} character A character.
  * @type {boolean} Whether the character is todo.
  */
