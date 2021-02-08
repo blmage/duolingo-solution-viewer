@@ -294,7 +294,7 @@ const WordFilterInput =
     useKey('f', () =>
       !isAnyInputFocused()
       && tagsInput.current
-      && setTimeout(() => tagsInput.current.focus())
+      && setTimeout(() => tagsInput.current.focus({ preventScroll: true }))
     );
 
     const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
