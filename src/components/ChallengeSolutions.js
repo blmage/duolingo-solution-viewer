@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from 'preact/hooks';
 import { IntlProvider, Localizer, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { isArray, getParentWithScrollbar, noop } from '../functions';
+import { isArray, noop, scrollElementIntoParentView } from '../functions';
 import { BASE, CONTEXT_CHALLENGE, useLocalStorage, useStyles } from './index';
 import Loader from './Loader';
 import SolutionList from './SolutionList';
@@ -53,23 +53,19 @@ const ChallengeSolutions =
     const listWrapper = useRef();
     const referenceWrapper = useRef();
 
+    const fullScrollOffsetGetter = useCallback(() => (
+      10
+      + scrollOffsetGetter()
+      + (isUserReferencePinned && referenceWrapper.current?.offsetHeight || 0)
+    ), [ scrollOffsetGetter, isUserReferencePinned, referenceWrapper ]);
+
     // Scrolls to the top of the solution list whenever it changes.
     const onSolutionListChange = useCallback(() => {
-      if (listWrapper.current) {
-        const parent = getParentWithScrollbar(listWrapper.current);
-
-        const top = listWrapper.current.offsetTop
-          - 10
-          - scrollOffsetGetter()
-          - (!isUserReferencePinned || !referenceWrapper.current ? 0 : referenceWrapper.current.offsetHeight);
-
-        parent.scrollTo({ top, behavior: 'smooth' });
-      }
+      listWrapper.current
+      && scrollElementIntoParentView(listWrapper.current, fullScrollOffsetGetter(), 'smooth');
     }, [ // eslint-disable-line react-hooks/exhaustive-deps
-      scrollOffsetGetter,
-      isUserReferencePinned,
       listWrapper,
-      referenceWrapper,
+      fullScrollOffsetGetter,
       currentSolutions,
     ]);
 
@@ -142,6 +138,7 @@ const ChallengeSolutions =
                 solutions={currentSolutions}
                 matchingData={matchingData}
                 onPageChange={onSolutionListChange}
+                scrollOffsetGetter={fullScrollOffsetGetter}
               />
             )}
         </div>

@@ -479,21 +479,78 @@ export function isAnyInputFocused() {
 
 /**
  * @param {Element} element An element.
- * @param {number} threshold The minimum scroll height, below which a parent is ignored.
- * @returns {Element} The first parent of the given element that has a scrollbar with a sufficient scroll height.
+ * @param {Element} ancestor An ancestor of the element.
+ * @returns {{x: number, y: number}} The offset of the element in its ancestor.
  */
-export function getParentWithScrollbar(element, threshold = 10) {
-  let parent = element.parentElement;
+export function getOffsetInAncestor(element, ancestor) {
+  let x = 0;
+  let y = 0;
 
-  while (parent) {
-    if ((parent.clientHeight > 0) && (parent.scrollHeight - threshold > parent.clientHeight)) {
-      return parent;
+  if (ancestor.contains(element)) {
+    let parent = element.offsetParent;
+
+    while (parent) {
+      x += element.offsetLeft;
+      y += element.offsetTop;
+      element = parent;
+      parent = parent.offsetParent;
+
+      if (!ancestor.contains(parent)) {
+        break;
+      }
     }
-
-    parent = parent.parentElement;
   }
 
-  return document.body;
+  return { x, y };
+}
+
+/**
+ * @param {Element} element An element.
+ * @param {number} threshold The minimum vertical scrolling height.
+ * @returns {Element|null} The first ancestor (if any) of the given element that has a matching vertical scrollbar.
+ */
+export function getAncestorWithVerticalScrollbar(element, threshold = 10) {
+  let ancestor = element.parentElement;
+
+  while (ancestor) {
+    if (
+      (ancestor.clientHeight > 0)
+      && (ancestor.scrollHeight - threshold > ancestor.clientHeight)
+      && ([ 'hidden', 'visible' ].indexOf(window.getComputedStyle(ancestor).overflowY) === -1)
+    ) {
+      return ancestor;
+    }
+
+    ancestor = ancestor.parentElement;
+  }
+
+  return null;
+}
+
+/**
+ * Scrolls an element to the top of its first scrollable ancestor, if it is not entirely visible already.
+ *
+ * This function does not ensure that the element is actually visible in the current viewport.
+ *
+ * @param {Element} element An element.
+ * @param {number} margin The margin to preserve between the top of the parent and the element itself.
+ * @param {string} behavior The scroll behavior ("auto" or "smooth").
+ */
+export function scrollElementIntoParentView(element, margin = 0, behavior = 'auto') {
+  const ancestor = getAncestorWithVerticalScrollbar(element);
+
+  if (!ancestor) {
+    return;
+  }
+
+  const offset = getOffsetInAncestor(element, ancestor).y;
+
+  if (
+    (offset < ancestor.scrollTop + margin)
+    || (offset + element.clientHeight > ancestor.scrollTop + ancestor.offsetHeight)
+  ) {
+    ancestor.scrollTo({ top: offset - margin, behavior });
+  }
 }
 
 /**
