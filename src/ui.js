@@ -532,9 +532,9 @@ async function handleTranslationChallengeResult(result, userAnswer) {
       statement,
       userAnswer,
     }
-  ).catch(() => false).then(challenge =>
+  ).catch(() => false).then(challenge => (
     isObject(challenge) && handleChallengeResult(challenge, result, userAnswer)
-  );
+  ));
 }
 
 /**
@@ -560,10 +560,10 @@ async function handleListeningChallengeResult(result, userAnswer) {
         ? null
         : solutionTranslationWrapper.innerText.trim(),
     }
-  ).catch(() => false).then(data =>
+  ).catch(() => false).then(data => (
     isObject(data?.challenge)
     && handleChallengeResult(data.challenge, result, userAnswer, data.correctionDiff)
-  );
+  ));
 }
 
 /**
@@ -600,9 +600,7 @@ function handleDocumentLocationChange(location) {
               ));
           }
         })
-        .catch(error => {
-          error && logError(error, 'Could not handle the forum comment:');
-        });
+        .catch(error => error && logError(error, 'Could not handle the forum comment:'));
     }
   }
 }
