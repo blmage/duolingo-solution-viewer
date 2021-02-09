@@ -430,8 +430,8 @@ const CLASS_NAMES = {
     ],
     // Copied from the breadcrumbs items.
     [FILTER]: [ '_2dkQa' ],
-    // Copied by searching for the main (link) color without side-effects.
-    [SUGGESTION__ACTIVE]: [ '_1vrtM' ],
+    // Copied by searching for the main (link) color, with as few side-effects as possible (reset below).
+    [SUGGESTION__ACTIVE]: [ '_1vrtM', '_35ADQ' ],
   },
 };
 
@@ -511,6 +511,11 @@ const STYLE_SHEETS = {
   [CONTEXT_CHALLENGE]: StyleSheet.create({
     [WRAPPER]: {
       margin: '10px 0',
+    },
+  }),
+  [CONTEXT_FORUM]: StyleSheet.create({
+    [SUGGESTION__ACTIVE]: {
+      borderBottom: 'none',
     },
   }),
 };
