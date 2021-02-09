@@ -68,6 +68,14 @@ export function isEmptyObject(object) {
 }
 
 /**
+ * @param {*} value The tested value.
+ * @returns {boolean} Whether the given value is a blob.
+ */
+export function isBlob(value) {
+  return (value instanceof Blob) || (Object.prototype.toString.call(value) === '[object Blob]');
+}
+
+/**
  * @type {Function}
  * @param {*} x A value.
  * @param {*} y Another value.
