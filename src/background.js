@@ -96,7 +96,7 @@ database.version(2)
   })
   .upgrade(async () => {
     await database.table(TABLE_COMMENT_CHALLENGES)
-      .count(count => {
+      .count(async count => {
         const sliceSize = 200;
         const sliceCount = Math.ceil(count / sliceSize);
 
@@ -104,9 +104,9 @@ database.version(2)
           const commentRows = [];
           const challengeRows = [];
 
-          database.table(TABLE_COMMENT_CHALLENGES)
-            .limit(sliceSize)
+          await database.table(TABLE_COMMENT_CHALLENGES)
             .offset(slice * sliceSize)
+            .limit(sliceSize)
             .each(challengeRow => {
               const discussionId = challengeRow[FIELD_CHALLENGE].discussionId;
               const locale = Challenge.getStatementLocale(challengeRow[FIELD_CHALLENGE]);
@@ -125,8 +125,8 @@ database.version(2)
               challengeRows.push(challengeRow);
             });
 
-          database.table(TABLE_COMMENT_DISCUSSIONS).bulkPut(commentRows);
-          database.table(TABLE_DISCUSSION_CHALLENGES).bulkPut(challengeRows);
+          await database.table(TABLE_COMMENT_DISCUSSIONS).bulkPut(commentRows);
+          await database.table(TABLE_DISCUSSION_CHALLENGES).bulkPut(challengeRows);
         }
       });
 
