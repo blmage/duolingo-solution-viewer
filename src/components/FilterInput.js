@@ -5,96 +5,130 @@ import { IntlProvider, Localizer, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import ReactTags from 'react-tag-autocomplete';
-import { it } from 'param.macro';
+import { _, it } from 'param.macro';
 import { matchSorter } from 'match-sorter';
 
 import {
   EXTENSION_CODE,
-  WORD_MATCH_ANYWHERE,
-  WORD_MATCH_END,
-  WORD_MATCH_EXACT,
-  WORD_MATCH_START
+  STRING_MATCH_MODE_GLOBAL,
+  STRING_MATCH_MODE_WORDS,
+  STRING_MATCH_TYPE_ANYWHERE,
+  STRING_MATCH_TYPE_END,
+  STRING_MATCH_TYPE_EXACT,
+  STRING_MATCH_TYPE_START,
 } from '../constants';
 
 import { discardEvent, identity, isAnyInputFocused, noop, normalizeString } from '../functions';
 import { getStringMatchableWords } from '../solutions';
-import { addContext, BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, usePortalContainer, useStyles } from './index';
+
+import {
+  BASE,
+  CONTEXT_CHALLENGE,
+  CONTEXT_FORUM,
+  usePortalContainer,
+  useStyles,
+  withContext,
+  withForcedProps,
+} from './index';
+
 import Dropdown from './Dropdown';
 
 /**
  * @typedef {object} WordFilter
  * @property {string} word The word to filter.
- * @property {string} matchMode How to search for the word in solution tokens.
+ * @property {string|null} matchType Where to search for the word in solutions.
  * @property {boolean} isExcluded Whether the word should be absent from the solutions.
  */
 
 /**
- * A convenience map from the first and last characters of a query to the corresponding match mode.
+ * A convenience map from the first and last characters of a query to the corresponding match type,
+ * for each match mode.
  *
  * @type {object}
  */
-const MATCH_MODE_MAP = {
-  '': {
-    '': WORD_MATCH_EXACT,
-    '*': WORD_MATCH_START,
+const MATCH_TYPE_MAP = {
+  [STRING_MATCH_MODE_GLOBAL]: {
+    '': {
+      '': STRING_MATCH_TYPE_ANYWHERE,
+      '*': STRING_MATCH_TYPE_START,
+    },
+    '=': {
+      '': STRING_MATCH_TYPE_EXACT,
+    },
+    '*': {
+      '': STRING_MATCH_TYPE_END,
+      '*': STRING_MATCH_TYPE_ANYWHERE,
+    },
   },
-  '*': {
-    '': WORD_MATCH_END,
-    '*': WORD_MATCH_ANYWHERE,
-  }
+  [STRING_MATCH_MODE_WORDS]: {
+    '': {
+      '': STRING_MATCH_TYPE_EXACT,
+      '*': STRING_MATCH_TYPE_START,
+    },
+    '*': {
+      '': STRING_MATCH_TYPE_END,
+      '*': STRING_MATCH_TYPE_ANYWHERE,
+    }
+  },
 };
 
 /**
- * @type {Array}
+ * @type {Function}
+ * @param {string} matchMode A match mode.
+ * @returns {Object[]} A list of filter settings.
  */
-const FILTER_SETTINGS = [
-  {
-    key: 'isExcluded',
-    values: [
-      {
-        value: false,
-        icon: 'check',
-        labelId: 'present',
-        defaultLabel: 'Present',
-      },
-      {
-        value: true,
-        icon: 'times',
-        labelId: 'absent',
-        defaultLabel: 'Absent',
-      },
-    ],
-  },
-  {
-    key: 'matchMode',
-    values: [
-      {
-        value: WORD_MATCH_EXACT,
-        icon: 'equals',
-        labelId: 'exact_word',
-        defaultLabel: 'Exact word',
-      },
-      {
-        value: WORD_MATCH_START,
-        icon: 'arrow-from-left',
-        labelId: 'at_word_start',
-        defaultLabel: 'At the start of a word',
-      },
-      {
-        value: WORD_MATCH_END,
-        icon: 'arrow-to-right',
-        labelId: 'at_word_end',
-        defaultLabel: 'At the end of a word',
-      },
-      {
-        value: WORD_MATCH_ANYWHERE,
-        icon: 'question',
-        labelId: 'anywhere_in_word',
-        defaultLabel: 'Anywhere in a word',
-      },
-    ],
-  },
-];
+const getFilterSettings = matchMode => {
+  const modeLabel = (STRING_MATCH_MODE_GLOBAL === matchMode) ? _ : _;
+
+  return [
+    {
+      key: 'isExcluded',
+      values: [
+        {
+          value: false,
+          icon: 'check',
+          labelId: 'present',
+          defaultLabel: 'Present',
+        },
+        {
+          value: true,
+          icon: 'times',
+          labelId: 'absent',
+          defaultLabel: 'Absent',
+        },
+      ],
+    },
+    {
+      key: 'matchType',
+      values: [
+        {
+          value: STRING_MATCH_TYPE_EXACT,
+          icon: 'equals',
+          labelId: modeLabel('exact_solution', 'exact_word'),
+          defaultLabel: modeLabel('Exact solution', 'Exact word'),
+        },
+        {
+          value: STRING_MATCH_TYPE_START,
+          icon: 'arrow-from-left',
+          labelId: modeLabel('at_solution_start', 'at_word_start'),
+          defaultLabel: modeLabel('At the start of the solution', 'At the start of a word'),
+        },
+        {
+          value: STRING_MATCH_TYPE_END,
+          icon: 'arrow-to-right',
+          labelId: modeLabel('at_solution_end', 'at_word_end'),
+          defaultLabel: modeLabel('At the end of the solution', 'At the end of a word'),
+        },
+        {
+          value: STRING_MATCH_TYPE_ANYWHERE,
+          icon: 'question',
+          labelId: modeLabel('anywhere_in_solution', 'anywhere_in_word'),
+          defaultLabel: modeLabel('Anywhere in the solution', 'Anywhere in a word'),
+        },
+      ],
+    },
+  ];
+};
 
 const FilterSetting = ({ context, setting: { key, values }, currentFilter, onUpdate }) => {
   const menu = useRef();
@@ -150,19 +184,28 @@ const FilterSetting = ({ context, setting: { key, values }, currentFilter, onUpd
   );
 };
 
-const Filter = ({ context, tag, onUpdate, onDelete, removeButtonText, classNames }) => (
-  <div onClick={onDelete} title={removeButtonText} className={classNames.selectedTag}>
-    {FILTER_SETTINGS.map(setting => (
-      <FilterSetting
-        context={context}
-        setting={setting}
-        currentFilter={tag}
-        onUpdate={onUpdate}
-      />
-    ))}
-    <span className={classNames.selectedTagName}>{tag.word}</span>
-  </div>
-);
+const Filter =
+  ({
+     context,
+     matchMode,
+     tag: filter,
+     onUpdate,
+     onDelete,
+     removeButtonText,
+     classNames,
+   }) => (
+    <div onClick={onDelete} title={removeButtonText} className={classNames.selectedTag}>
+      {getFilterSettings(matchMode).map(setting => (
+        <FilterSetting
+          context={context}
+          setting={setting}
+          currentFilter={filter}
+          onUpdate={onUpdate}
+        />
+      ))}
+      <span className={classNames.selectedTagName}>{filter.word}</span>
+    </div>
+  );
 
 const SuggestionsDropdown = ({ context, classNames, children }) => {
   const [ isClosed, setIsClosed ] = useState(false);
@@ -186,11 +229,13 @@ const SuggestionsDropdown = ({ context, classNames, children }) => {
   );
 };
 
-const WordFilterInput =
+const FilterInput =
   ({
      context = CONTEXT_CHALLENGE,
-     filters = [],
+     matchMode = STRING_MATCH_MODE_WORDS,
      matchingData = {},
+     filters = [],
+     minQueryLength = 2,
      onChange = noop,
      onFocus = noop,
      onBlur = noop,
@@ -202,7 +247,7 @@ const WordFilterInput =
     } = matchingData;
 
     const suggestions = useMemo(() => (
-      suggestableWords.map((name, id) => ({
+      (suggestableWords || []).map((name, id) => ({
         id,
         name,
         searchable: normalizeString(name, false, true),
@@ -211,20 +256,24 @@ const WordFilterInput =
 
     // Extracts a word filter from a user query.
     const parseWordFilter = useCallback(query => {
-      const [ , sign = '', start = '', base = '', end = '' ] = /^([-+]?)(\*?)(.+?)(\*?)$/ug.exec(query) || [];
+      const [ , sign = '', start = '', base = '', end = '' ] = /^([-+]?)([*=]?)(.+?)(\*?)$/ug.exec(query) || [];
 
       const word = getStringMatchableWords(base, locale, matchingOptions)[0] || '';
-      const matchMode = MATCH_MODE_MAP[start][end];
+      const matchType = MATCH_TYPE_MAP[matchMode][start]?.[end] || MATCH_TYPE_MAP[matchMode][''][end];
       const isExcluded = sign === '-';
 
-      return { word, matchMode, isExcluded };
-    }, [ locale, matchingOptions ]);
+      return { word, matchType, isExcluded };
+    }, [ matchMode, locale, matchingOptions ]);
 
     // Filters the words that should be proposed to the user based on the current query.
     const filterSuggestions = useCallback((query, suggestions) => {
+      if (0 === suggestions.length) {
+        return [];
+      }
+
       const { word } = parseWordFilter(query);
 
-      if (word.length < 2) {
+      if (word.length < minQueryLength) {
         return [];
       }
 
@@ -241,7 +290,7 @@ const WordFilterInput =
         ),
         highlightedQuery: word,
       };
-    }, [ parseWordFilter ]);
+    }, [ minQueryLength, parseWordFilter ]);
 
     const tagsInput = useRef();
 
@@ -254,8 +303,8 @@ const WordFilterInput =
       let filter;
 
       if (id) {
-        const { matchMode, isExcluded } = parseWordFilter(query);
-        filter = { word: name, matchMode, isExcluded };
+        const { matchType, isExcluded } = parseWordFilter(query);
+        filter = { word: name, matchType, isExcluded };
       } else {
         filter = parseWordFilter(name);
       }
@@ -310,16 +359,17 @@ const WordFilterInput =
             suggestionsTransform={filterSuggestions}
             allowNew={true}
             delimiters={[ 'Enter', ' ', ',', ';' ]}
+            minQueryLength={minQueryLength}
             onAddition={onAddFilter}
             onUpdate={onUpdateFilter}
             onDelete={onDeleteFilter}
             onKeyDown={onKeyDown}
             onFocus={onFocus}
             onBlur={onBlur}
-            placeholderText={<Text id="add_word_to_filter">Add a word to filter</Text>}
+            placeholderText={<Text id="add_filter">Add a filter</Text>}
             removeButtonText={<Text id="click_to_remove_filter">Click to remove filter</Text>}
-            tagComponent={addContext(Filter, context)}
-            suggestionsComponent={addContext(SuggestionsDropdown, context)}
+            tagComponent={withForcedProps(Filter, { context, matchMode })}
+            suggestionsComponent={withContext(SuggestionsDropdown, context)}
             autoresizePortal={sizerContainer}
             classNames={{
               root: getElementClassNames(WRAPPER),
@@ -388,6 +438,7 @@ const CLASS_NAMES = {
 const STYLE_SHEETS = {
   [BASE]: StyleSheet.create({
     [WRAPPER]: {
+      cursor: 'text',
       display: 'flex',
       flexWrap: 'wrap',
       padding: '6px 7px 0',
@@ -464,4 +515,4 @@ const STYLE_SHEETS = {
   }),
 };
 
-export default WordFilterInput;
+export default FilterInput;

@@ -8,11 +8,13 @@ import { _, it } from 'param.macro';
 import moize from 'moize';
 
 import {
-  WORD_MATCH_ANYWHERE,
-  WORD_MATCH_END,
-  WORD_MATCH_EXACT,
-  WORD_MATCH_NONE,
-  WORD_MATCH_START,
+  STRING_MATCH_MODE_GLOBAL,
+  STRING_MATCH_MODE_WORDS,
+  STRING_MATCH_TYPE_ANYWHERE,
+  STRING_MATCH_TYPE_END,
+  STRING_MATCH_TYPE_EXACT,
+  STRING_MATCH_TYPE_NONE,
+  STRING_MATCH_TYPE_START,
 } from '../constants';
 
 import {
@@ -38,7 +40,7 @@ import {
 
 import Dropdown from './Dropdown';
 import Pagination from './Pagination';
-import WordFilterInput from './WordFilterInput';
+import FilterInput from './FilterInput';
 
 const SORT_TYPE_SIMILARITY = 'similarity';
 const SORT_TYPE_ALPHABETICAL = 'alphabetical';
@@ -178,6 +180,7 @@ const SelectedWordActions =
      context,
      bbox,
      word,
+     matchType = STRING_MATCH_TYPE_EXACT,
      onAddFilter = noop,
    }) => {
     const [ isMenuDisplayed, setIsMenuDisplayed ] = useState(true);
@@ -189,7 +192,7 @@ const SelectedWordActions =
 
       onAddFilter({
         word,
-        matchMode: WORD_MATCH_EXACT,
+        matchType,
         isExcluded: WORD_ACTION_EXCLUDE === action,
       })
     };
@@ -307,6 +310,158 @@ const ListPagination =
     )
   };
 
+/**
+ * @type {Function}
+ * @param {number} matchType A match type.
+ * @param {number} matches A set of match results.
+ * @returns {boolean} Whether the given results include a match of the given type.
+ */
+const testMatches = (matchType, matches) => (matchType & matches) === matchType;
+
+/**
+ * @type {Function}
+ * @param {string} string A string.
+ * @param {string} substring The substring to search in the given string.
+ * @returns {number} A set of match results corresponding to the positions of the substring in the string.
+ */
+const matchSubstring = (string, substring) => {
+  let match = STRING_MATCH_TYPE_NONE;
+  const [ first, last ] = boundIndicesOf(string, substring);
+
+  if (first >= 0) {
+    if (first === 0) {
+      if (last + substring.length === string.length) {
+        match = STRING_MATCH_TYPE_EXACT;
+      } else {
+        match = STRING_MATCH_TYPE_START;
+      }
+    } else if (last + substring.length === string.length) {
+      match = STRING_MATCH_TYPE_END;
+    } else if (first + last >= 0) {
+      match = STRING_MATCH_TYPE_ANYWHERE;
+    }
+  }
+
+  return match;
+};
+
+/**
+ * @typedef {Object} MatchResult The result of a match between a solution against a filter.
+ * @property {boolean} isMatched Whether the solution matched the filter.
+ * @property {number} matches A set of match results corresponding to the positions of the filter in the solution.
+ * @property {boolean} isPartial Whether the results may still be refined.
+ * @property {*} state If the results may be refined, a state indicating where to pick up next.
+ */
+
+/**
+ * @type {Function}
+ * @param {import('../solutions.js').Solution} solution A solution.
+ * @param {import('./FilterInput.js').WordFilter} filter A filter.
+ * @param {number} matches A set of previous match results.
+ * @param {number} index The index of the first word of the solution to match against the filter.
+ * @returns {MatchResult} The result of the match between the given solution and filter.
+ */
+const matchSolutionOnWords = (solution, filter, matches, index = 0) => {
+  const words = solution.matchingData.words;
+  let isMatched;
+  let isPartial;
+
+  do {
+    matches |= matchSubstring(words[index], filter.word);
+    index = (STRING_MATCH_TYPE_EXACT === matches) ? words.length : index + 1;
+    isPartial = (index < words.length);
+    isMatched = testMatches(filter.matchType, matches);
+  } while (!isMatched && isPartial);
+
+  return {
+    isMatched,
+    matches,
+    isPartial,
+    state: index,
+  };
+};
+
+/**
+ * @type {Function}
+ * @param {import('../solutions.js').Solution} solution A solution.
+ * @param {import('./FilterInput.js').WordFilter} filter A filter.
+ * @returns {MatchResult} The result of the match between the given solution and filter.
+ */
+const matchSolutionOnSummary = (solution, filter) => {
+  const matches = matchSubstring(solution.matchingData.summary, filter.word);
+
+  return {
+    isMatched: testMatches(filter.matchType, matches),
+    matches,
+    isPartial: false,
+  }
+};
+
+/**
+ * @type {Function}
+ * @param {Function} matchSolution The callback usable to match a solution against a filter.
+ * @param {import('../solutions.js').Solution[]} solutions A list of solutions.
+ * @param {import('./FilterInput.js').WordFilter[]} filters A list of filters.
+ * @param {Object} filterCache A cache for the results of filters.
+ * @returns {import('../solutions.js').Solution[]} A sub-list of the solutions that matched the given filters.
+ */
+const filterSolutions = (matchSolution, solutions, filters, filterCache) => {
+  for (const filter of filters) {
+    if (!filterCache[filter.word]) {
+      filterCache[filter.word] = {};
+    }
+  }
+
+  return solutions.filter(solution => {
+    const id = solution.matchingData.id;
+
+    for (const filter of filters) {
+      const word = filter.word;
+      let cache;
+      let isMatched;
+
+      if (filterCache[word][id]) {
+        cache = filterCache[word][id];
+        isMatched = testMatches(filter.matchType, cache.matches);
+      } else {
+        cache = { matches: STRING_MATCH_TYPE_NONE, isPartial: true };
+        isMatched = false;
+      }
+
+      if (!isMatched && cache.isPartial) {
+        ({ isMatched, ...cache } = matchSolution(solution, filter, cache.matches, cache.state));
+        filterCache[word][id] = cache;
+      }
+
+      if (isMatched === filter.isExcluded) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+};
+
+/**
+ * Filters a list of solutions based on the words they contain.
+ *
+ * @param {import('../solutions.js').Solution[]} solutions A list of solutions.
+ * @param {import('./FilterInput.js').WordFilter[]} filters A list of filters.
+ * @param {Object} filterCache A cache for the results of filters.
+ * @returns {import('../solutions.js').Solution[]} A sub-list of the solutions that matched the given filters.
+ */
+const filterSolutionsUsingWords = filterSolutions(matchSolutionOnWords, _, _, _);
+
+/**
+ * Filters a list of solutions based on their summaries.
+ *
+ * @param {import('../solutions.js').Solution[]} solutions A list of solutions.
+ * @param {import('./FilterInput.js').WordFilter[]} filters A list of filters.
+ * @param {Object} filterCache A cache for the results of filters.
+ * @returns {import('../solutions.js').Solution[]} A sub-list of the solutions that matched the given filters.
+ */
+const filterSolutionsUsingSummaries = filterSolutions(matchSolutionOnSummary, _, _, _);
+
 const SolutionList =
   forwardRef(
     (
@@ -345,6 +500,8 @@ const SolutionList =
         SORT_DIRECTION_DESC
       );
 
+      const isFilterWordBased = !!matchingData.words;
+
       // 1. Sort the solutions.
 
       const sortedSolutions = useMemo(() => (
@@ -361,61 +518,14 @@ const SolutionList =
       const filterCache = useRef({}).current;
       const [ filters, filtersRef, setFilters ] = useStateRef([]);
 
-      const filteredSolutions = useMemo(() => {
-        for (const filter of filters) {
-          if (!filterCache[filter.word]) {
-            filterCache[filter.word] = {};
-          }
-        }
-
-        return sortedSolutions.filter(({ matchingData: { id, words } }) => {
-          for (const filter of filters) {
-            let start = 0;
-            let matches = WORD_MATCH_NONE;
-            let isMatched = false;
-
-            if (filterCache[filter.word][id]) {
-              [ start, matches ] = filterCache[filter.word][id];
-              isMatched = (filter.matchMode & matches) === filter.matchMode;
-            }
-
-            let index = start;
-
-            while ((index < words.length) && !isMatched) {
-              const word = words[index];
-              const [ first, last ] = boundIndicesOf(word, filter.word);
-
-              if (first >= 0) {
-                if (first === 0) {
-                  if (last + filter.word.length === word.length) {
-                    matches = WORD_MATCH_EXACT;
-                    index = words.length;
-                  } else {
-                    matches |= WORD_MATCH_START;
-                  }
-                } else if (last + filter.word.length === word.length) {
-                  matches |= WORD_MATCH_END;
-                } else if (first + last >= 0) {
-                  matches |= WORD_MATCH_ANYWHERE;
-                }
-              }
-
-              ++index;
-              isMatched = (filter.matchMode & matches) === filter.matchMode;
-            }
-
-            if (index > start) {
-              filterCache[filter.word][id] = [ index, matches ];
-            }
-
-            if (isMatched === filter.isExcluded) {
-              return false;
-            }
-          }
-
-          return true;
-        })
-      }, [ sortedSolutions, filterCache, filters ]);
+      const filteredSolutions = useMemo(
+        () => (
+          isFilterWordBased
+            ? filterSolutionsUsingWords
+            : filterSolutionsUsingSummaries
+        )(sortedSolutions, filters, filterCache),
+        [ sortedSolutions, filters, filterCache, isFilterWordBased ]
+      );
 
       // 3. Paginate and render the current solutions.
 
@@ -514,16 +624,23 @@ const SolutionList =
               );
 
               if (1 === words.length) {
-                const [ word = '' ] = Solution.getStringMatchableWords(
-                  getWordAt(
+                const selectedText = !isFilterWordBased
+                  ? selection.toString()
+                  : getWordAt(
                     selection.anchorNode.wholeText,
                     Math.floor((selection.anchorOffset + selection.focusOffset) / 2)
-                  ),
+                  );
+
+                const [ word = '' ] = Solution.getStringMatchableWords(
+                  selectedText,
                   matchingData.locale,
                   matchingData.matchingOptions
                 );
 
-                if ((word.length > 1) && !(filtersRef.current || []).some(it.word === word)) {
+                if (
+                  (!isFilterWordBased || (word.length > 1))
+                  && !(filtersRef.current || []).some(it.word === word)
+                ) {
                   const bbox = selection.getRangeAt(0).getBoundingClientRect();
                   const offsetParent = getFixedElementPositioningParent(listRef.current);
 
@@ -579,14 +696,16 @@ const SolutionList =
         <IntlProvider scope="solution_list">
           <div>
             <h3 ref={filterWrapperRef} className={getElementClassNames(TITLE)}>
-            <span className={getElementClassNames(TITLE_TEXT)}>
-              <Text id="filter">Filter:</Text>
-            </span>
+              <span className={getElementClassNames(TITLE_TEXT)}>
+                <Text id="filter">Filter:</Text>
+              </span>
 
-              <WordFilterInput
+              <FilterInput
                 context={context}
-                filters={filters}
+                matchMode={isFilterWordBased ? STRING_MATCH_MODE_WORDS : STRING_MATCH_MODE_GLOBAL}
                 matchingData={matchingData}
+                minQueryLength={isFilterWordBased ? 2 : 1}
+                filters={filters}
                 onChange={setFilters}
                 onFocus={onFilterFocus}
                 onBlur={onFilterBlur}
@@ -595,9 +714,9 @@ const SolutionList =
 
             <div ref={listRef}>
               <h3 className={getElementClassNames(TITLE)}>
-              <span className={getElementClassNames(TITLE_TEXT)}>
-                <Text id="correct_solutions">Correct solutions:</Text>
-              </span>
+                <span className={getElementClassNames(TITLE_TEXT)}>
+                  <Text id="correct_solutions">Correct solutions:</Text>
+                </span>
 
                 <ListSortLinks
                   context={context}
@@ -624,6 +743,7 @@ const SolutionList =
                       <SelectedWordActions
                         {...selectedWord}
                         context={context}
+                        matchType={isFilterWordBased ? STRING_MATCH_TYPE_EXACT : STRING_MATCH_TYPE_ANYWHERE}
                         onAddFilter={setFilters([ ...filters, _ ])}
                       />
                     )}

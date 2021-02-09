@@ -435,17 +435,25 @@ async function handleCurrentListeningChallengeRequest(senderId, data, sendResult
     const result = { challenge };
 
     if (('' !== userAnswer) && (RESULT_CORRECT === data.result)) {
-      const bestScore = maxOf(challenge.solutions, it.score);
       const matchingOptions = challenge.matchingData.matchingOptions;
+      let variations;
 
-      result.correctionDiff = minBy(
-        challenge.solutions
+      if (challenge.solutions.some('score' in it)) {
+        const bestScore = maxOf(challenge.solutions, it.score);
+
+        variations = challenge.solutions
           .filter(bestScore === it.score)
           .flatMap(Solution.getBestMatchingVariationsForAnswer(_, userAnswer, matchingOptions))
-          .map(Solution.getVariationDiffWithAnswer(_, userAnswer, matchingOptions))
-          .filter(isArray),
-        it.length
-      );
+      } else {
+        variations = challenge.solutions.flatMap(Solution.getAllVariations(_));
+      }
+
+      const correctionDiffs = variations.map(Solution.getVariationDiffWithAnswer(_, userAnswer, matchingOptions));
+
+      // Do not display a correction if any variation is equivalent to the answer (regardless of the scores).
+      if (correctionDiffs.every(isArray(_))) {
+        result.correctionDiff = minBy(correctionDiffs, it.length);
+      }
     }
 
     sendResult(result);

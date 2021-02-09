@@ -1,3 +1,5 @@
+import { _, it } from 'param.macro';
+
 import {
   UI_NAMING_CHALLENGE_TYPES,
   UI_LISTENING_CHALLENGE_TYPES,
@@ -43,7 +45,9 @@ import * as Solution from './solutions';
  * @typedef {object} MatchingData
  * @property {MatchingOptions} options A set of matching options.
  * @property {string} locale The locale of the solutions.
- * @property {string[]} words A list of all the words found in the solutions, adapted for matching using the options.
+ * @property {?(string[])} words
+ * A list of all the words found in the solutions, adapted for matching using the corresponding options.
+ * The list may be absent if solutions in the given locale do not use tokens based on words.
  */
 
 /**
@@ -75,32 +79,54 @@ export function isSameListeningChallenge(challengeA, challengeB) {
 }
 
 /**
+ * @type {Function}
+ * @param {Challenge} challenge A challenge.
+ * @returns {string|null} The locale used by the solutions to the given challenge.
+ */
+export const getSolutionsLocale = it.solutions[0]?.locale || null;
+
+/**
+ * @type {Function}
+ * @param {Challenge} challenge A challenge.
+ * @returns {string|null} The locale used by the statement of the given challenge.
+ */
+export const getStatementLocale = challenge => (
+  getSolutionsLocale(challenge) === challenge.fromLanguage
+    ? challenge.toLanguage
+    : challenge.fromLanguage
+);
+
+/**
  * Adds matching data to a challenge and the corresponding solutions.
  *
  * @param {Challenge} challenge The challenge.
  */
 export function addMatchingData(challenge) {
   if (!isObject(challenge.matchingData)) {
+    const locale = getSolutionsLocale(challenge);
+
     const matchingOptions = {
       ignoreDiacritics: false,
       ignoreWordOrder: true,
     };
 
-    const words = new Set();
+    challenge.matchingData = { matchingOptions, locale };
 
-    challenge.solutions.forEach((solution, index) => {
-      Solution.addMatchingData(solution, index, matchingOptions);
+    if (Solution.hasLocaleWordBasedTokens(locale)) {
+      const words = new Set();
 
-      for (const word of solution.matchingData.words) {
-        words.add(word);
-      }
-    });
+      challenge.solutions.forEach((solution, index) => {
+        Solution.addWordsMatchingData(solution, index, matchingOptions);
 
-    challenge.matchingData = {
-      matchingOptions,
-      words: Array.from(words),
-      locale: challenge.toLanguage,
-    };
+        for (const word of solution.matchingData.words) {
+          words.add(word);
+        }
+      });
+
+      challenge.matchingData.words = Array.from(words);
+    } else {
+      challenge.solutions.forEach(Solution.addSummaryMatchingData(_, _, matchingOptions));
+    }
   }
 }
 
@@ -115,11 +141,7 @@ export function addMatchingData(challenge) {
 export function addSimilarityScores(challenge, userAnswer) {
   addMatchingData(challenge);
 
-  if ('' === userAnswer) {
-    challenge.solutions.forEach(solution => {
-      solution.score = 0;
-    });
-  } else {
+  if (('' !== userAnswer) && challenge.matchingData.words) {
     challenge.solutions.forEach(solution => {
       solution.score = Solution.getMatchingScoreWithAnswer(
         solution,

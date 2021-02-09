@@ -231,39 +231,53 @@ export const EMPTY_CHALLENGE = {
 };
 
 /**
- * A word match result indicating that a word is not present anywhere in another.
+ * A match type for strings that are not present in others.
  *
  * @type {number}
  */
-export const WORD_MATCH_NONE = 0b0000;
+export const STRING_MATCH_TYPE_NONE = 0b0000;
 
 /**
- * A word match result indicating that a word is present somewhere in another.
+ * A match type for strings that are present anywhere in others.
  *
  * @type {number}
  */
-export const WORD_MATCH_ANYWHERE = 0b0001;
+export const STRING_MATCH_TYPE_ANYWHERE = 0b0001;
 
 /**
- * A word match result indicating that a word is present at the start of another.
+ * A match type for strings that are present at the start of others.
  *
  * @type {number}
  */
-export const WORD_MATCH_START = 0b0011;
+export const STRING_MATCH_TYPE_START = 0b0011;
 
 /**
- * A word match result indicating that a word is present at the end of another.
+ * A match type for strings that are present at the end of others.
  *
  * @type {number}
  */
-export const WORD_MATCH_END = 0b0101;
+export const STRING_MATCH_TYPE_END = 0b0101;
 
 /**
- * A word match result indicating that a word is equal to another.
+ * A match type for strings that are equal to others.
  *
  * @type {number}
  */
-export const WORD_MATCH_EXACT = 0b1111;
+export const STRING_MATCH_TYPE_EXACT = 0b1111;
+
+/**
+ * A match mode for matching strings globally.
+ *
+ * @type {string}
+ */
+export const STRING_MATCH_MODE_GLOBAL = 'global';
+
+/**
+ * A match mode for matching strings based on the words they contain.
+ *
+ * @type {string}
+ */
+export const STRING_MATCH_MODE_WORDS = 'words';
 
 /**
  * The URL of the image CDN as was last seen, usable as a fallback.

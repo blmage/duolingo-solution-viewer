@@ -29,10 +29,18 @@ export const CONTEXT_FORUM = Symbol('forum');
 /**
  * @type {Function}
  * @param {Function} component A functional component.
- * @param {string }context A context.
+ * @param {object} forcedProps A set of props to be forced on the component.
+ * @returns {Function} The same functional component with the given props forced.
+ */
+export const withForcedProps = (component, forcedProps) => props => component({ ...props, ...forcedProps });
+
+/**
+ * @type {Function}
+ * @param {Function} component A functional component.
+ * @param {string} context A context.
  * @returns {Function} The same functional component with the given context forced.
  */
-export const addContext = (component, context) => props => component({ ...props, context });
+export const withContext = (component, context) => withForcedProps(component, { context });
 
 /**
  * A variant of the "useLocalStorage" hook from the "react-use" package,

@@ -52,8 +52,15 @@ import {
  *
  * @typedef {object} MatchingData
  * @property {number} id A unique ID for the solution.
- * @property {string[][][]} tokens The tokens of the solution, cleaned up and split into words.
- * @property {string[]} words A list of all the unique words used by the tokens of the solution.
+ * @property {?(string[][][])} tokens
+ * The tokens of the solution, cleaned up and split into words.
+ * The list may be absent if the solution tokens are not based on words.
+ * @property {?(string[])} words
+ * A list of all the unique words used by the solution tokens.
+ * The list may be absent if the solution tokens are not based on words.
+ * @property {?string} summary
+ * A cleaned up version of the user-friendly summary of all the variations of the solution.
+ * The summary is only present if the solution tokens are not based on words.
  */
 
 /**
@@ -64,6 +71,13 @@ import {
  * @property {number} wordCount The total number of matched words.
  * @property {Map} bigramMap A map from bigrams to their number of occurrences in the matched words.
  */
+
+/**
+ * @type {Function}
+ * @param {string} locale A locale.
+ * @returns {boolean} Whether solutions in the given locale use tokens that correspond to words.
+ */
+export const hasLocaleWordBasedTokens = [ 'ja' ].indexOf(_) === -1;
 
 /**
  * A memoized version of {@see compareStrings}, used to efficiently compare words or small strings,
@@ -325,13 +339,24 @@ export function fromWordBankTokens(wordTokens, locale) {
 }
 
 /**
+ * The (unique) key under which to consolidate reader-friendly strings on a solution.
+ *
+ * @type {symbol}
+ */
+const KEY_SUMMARY = Symbol('summary');
+
+/**
  * @param {Solution} solution A solution.
  * @returns {string} A reader-friendly string summarizing all the variations of the given solution.
  */
 export function getReaderFriendlySummary(solution) {
-  return solution.tokens.reduce((result, choices) => {
-    return result + ((1 === choices.length) ? choices[0] : `[${choices.join(' / ')}]`);
-  }, '');
+  if (!solution[KEY_SUMMARY]) {
+    solution[KEY_SUMMARY] = solution.tokens.reduce((result, choices) => {
+      return result + ((1 === choices.length) ? choices[0] : `[${choices.join(' / ')}]`);
+    }, '');
+  }
+
+  return solution[KEY_SUMMARY];
 }
 
 /**
@@ -431,13 +456,13 @@ const getTokenMatchableWords = (token, locale, matchingOptions) => (
 );
 
 /**
- * Adds matching data to a solution.
+ * Adds matching data to a solution based on the words it contains.
  *
  * @param {Solution} solution A solution.
  * @param {number} id A unique ID to assign to the solution.
  * @param {import('./challenges.js').MatchingOptions} matchingOptions A set of matching options.
  */
-export function addMatchingData(solution, id, matchingOptions) {
+export function addWordsMatchingData(solution, id, matchingOptions) {
   const allWords = new Set();
 
   const tokens = solution.tokens
@@ -457,6 +482,26 @@ export function addMatchingData(solution, id, matchingOptions) {
     tokens,
     words: Array.from(allWords),
   };
+}
+
+/**
+ * Adds matching data to a solution based on its reader-friendly summary.
+ *
+ * @param {Solution} solution A solution.
+ * @param {number} id A unique ID to assign to the solution.
+ * @param {import('./challenges.js').MatchingOptions} matchingOptions A set of matching options.
+ */
+export function addSummaryMatchingData(solution, id, matchingOptions) {
+  const baseSummary = normalizeString(
+    getReaderFriendlySummary(solution),
+    true,
+    matchingOptions.ignoreDiacritics
+  ).toLocaleLowerCase(solution.locale);
+
+  // Ignore non-word characters at the start / end of the summary, so that all match types are supported and useful.
+  const summary = /^[^\p{L}\p{N}]*(.*?)[^\p{L}\p{N}]*?$/ug.exec(baseSummary)?.[1] || baseSummary;
+
+  solution.matchingData = { id, summary };
 }
 
 /**
@@ -621,6 +666,12 @@ function matchAgainstAnswer(solution, answer, matchingOptions) {
 export const getMatchingScoreWithAnswer = (solution, answer, matchingOptions) => (
   max(matchAgainstAnswer(solution, answer, matchingOptions))
 );
+
+/**
+ * @param {Solution} solution A solution.
+ * @returns {string[]} The variations of the given solution.
+ */
+export const getAllVariations = cartesianProduct(_.tokens.map(it)).map(it.join(''));
 
 /**
  * @param {Solution} solution A solution.
