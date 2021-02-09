@@ -732,7 +732,7 @@ const SolutionList =
 
               {(0 === filteredSolutions.length)
                 ? (
-                  <div>
+                  <div className={getElementClassNames(EMPTY_LIST)}>
                     <Text id="no_matching_solution">There is no matching solution.</Text>
                   </div>
                 ) : (
@@ -774,6 +774,7 @@ const SORT_LINK = 'sort_link';
 const SORT_TYPE_LABEL = 'sort_type_label';
 const SORT_DIRECTION_LABEL = 'sort_direction_label';
 const SINGLE_SORT_TYPE_LABEL = 'single_sort_type_label';
+const EMPTY_LIST = 'empty_list';
 const SOLUTION = 'solution';
 const SELECTED_WORD_ACTIONS = 'selected_word_actions';
 const PAGINATION_WRAPPER = 'pagination';
@@ -960,6 +961,9 @@ const STYLE_SHEETS = {
     [SORT_LINK]: {
       fontSize: '0.75em',
     },
+    [SINGLE_SORT_TYPE_LABEL]: {
+      fontSize: '0.75em',
+    },
     [PAGINATION_WRAPPER]: {
       bottom: '0',
       paddingTop: '0.1em',
@@ -975,6 +979,9 @@ const STYLE_SHEETS = {
     [TITLE_TEXT]: {
       padding: 0,
       textTransform: 'none',
+    },
+    [EMPTY_LIST]: {
+      paddingBottom: '1em',
     },
     [SORT_TYPE_LABEL]: {
       marginRight: '0.5em',
