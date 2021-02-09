@@ -526,7 +526,10 @@ async function handleChallengeResult(challenge, result, userAnswer, correctionDi
 
   if (userAnswer) {
     if (RESULT_INCORRECT === result) {
-      if (challenge.solutions.length > 1) {
+      if (
+        (challenge.solutions.length > 1)
+        && challenge.solutions.some('score' in it)
+      ) {
         renderChallengeClosestSolution(maxBy(challenge.solutions, it.score), result);
       }
     } else if (isArray(correctionDiff)) {
