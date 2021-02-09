@@ -640,7 +640,7 @@ function renderCompletedChallengeSolutionListModal(opened) {
  *
  * @type {RegExp}
  */
-const FORUM_COMMENT_URL_REGEXP = /forum\.duolingo\.com\/comment\/([\d]+)/;
+const FORUM_COMMENT_URL_REGEXP = /forum\.duolingo\.com\/comment\/(?<comment_id>[\d]+)/;
 
 /**
  * @param {string} location The new location of the document.
@@ -656,20 +656,30 @@ function handleDocumentLocationChange(location) {
     if (commentId > 0) {
       forumCommentId = commentId;
 
-      sendActionRequestToContentScript(ACTION_TYPE_GET_COMMENT_CHALLENGE, commentId)
-        .then(data => {
-          if (isObject(data?.challenge) && (forumCommentId === data.commentId)) {
-            forumCommentData = data;
+      onUiLoaded()
+        .then(() => Promise.race(
+          [ 0, 1, 3, 6 ].map(async delay => {
+            await sleep(delay * 1000);
 
-            onUiLoaded()
-              .then(() => renderForumCommentChallenge(
-                data.commentId,
-                data.challenge,
-                data.userReference
-              ));
-          }
-        })
-        .catch(error => error && logError(error, 'Could not handle the forum comment:'));
+            if (null !== forumCommentData) {
+              return;
+            }
+
+            await sendActionRequestToContentScript(ACTION_TYPE_GET_COMMENT_CHALLENGE, commentId)
+              .then(data => {
+                if (isObject(data?.challenge) && (forumCommentId === data.commentId)) {
+                  forumCommentData = data;
+
+                  renderForumCommentChallenge(
+                    data.commentId,
+                    data.challenge,
+                    data.userReference
+                  );
+                }
+              })
+              .catch(error => error && logError(error, 'Could not handle the forum comment:'))
+          })
+        ));
     }
   }
 }

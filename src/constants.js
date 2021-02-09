@@ -193,6 +193,13 @@ export const MESSAGE_TYPE_UI_EVENT_NOTIFICATION = `${EXTENSION_PREFIX}-ui_event_
 export const EVENT_TYPE_SESSION_LOADED = 'session_loaded';
 
 /**
+ * The type of the event occurring when a forum discussion has been loaded.
+ *
+ * @type {string}
+ */
+export const EVENT_TYPE_DISCUSSION_LOADED = 'discussion_loaded';
+
+/**
  * The type of the event occurring when a sound is played.
  *
  * @type {string}
@@ -206,6 +213,7 @@ export const EVENT_TYPE_SOUND_PLAYED = 'sound_played';
  */
 export const EVENT_TYPES = [
   EVENT_TYPE_SESSION_LOADED,
+  EVENT_TYPE_DISCUSSION_LOADED,
   EVENT_TYPE_SOUND_PLAYED,
 ];
 

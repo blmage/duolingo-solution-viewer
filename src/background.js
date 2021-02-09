@@ -1,8 +1,6 @@
 import 'core-js/features/array/flat-map';
 import 'core-js/features/string/match-all';
 import { _, it } from 'param.macro';
-import sleep from 'sleep-promise';
-import wrapFetchWithRetry from 'fetch-retry';
 import Dexie from 'dexie';
 
 import {
@@ -16,6 +14,7 @@ import {
   CHALLENGE_TYPE_LISTENING,
   CHALLENGE_TYPE_NAMING,
   CHALLENGE_TYPE_TRANSLATION,
+  EVENT_TYPE_DISCUSSION_LOADED,
   EVENT_TYPE_SESSION_LOADED,
   EVENT_TYPE_SOUND_PLAYED,
   EXTENSION_CODE,
@@ -46,16 +45,20 @@ function getCompoundIndex(fields) {
   return `[${fields.join('+')}]`;
 }
 
-const TABLE_DISCUSSION_COMMENTS = 'discussion_comments';
 const TABLE_COMMENT_CHALLENGES = 'comment_challenges';
+const TABLE_COMMENT_DISCUSSIONS = 'comment_discussions';
+const TABLE_DISCUSSION_CHALLENGES = 'discussion_challenges';
+const TABLE_DISCUSSION_COMMENTS = 'discussion_comments';
 
 const FIELD_CHALLENGE = 'challenge';
 const FIELD_COMMENT_ID = 'comment_id';
 const FIELD_DISCUSSION_ID = 'discussion_id';
 const FIELD_INVERTED_SIZE = 'inverted_size';
 const FIELD_LAST_ACCESS_AT = 'last_access_at';
+const FIELD_LOCALE = 'locale';
 const FIELD_USER_REFERENCE = 'user_reference';
 
+const INDEX_DISCUSSION_LOCALE = getCompoundIndex([ FIELD_DISCUSSION_ID, FIELD_LOCALE ]);
 const INDEX_CHALLENGE_PRIORITY = getCompoundIndex([ FIELD_LAST_ACCESS_AT, FIELD_INVERTED_SIZE ]);
 
 /**
@@ -80,26 +83,63 @@ database.version(1)
     ].join(','),
   });
 
+// Associate challenges to forum discussions rather than comments.
+database.version(2)
+  .stores({
+    [TABLE_COMMENT_DISCUSSIONS]: [
+      FIELD_COMMENT_ID,
+    ].join(','),
+    [TABLE_DISCUSSION_CHALLENGES]: [
+      INDEX_DISCUSSION_LOCALE,
+      INDEX_CHALLENGE_PRIORITY,
+    ].join(','),
+  })
+  .upgrade(async () => {
+    await database.table(TABLE_COMMENT_CHALLENGES)
+      .count(count => {
+        const sliceSize = 200;
+        const sliceCount = Math.ceil(count / sliceSize);
+
+        for (let slice = 0; slice < sliceCount; slice++) {
+          const commentRows = [];
+          const challengeRows = [];
+
+          database.table(TABLE_COMMENT_CHALLENGES)
+            .limit(sliceSize)
+            .offset(slice * sliceSize)
+            .each(challengeRow => {
+              const discussionId = challengeRow[FIELD_CHALLENGE].discussionId;
+              const locale = Challenge.getStatementLocale(challengeRow[FIELD_CHALLENGE]);
+
+              const commentRow = {
+                [FIELD_COMMENT_ID]: challengeRow[FIELD_COMMENT_ID],
+                [FIELD_DISCUSSION_ID]: discussionId,
+                [FIELD_LOCALE]: locale,
+              };
+
+              challengeRow[FIELD_DISCUSSION_ID] = discussionId;
+              challengeRow[FIELD_LOCALE] = locale;
+              delete challengeRow[FIELD_COMMENT_ID];
+
+              commentRows.push(commentRow);
+              challengeRows.push(challengeRow);
+            });
+
+          database.table(TABLE_COMMENT_DISCUSSIONS).bulkPut(commentRows);
+          database.table(TABLE_DISCUSSION_CHALLENGES).bulkPut(challengeRows);
+        }
+      });
+
+    await database.table(TABLE_COMMENT_CHALLENGES).clear();
+    await database.table(TABLE_DISCUSSION_COMMENTS).clear();
+  });
+
 /**
  * @returns {number} The index of the current 30-minute slice of time.
  */
 function getCurrentAccessAt() {
   return Math.floor((new Date()).getTime() / 1000 / 60 / 30);
 }
-
-/**
- * A wrapper around fetch which retries twice when encountering an error.
- *
- * @type {Function}
- * @param {string} url The URL to fetch.
- * @param {?object} options Optional parameters such as method, headers, etc.
- * @returns {Promise} A promise for the result of the request.
- */
-const fetchWithRetry = wrapFetchWithRetry(fetch, {
-  retries: 2,
-  retryDelay: 1500,
-  retryOn: [ 403, 500, 503, 504 ],
-});
 
 /**
  * @param {string} table The table in which to insert/update the value.
@@ -120,13 +160,14 @@ async function putWithRetry(table, value) {
         return (purgedSize >= MAX_CHALLENGE_SIZE);
       };
 
-      const purgedIds = await database[TABLE_COMMENT_CHALLENGES]
+      const purgedIds = await database[TABLE_DISCUSSION_CHALLENGES]
         .orderBy(INDEX_CHALLENGE_PRIORITY)
         .until(checkPurgedSize, true)
         .toArray()
-        .map(it[FIELD_COMMENT_ID]);
+        .map([ it[FIELD_DISCUSSION_ID], it[FIELD_LOCALE] ]);
 
-      await database[TABLE_COMMENT_CHALLENGES].bulkDelete(purgedIds);
+      await database[TABLE_DISCUSSION_CHALLENGES].bulkDelete(purgedIds);
+
       await database[table].put(value);
     }
   }
@@ -157,110 +198,67 @@ const sessionChallenges = [];
 const sessionCurrentListeningChallenges = {};
 
 /**
+ * Registers the relation between a forum comment and a forum discussion.
+ *
+ * @type {Function}
+ * @param {number} commentId The ID of a forum comment.
  * @param {string} discussionId The ID of a forum discussion.
- * @param {string} fromLanguage The language the user speaks.
- * @param {string} toLanguage The language the user learns.
- * @returns {string} The URL usable to fetch data about the first comment from the given forum discussion.
+ * @param {string} locale The locale
+ * @returns {Promise<void>} A promise for the result of the action.
  */
-function getDiscussionCommentDataUrl(discussionId, fromLanguage, toLanguage) {
-  return `https://www.duolingo.com/sentence/${discussionId}?learning_language=${toLanguage}&ui_language=${fromLanguage}`;
-}
-
-/**
- * @param {string} discussionId The ID of a forum discussion.
- * @param {string} fromLanguage The language the user speaks.
- * @param {string} toLanguage The language the user learns.
- * @returns {Promise<number>} A promise for the ID of the first comment from the given forum discussion.
- */
-async function getDiscussionCommentId(discussionId, fromLanguage, toLanguage) {
-  const result = await database[TABLE_DISCUSSION_COMMENTS].get(discussionId);
-
-  if (!isObject(result)) {
-    const response = await fetchWithRetry(
-      getDiscussionCommentDataUrl(
-        discussionId,
-        fromLanguage,
-        toLanguage
-      ),
-      { credentials: 'include' }
-    );
-
-    const { comment: { id: commentId } = {} } = await response.json();
-
-    if (isNumber(commentId) && (commentId > 0)) {
-      await putWithRetry(TABLE_DISCUSSION_COMMENTS, {
-        [FIELD_COMMENT_ID]: commentId,
-        [FIELD_DISCUSSION_ID]: discussionId,
-      });
-
-      return commentId;
-    }
-
-    throw new Error(`There is no comment for discussion #${discussionId}.`);
-  }
-
-  return result[FIELD_COMMENT_ID];
-}
-
-/**
- * @param {import('./challenges').Challenge} challenge A challenge.
- * @returns {Promise<number>} A promise for the ID of the first forum comment about the given challenge.
- */
-async function getChallengeCommentId(challenge) {
-  if (challenge.commentId > 0) {
-    return challenge.commentId;
-  }
-
-  if (!challenge.discussionId) {
-    throw new Error('The challenge is not associated to a discussion.');
-  }
-
-  challenge.commentId = await getDiscussionCommentId(
-    challenge.discussionId,
-    challenge.fromLanguage,
-    challenge.toLanguage
-  );
-
-  return challenge.commentId;
+async function registerCommentDiscussion(commentId, discussionId, locale) {
+  await putWithRetry(TABLE_COMMENT_DISCUSSIONS, {
+    [FIELD_COMMENT_ID]: commentId,
+    [FIELD_DISCUSSION_ID]: discussionId,
+    [FIELD_LOCALE]: locale,
+  });
 }
 
 /**
  * @param {number} commentId The ID of a forum comment.
- * @returns {Promise<Challenge>}
- * A promise for the challenge which is referred to by the given forum comment,
+ * @returns {Promise<Object>}
+ * A promise for the challenge which is discussed by the given forum comment,
  * and the last user reference that it was associated to.
  */
 async function getCommentChallenge(commentId) {
-  const result = await database[TABLE_COMMENT_CHALLENGES].get(commentId);
+  let result = await database[TABLE_COMMENT_DISCUSSIONS].get(commentId);
 
   if (isObject(result)) {
-    try {
-      await database[TABLE_COMMENT_CHALLENGES].update(
-        commentId,
-        { [FIELD_LAST_ACCESS_AT]: getCurrentAccessAt() }
-      );
-    } catch (error) {
-      // Ignore the error. We only want to purge data when nothing is waiting for a result.
-    }
+    const discussionKey = [ result[FIELD_DISCUSSION_ID], result[FIELD_LOCALE] ];
 
-    return {
-      commentId,
-      challenge: result[FIELD_CHALLENGE],
-      userReference: result[FIELD_USER_REFERENCE],
-    };
+    result = await database[TABLE_DISCUSSION_CHALLENGES]
+      .where(INDEX_DISCUSSION_LOCALE)
+      .equals(discussionKey)
+      .first();
+
+    if (isObject(result)) {
+      try {
+        await database[TABLE_DISCUSSION_CHALLENGES].update(
+          discussionKey,
+          { [FIELD_LAST_ACCESS_AT]: getCurrentAccessAt() }
+        );
+      } catch (error) {
+        // Ignore the error. We only want to purge data when nothing is waiting for a result.
+      }
+
+      return {
+        commentId,
+        challenge: result[FIELD_CHALLENGE],
+        userReference: result[FIELD_USER_REFERENCE],
+      };
+    }
   }
 
   throw new Error(`There is no challenge for comment #${commentId}.`);
 }
 
 /**
- * Registers the relation between a challenge and the corresponding first forum comment.
+ * Registers the relation between a challenge and the corresponding forum discussion.
  *
  * @param {import('./challenges').Challenge} challenge A challenge.
  * @returns {Promise<void>} A promise for the result of the action.
  */
-async function registerCommentChallenge(challenge) {
-  const commentId = await getChallengeCommentId(challenge);
+async function registerDiscussionChallenge(challenge) {
   const challengeSize = JSON.stringify(challenge).length;
 
   if (challengeSize > MAX_CHALLENGE_SIZE) {
@@ -269,8 +267,9 @@ async function registerCommentChallenge(challenge) {
     );
   }
 
-  await putWithRetry(TABLE_COMMENT_CHALLENGES, {
-    [FIELD_COMMENT_ID]: commentId,
+  await putWithRetry(TABLE_DISCUSSION_CHALLENGES, {
+    [FIELD_DISCUSSION_ID]: challenge.discussionId,
+    [FIELD_LOCALE]: Challenge.getStatementLocale(challenge),
     [FIELD_CHALLENGE]: challenge,
     [FIELD_INVERTED_SIZE]: MAX_CHALLENGE_SIZE - challengeSize,
     [FIELD_LAST_ACCESS_AT]: getCurrentAccessAt(),
@@ -278,18 +277,13 @@ async function registerCommentChallenge(challenge) {
 }
 
 /**
- * Registers the relations between a set of challenges and the corresponding first forum comments.
+ * Registers the relations between some challenges and the corresponding forum discussions.
  *
+ * @type {Function}
  * @param {import('./challenges').Challenge[]} challenges A set of challenges.
- * @returns {Promise<void>} A promise for the result of the action.
+ * @returns {Promise<void>} A promise for the result of the actions.
  */
-async function registerCommentChallenges(challenges) {
-  return Promise.all(
-    challenges.map(
-      (challenge, index) => sleep(4500 * index).then(() => registerCommentChallenge(challenge))
-    )
-  );
-}
+const registerDiscussionChallenges = async challenges => Promise.all(challenges.map(registerDiscussionChallenge(_)));
 
 /**
  * Registers a new user reference for a challenge.
@@ -299,10 +293,12 @@ async function registerCommentChallenges(challenges) {
  * @returns {Promise<void>} A promise for the result of the action.
  */
 async function registerChallengeUserReference(challenge, reference) {
-  const commentId = await getChallengeCommentId(challenge);
+  if (!challenge.discussionId) {
+    return;
+  }
 
-  await database[TABLE_COMMENT_CHALLENGES].update(
-    commentId,
+  await database[TABLE_DISCUSSION_CHALLENGES].update(
+    [ challenge.discussionId, Challenge.getStatementLocale(challenge) ],
     {
       [FIELD_USER_REFERENCE]: reference,
       [FIELD_LAST_ACCESS_AT]: getCurrentAccessAt(),
@@ -352,7 +348,7 @@ function findSessionChallengesOfType(sessionId, challengeType, predicate) {
 async function registerUiChallenges(sessionId, uiChallenges, fromLanguage, toLanguage) {
   sessionChallenges[sessionId] = Challenge.parseUiChallenges(uiChallenges, fromLanguage, toLanguage);
 
-  await registerCommentChallenges(
+  await registerDiscussionChallenges(
     sessionChallenges[sessionId].filter(Challenge.isOfType(_, CHALLENGE_TYPE_TRANSLATION))
   );
 }
@@ -491,7 +487,7 @@ async function handleCurrentChallengeUserReferenceUpdateRequest(senderId, data, 
  * @returns {Promise<void>} A promise for the result of the request.
  */
 async function handleCommentChallengeRequest(commentId, sendResult) {
-  if (commentId > 0) {
+  if (isNumber(commentId) && (commentId > 0)) {
     const result = await getCommentChallenge(commentId);
 
     if (isString(result.userReference) && ('' !== result.userReference)) {
@@ -512,6 +508,7 @@ async function handleCommentChallengeRequest(commentId, sendResult) {
 async function handleCommentChallengeUserReferenceUpdateRequest(data, sendResult) {
   if (
     isObject(data)
+    && isNumber(data.commentId)
     && (data.commentId > 0)
     && isString(data.userReference)
     && ('' !== data.userReference.trim())
@@ -591,6 +588,27 @@ async function handleSessionLoadedEvent(senderId, data) {
 }
 
 /**
+ * Registers the relation between forum comments and forum discussions upon loading the latter.
+ *
+ * @param {string} senderId The ID of the sender of the event notification.
+ * @param {object} data The event payload.
+ * @returns {Promise<void>} A promise for the result of the event handling.
+ */
+async function handleDiscussionLoadedEvent(senderId, data) {
+  if (
+    isObject(data)
+    && isNumber(data.commentId)
+    && (data.commentId > 0)
+    && isString(data.discussionId)
+    && ('' !== data.discussionId)
+    && isString(data.locale)
+    && ('' !== data.locale)
+  ) {
+    await registerCommentDiscussion(data.commentId, data.discussionId, data.locale);
+  }
+}
+
+/**
  * Registers the current listening challenge when a corresponding TTS media is played.
  *
  * @param {string} senderId The ID of the sender of the event notification.
@@ -625,6 +643,8 @@ async function handleUiEvent(event, data, sender) {
 
   if (EVENT_TYPE_SESSION_LOADED === event) {
     await handleSessionLoadedEvent(senderId, data);
+  } else if (EVENT_TYPE_DISCUSSION_LOADED === event) {
+    await handleDiscussionLoadedEvent(senderId, data);
   } else if (EVENT_TYPE_SOUND_PLAYED === event) {
     handleSoundPlayedEvent(senderId, data);
   }

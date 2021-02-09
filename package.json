@@ -19,7 +19,6 @@
     "aphrodite": "^2.4.0",
     "dexie": "^3.0.3",
     "diff": "^4.0.2",
-    "fetch-retry": "^4.0.1",
     "js-cookie": "^2.2.1",
     "match-sorter": "^5.0.0",
     "moize": "^5.4.7",

@@ -1,6 +1,6 @@
 import { sendEventNotificationToContentScript } from './ipc';
 import { isBlob, isObject, logError } from './functions';
-import { EVENT_TYPE_SESSION_LOADED, EVENT_TYPE_SOUND_PLAYED } from './constants';
+import { EVENT_TYPE_DISCUSSION_LOADED, EVENT_TYPE_SESSION_LOADED, EVENT_TYPE_SOUND_PLAYED } from './constants';
 
 // This module must be kept as short as possible, we need it to be evaluated as soon as possible.
 
@@ -11,14 +11,24 @@ import { EVENT_TYPE_SESSION_LOADED, EVENT_TYPE_SOUND_PLAYED } from './constants'
  */
 const NEW_SESSION_URL_REGEXP = /\/[\d]{4}-[\d]{2}-[\d]{2}\/sessions/g;
 
+/**
+ * A RegExp for the URL that is used by Duolingo to load the data related to a forum discussion.
+ *
+ * @type {RegExp}
+ */
+const FORUM_DISCUSSION_URL_REGEXP = /\/comments\/([\d]+)/g;
 
 /**
  * @type {Function}
  */
 const originalXhrOpen = XMLHttpRequest.prototype.open;
 
+// Notifies the background script when a practice session or a forum discussion about a challenge is loaded.
 XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
-  if (url.match(NEW_SESSION_URL_REGEXP)) {
+  const isNewSession = url.match(NEW_SESSION_URL_REGEXP);
+  const isForumDiscussion = url.match(FORUM_DISCUSSION_URL_REGEXP);
+
+  if (isNewSession || isForumDiscussion) {
     this.addEventListener('load', () => {
       try {
         const data = isObject(this.response)
@@ -26,10 +36,22 @@ XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
           : JSON.parse(this.responseText);
 
         if (isObject(data)) {
-          sendEventNotificationToContentScript(EVENT_TYPE_SESSION_LOADED, data);
+          if (isNewSession) {
+            sendEventNotificationToContentScript(EVENT_TYPE_SESSION_LOADED, data);
+          } else if (
+            (data.id > 0)
+            && !!data.sentence_id
+            && !!data.sentence_language
+          ) {
+            sendEventNotificationToContentScript(EVENT_TYPE_DISCUSSION_LOADED, {
+              commentId: Number(data.id),
+              discussionId: String(data.sentence_id).trim(),
+              locale: String(data.sentence_language).trim(),
+            });
+          }
         }
       } catch (error) {
-        logError(error, 'Could not handle the new session data: ');
+        logError(error, 'Could not handle the session / discussion data: ');
       }
     });
   }
