@@ -18,6 +18,7 @@ the **correction of typos** for listening challenges.
 * [Download](#download)
 * [Features](#features)
 * [Keyboard shortcuts](#keyboard-shortcuts)
+* [Filter shortcuts](#filter-shortcuts)
 * [Limitations](#limitations)
 * [Contributions](#contributions)
     * [Translations](#translations)
@@ -33,62 +34,93 @@ the **correction of typos** for listening challenges.
 
 * Provides a link to the list of solutions of the current challenge, once you have submitted your answer:
 
-  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_link.png" width="500" />
+  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/base_correct_answer_solution_list_link.png" width="500" />
 
     * By default, the solutions are sorted by their similarity with your answer:
 
-      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_modal.png" width="500" />
+      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/base_correct_answer_solution_list_modal.png" width="500" />
 
     * But you can also switch to an alphabetical sort:
 
-      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_modal_alphabetical_sort.png" width="500" />
+      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/base_correct_answer_solution_list_modal_alphabetical_sort.png" width="500" />
 
     * Click on your answer to edit it. The similarity scores of the solutions will be refreshed accordingly:
 
-      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_modal_reference_update.png" width="500" />
+      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/base_correct_answer_solution_list_modal_reference_update.png" width="500" />
 
-      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_solution_list_modal_update_result.png" width="500" />
+      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/base_correct_answer_solution_list_modal_update_result.png" width="500" />
+
+    * Click on the thumbtack button to pin your reference answer, and easily compare it with all the solutions:
+
+      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/base_correct_answer_solution_list_modal_pinned_answer.png" width="500" />
+
+    * Filter the solutions by entering one or more words in the filter input (click on the icons on the left to refine your filters):
+
+      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/base_correct_answer_solution_list_modal_filter.png" width="500" />
+
+    * Select a word (or just a part of it) in any solution to quickly add a new filter:
+
+      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/base_correct_answer_solution_list_modal_filter_selection.png" width="500" />
 
 * Remembers the lists of solutions of each challenge, to also make them available from the corresponding forum discussions:
 
-    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_forum_solution_list.png" width="500" />
-
-    * All the options seen above are also accessible in the forum, such as editing your reference:
-
-      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_forum_solution_list_reference_update.png" width="500" />
-
-      <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_forum_solution_list_update_result.png" width="500" />
+    <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/base_forum_solution_list.png" width="500" />
 
 * Displays the closest solution when the answer you submitted is incorrect:
 
-  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_incorrect_answer_closest_solution.png" width="500" />
+  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/base_incorrect_answer_closest_solution.png" width="500" />
 
 * Outlines typos in answers to listening challenges:
 
-<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/base_correct_answer_listening_correction.png" width="500" />
+<img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/base_correct_answer_listening_correction.png" width="500" />
 
 * Strives to blend seamlessly in [Duolingo](https://www.duolingo.com)'s UI, and to be compatible with custom themes such as [Darklingo++](https://userstyles.org/styles/169205/darklingo):
 
-  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_correct_answer_solution_list_link.png" width="500" />
+  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/dark_correct_answer_solution_list_link.png" width="500" />
 
-  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_correct_answer_solution_list_modal.png" width="500" />
+  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/dark_correct_answer_solution_list_modal.png" width="500" />
 
-  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_forum_solution_list.png" width="500" />
+  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/dark_forum_solution_list.png" width="500" />
 
-  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_incorrect_answer_closest_solution.png" width="500" />
+  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/dark_incorrect_answer_closest_solution.png" width="500" />
 
-  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v3/screenshots/dark_correct_answer_listening_correction.png" width="500" />
+  <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/dark_correct_answer_listening_correction.png" width="500" />
 
 ### Keyboard shortcuts
 
 After having submitted an answer to a challenge, use:
-* `s` to open the solution window, 
-* `↑` / `↓` to scroll up / down the window content,
-* `Esc` to close the solution window.
+* `s` to open the solution window, and `Esc` to close it,
+* `r` to open the report window,
+* `d` to open the forum discussion in a new tab,
 
 When a list of solutions is available, use:
+* `f` to focus the filter input, and `Esc` to leave it,
+* `↑` / `↓` to scroll up / down the list,
 * `←` / `→` to navigate through the pages one by one,
 * `Ctrl` + `←` / `→` to go directly to the first / last page.
+
+When the filter input is focused:
+* enter a word, then use `Enter` to add a filter (see the [filter shortcuts](#filter-shortcuts) below)
+* use `Backspace` to remove the last added filter,
+* .. and suggestions are available:
+  * use `↑` / `↓` to go through the suggestions,
+  * use `Enter` to add the corresponding filter (shortcuts will be preserved).
+ 
+### Filter shortcuts
+
+For most languages, enter:
+* " **word** " for solutions that include the exact word,
+* " __*__&#8202;example " for solutions that include a word ending with "*example*",
+* " example&#8202;__*__ " for solutions that include a word beginning with "*example*",
+* " __*__&#8202;example&#8202;__*__ " for solutions that include a word containing "*example*",
+* " __-__&#8202;word " for solutions that **do not** include the exact word (wildcard variants above are also available).
+
+For languages that do not use space-separated words (such as Japanese), enter:
+* " **word** " for solutions that include the word anywhere,
+* " __*__&#8202;example " for solutions ending with "*example*",
+* " example&#8202;__*__ " for solutions beginning with "*example*",
+* "  __=__&#8202;example " for exact solutions,
+* "  __-__&#8202;word " for solutions that **do not** include the word (again, all variants above are available).
 
 ### Limitations
 
