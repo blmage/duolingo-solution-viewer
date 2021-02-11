@@ -100,11 +100,11 @@ When a list of solutions is available, use:
 * `Ctrl` + `←` / `→` to go directly to the first / last page.
 
 When the filter input is focused:
-* enter a word, then use `Enter` to add a filter (see the [filter shortcuts](#filter-shortcuts) below)
+* enter a word, then use `Enter` to add a filter (see the [filter shortcuts](#filter-shortcuts) below),
 * use `Backspace` to remove the last added filter,
 * .. and suggestions are available:
-  * use `↑` / `↓` to go through the suggestions,
-  * use `Enter` to add the corresponding filter (shortcuts will be preserved).
+  * use `↑` / `↓` to select a suggestion,
+  * use `Enter` to add a filter based on the selected suggestion (shortcuts will be preserved).
  
 ### Filter shortcuts
 
