@@ -598,11 +598,10 @@ async function handleSessionLoadedEvent(senderId, data) {
 /**
  * Registers the relation between forum comments and forum discussions upon loading the latter.
  *
- * @param {string} senderId The ID of the sender of the event notification.
  * @param {object} data The event payload.
  * @returns {Promise<void>} A promise for the result of the event handling.
  */
-async function handleDiscussionLoadedEvent(senderId, data) {
+async function handleDiscussionLoadedEvent(data) {
   if (
     isObject(data)
     && isNumber(data.commentId)
@@ -652,7 +651,7 @@ async function handleUiEvent(event, data, sender) {
   if (EVENT_TYPE_SESSION_LOADED === event) {
     await handleSessionLoadedEvent(senderId, data);
   } else if (EVENT_TYPE_DISCUSSION_LOADED === event) {
-    await handleDiscussionLoadedEvent(senderId, data);
+    await handleDiscussionLoadedEvent(data);
   } else if (EVENT_TYPE_SOUND_PLAYED === event) {
     handleSoundPlayedEvent(senderId, data);
   }
