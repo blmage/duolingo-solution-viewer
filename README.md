@@ -54,7 +54,7 @@ the **correction of typos** for listening challenges.
 
       <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/base_correct_answer_solution_list_modal_pinned_answer.png" width="500" />
 
-    * Filter the solutions by entering one or more words in the filter input (click on the icons on the left to refine your filters):
+    * Filter the solutions by entering one or more words in the filter input (click on the icons on the left of a filter to refine it):
 
       <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets_v4/screenshots/base_correct_answer_solution_list_modal_filter.png" width="500" />
 
@@ -91,7 +91,7 @@ the **correction of typos** for listening challenges.
 After having submitted an answer to a challenge, use:
 * `s` to open the solution window, and `Esc` to close it,
 * `r` to open the report window,
-* `d` to open the forum discussion in a new tab,
+* `d` to open the forum discussion in a new tab.
 
 When a list of solutions is available, use:
 * `f` to focus the filter input, and `Esc` to leave it,
