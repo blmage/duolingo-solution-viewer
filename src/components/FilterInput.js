@@ -340,11 +340,12 @@ const FilterInput =
       ('Escape' === event.key) && blurTagsInput();
     }
 
-    useKey('f', () =>
-      !isAnyInputFocused()
-      && tagsInput.current
-      && setTimeout(() => tagsInput.current.focus({ preventScroll: true }))
-    );
+    useKey('f', event => {
+      if (!isAnyInputFocused() && tagsInput.current) {
+        discardEvent(event);
+        setTimeout(() => tagsInput.current.focus({ preventScroll: true }));
+      }
+    });
 
     const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
 
