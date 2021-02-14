@@ -351,9 +351,16 @@ const KEY_SUMMARY = Symbol('summary');
  */
 export function getReaderFriendlySummary(solution) {
   if (!solution[KEY_SUMMARY]) {
-    solution[KEY_SUMMARY] = solution.tokens.reduce((result, choices) => {
-      return result + ((1 === choices.length) ? choices[0] : `[${choices.join(' / ')}]`);
-    }, '');
+    // Add more space between choices and the rest to help with readability when words are not separated by spaces.
+    const space = hasLocaleWordBasedTokens(solution.locale) ? '' : ' ';
+
+    solution[KEY_SUMMARY] = solution.tokens.reduce((result, choices) => (
+      result + (
+        (1 === choices.length)
+          ? choices[0]
+          : `${space}[${space}${choices.join(' / ')}${space}]${space}`
+      )
+    ), '');
   }
 
   return solution[KEY_SUMMARY];
