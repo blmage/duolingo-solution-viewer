@@ -77,7 +77,7 @@ import {
  * @param {string} locale A locale.
  * @returns {boolean} Whether solutions in the given locale use tokens that correspond to words.
  */
-export const hasLocaleWordBasedTokens = [ 'ja' ].indexOf(_) === -1;
+export const hasLocaleWordBasedTokens = [ 'ja', 'zh', 'zs' ].indexOf(_) === -1;
 
 /**
  * A memoized version of {@see compareStrings}, used to efficiently compare words or small strings,

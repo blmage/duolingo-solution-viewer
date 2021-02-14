@@ -79,6 +79,17 @@ export function isSameListeningChallenge(challengeA, challengeB) {
 }
 
 /**
+ * @param {string} x A locale.
+ * @param {string} y Another locale.
+ * @returns {boolean} Whether the given locales can be considered identical.
+ */
+function isSameLocale(x, y) {
+  return (x === y)
+    || ('zh' === x) && ('zs' === y)
+    || ('zs' === x) && ('zh' === y);
+}
+
+/**
  * @type {Function}
  * @param {Challenge} challenge A challenge.
  * @returns {string|null} The locale used by the solutions to the given challenge.
@@ -91,7 +102,7 @@ export const getSolutionsLocale = it.solutions[0]?.locale || null;
  * @returns {string|null} The locale used by the statement of the given challenge.
  */
 export const getStatementLocale = challenge => (
-  getSolutionsLocale(challenge) === challenge.fromLanguage
+  isSameLocale(challenge.fromLanguage, getSolutionsLocale(challenge))
     ? challenge.toLanguage
     : challenge.fromLanguage
 );
