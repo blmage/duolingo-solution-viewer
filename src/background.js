@@ -259,6 +259,10 @@ async function getCommentChallenge(commentId) {
  * @returns {Promise<void>} A promise for the result of the action.
  */
 async function registerDiscussionChallenge(challenge) {
+  if (!challenge.discussionId) {
+    return Promise.resolve();
+  }
+
   const challengeSize = JSON.stringify(challenge).length;
 
   if (challengeSize > MAX_CHALLENGE_SIZE) {
