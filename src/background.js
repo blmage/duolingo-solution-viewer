@@ -582,15 +582,20 @@ async function handleActionRequest(action, data, sender, sendResponse) {
  */
 async function handleSessionLoadedEvent(senderId, data) {
   if (isObject(data)) {
-    const metaData = isObject(data.metadata) ? data.metadata : {};
     const baseChallenges = isArray(data.challenges) ? data.challenges : [];
     const adaptiveChallenges = isArray(data.adaptiveChallenges) ? data.adaptiveChallenges : [];
+
+    const metaData = [
+      data.metadata,
+      baseChallenges[0]?.metadata,
+      adaptiveChallenges[0]?.metadata,
+    ].find(isObject(_)) || {};
 
     await registerUiChallenges(
       senderId,
       baseChallenges.concat(adaptiveChallenges),
       String(metaData.ui_language || metaData.from_language || data.fromLanguage || '').trim(),
-      String(metaData.language || data.learningLanguage || '').trim()
+      String(metaData.language || metaData.learning_language || data.learningLanguage || '').trim()
     );
   }
 }
