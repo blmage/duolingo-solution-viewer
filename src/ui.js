@@ -21,6 +21,7 @@ import {
   maxBy,
   noop,
   querySelectors,
+  scrollElementIntoParentView,
   toggleElementDisplay,
 } from './functions';
 
@@ -140,6 +141,11 @@ function getComponentWrapper(component, parentElement) {
 }
 
 /**
+ * @returns {number} The height of the fixed forum page header, if any.
+ */
+const getForumTopScrollOffset = () => document.querySelector(FORUM_FIXED_PAGE_HEADER_SELECTOR)?.clientHeight;
+
+/**
  * @param {import('./solutions.js').Solution} closestSolution A solution that comes closest to a user answer.
  * @param {string} result The result of the corresponding challenge.
  */
@@ -221,6 +227,13 @@ let isSolutionListModalToggling = false;
  * @type {boolean}
  */
 let isSolutionListModalDisplayed = false;
+
+/**
+ * The element in which are displayed the solutions of the challenge corresponding to the current forum discussion.
+ *
+ * @type {Element}
+ */
+let forumCommentChallengeWrapper = null;
 
 /**
  * @param {import('./background.js').Challenge} challenge A challenge.
@@ -365,11 +378,11 @@ function renderForumCommentChallenge(commentId, challenge, userReference = '') {
       const actionLinkList = document.querySelector(FORUM_OP_ACTION_LINK_LIST_SELECTOR);
 
       if (actionLinkList) {
-        const challengeWrapper = getComponentWrapper(ChallengeSolutions, forumOpWrapper)
+        forumCommentChallengeWrapper = getComponentWrapper(ChallengeSolutions, forumOpWrapper);
 
-        if (0 === challengeWrapper.childNodes.length) {
+        if (0 === forumCommentChallengeWrapper.childNodes.length) {
           // Hide the challenge on the initial rendering.
-          toggleElementDisplay(challengeWrapper, false);
+          toggleElementDisplay(forumCommentChallengeWrapper, false);
         }
 
         const updateUserReference = async newReference => {
@@ -390,11 +403,6 @@ function renderForumCommentChallenge(commentId, challenge, userReference = '') {
           }
         }
 
-        const getScrollOffset = () => {
-          const pageHeader = document.querySelector(FORUM_FIXED_PAGE_HEADER_SELECTOR);
-          return !pageHeader ? 0 : pageHeader.clientHeight;
-        };
-
         render(
           <IntlProvider definition={getTranslations(getUiLocale() || challenge.fromLanguage)}>
             <ChallengeSolutions
@@ -404,10 +412,10 @@ function renderForumCommentChallenge(commentId, challenge, userReference = '') {
               matchingData={challenge.matchingData}
               userReference={userReference}
               onUserReferenceUpdate={updateUserReference}
-              scrollOffsetGetter={getScrollOffset}
+              scrollOffsetGetter={getForumTopScrollOffset}
             />
           </IntlProvider>,
-          challengeWrapper
+          forumCommentChallengeWrapper
         );
 
         render(
@@ -415,7 +423,7 @@ function renderForumCommentChallenge(commentId, challenge, userReference = '') {
             <SolutionLink
               context={CONTEXT_FORUM}
               solutions={challenge.solutions}
-              onClick={() => toggleElementDisplay(challengeWrapper)}
+              onClick={() => toggleElementDisplay(forumCommentChallengeWrapper)}
             />
           </IntlProvider>,
           getComponentWrapper(SolutionLink, actionLinkList)
@@ -648,6 +656,7 @@ const FORUM_COMMENT_URL_REGEXP = /forum\.duolingo\.com\/comment\/(?<comment_id>[
 function handleDocumentLocationChange(location) {
   forumCommentId = null;
   forumCommentData = null;
+  forumCommentChallengeWrapper = null;
   const matches = location.match(FORUM_COMMENT_URL_REGEXP);
 
   if (isArray(matches)) {
@@ -744,7 +753,19 @@ document.addEventListener('keydown', event => {
 
     if ('s' === key) {
       discardEvent(event);
-      renderCompletedChallengeSolutionListModal(true).catch(noop);
+
+      renderCompletedChallengeSolutionListModal(true)
+        .catch(() => {
+          if (forumCommentChallengeWrapper) {
+            toggleElementDisplay(forumCommentChallengeWrapper, true);
+
+            scrollElementIntoParentView(
+              forumCommentChallengeWrapper,
+              getForumTopScrollOffset() + 10,
+              'smooth'
+            );
+          }
+        });
     } else if ('d' === key) {
       discardEvent(event);
       clickOriginalUiFooterButton(CHALLENGE_DISCUSSION_ICON_SELECTOR);
