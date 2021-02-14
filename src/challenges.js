@@ -56,7 +56,7 @@ import * as Solution from './solutions';
  * @param {number} type A challenge type.
  * @returns {boolean} Whether the given challenge belongs to the given type.
  */
-export const isOfType = (challenge, type) => (challenge.type & type) >= 0;
+export const isOfType = (challenge, type) => (challenge.type & type) > 0;
 
 /**
  * @type {Function}
