@@ -134,6 +134,43 @@ database.version(2)
     await database.table(TABLE_DISCUSSION_COMMENTS).clear();
   });
 
+// Fix detection of challenges for discussions that exist in multiple languages.
+database.version(3)
+  .stores({
+    [TABLE_COMMENT_CHALLENGES]: null,
+    [TABLE_DISCUSSION_COMMENTS]: null,
+  })
+  .upgrade(async () => {
+    await database.table(TABLE_DISCUSSION_CHALLENGES)
+      .count(async count => {
+        const sliceSize = 200;
+        const sliceCount = Math.ceil(count / sliceSize);
+
+        for (let slice = 0; slice < sliceCount; slice++) {
+          const newRows = [];
+          const obsoleteRows = [];
+
+          await database.table(TABLE_DISCUSSION_CHALLENGES)
+            .offset(slice * sliceSize)
+            .limit(sliceSize)
+            .each(challengeRow => {
+              obsoleteRows.push([
+                challengeRow[FIELD_DISCUSSION_ID],
+                challengeRow[FIELD_LOCALE],
+              ]);
+
+              challengeRow[FIELD_LOCALE] = Challenge.getSolutionsLocale(challengeRow[FIELD_CHALLENGE]);
+              newRows.push(challengeRow);
+            });
+
+          await database.table(TABLE_DISCUSSION_CHALLENGES).bulkDelete(obsoleteRows);
+          await database.table(TABLE_DISCUSSION_CHALLENGES).bulkPut(newRows);
+        }
+      });
+
+    await database.table(TABLE_COMMENT_DISCUSSIONS).clear();
+  });
+
 /**
  * @returns {number} The index of the current 30-minute slice of time.
  */
@@ -273,7 +310,7 @@ async function registerDiscussionChallenge(challenge) {
 
   await putWithRetry(TABLE_DISCUSSION_CHALLENGES, {
     [FIELD_DISCUSSION_ID]: challenge.discussionId,
-    [FIELD_LOCALE]: Challenge.getStatementLocale(challenge),
+    [FIELD_LOCALE]: Challenge.getSolutionsLocale(challenge),
     [FIELD_CHALLENGE]: challenge,
     [FIELD_INVERTED_SIZE]: MAX_CHALLENGE_SIZE - challengeSize,
     [FIELD_LAST_ACCESS_AT]: getCurrentAccessAt(),
@@ -302,7 +339,7 @@ async function registerChallengeUserReference(challenge, reference) {
   }
 
   await database[TABLE_DISCUSSION_CHALLENGES].update(
-    [ challenge.discussionId, Challenge.getStatementLocale(challenge) ],
+    [ challenge.discussionId, Challenge.getSolutionsLocale(challenge) ],
     {
       [FIELD_USER_REFERENCE]: reference,
       [FIELD_LAST_ACCESS_AT]: getCurrentAccessAt(),

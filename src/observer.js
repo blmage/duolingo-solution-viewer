@@ -41,12 +41,12 @@ XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
           } else if (
             (data.id > 0)
             && !!data.sentence_id
-            && !!data.sentence_language
+            && !!data.translation_language
           ) {
             sendEventNotificationToContentScript(EVENT_TYPE_DISCUSSION_LOADED, {
               commentId: Number(data.id),
               discussionId: String(data.sentence_id).trim(),
-              locale: String(data.sentence_language).trim(),
+              locale: String(data.translation_language).trim(),
             });
           }
         }
