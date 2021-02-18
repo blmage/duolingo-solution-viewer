@@ -136,43 +136,38 @@ database.version(2)
 
 // Fix detection of challenges for discussions that exist in multiple languages.
 // Clean up obsolete tables and unwanted challenges from the database.
-database.version(3)
-  .stores({
-    [TABLE_COMMENT_CHALLENGES]: null,
-    [TABLE_DISCUSSION_COMMENTS]: null,
-  })
-  .upgrade(async () => {
-    await database.table(TABLE_DISCUSSION_CHALLENGES)
-      .count(async count => {
-        const sliceSize = 200;
-        const sliceCount = Math.ceil(count / sliceSize);
+database.version(3).upgrade(async () => {
+  await database.table(TABLE_DISCUSSION_CHALLENGES)
+    .count(async count => {
+      const sliceSize = 200;
+      const sliceCount = Math.ceil(count / sliceSize);
 
-        for (let slice = 0; slice < sliceCount; slice++) {
-          const newRows = [];
-          const obsoleteRows = [];
+      for (let slice = 0; slice < sliceCount; slice++) {
+        const newRows = [];
+        const obsoleteRows = [];
 
-          await database.table(TABLE_DISCUSSION_CHALLENGES)
-            .offset(slice * sliceSize)
-            .limit(sliceSize)
-            .each(challengeRow => {
-              obsoleteRows.push([
-                challengeRow[FIELD_DISCUSSION_ID],
-                challengeRow[FIELD_LOCALE],
-              ]);
+        await database.table(TABLE_DISCUSSION_CHALLENGES)
+          .offset(slice * sliceSize)
+          .limit(sliceSize)
+          .each(challengeRow => {
+            obsoleteRows.push([
+              challengeRow[FIELD_DISCUSSION_ID],
+              challengeRow[FIELD_LOCALE],
+            ]);
 
-              if (!Challenge.isOfType(challengeRow[FIELD_CHALLENGE], CHALLENGE_TYPE_LISTENING)) {
-                challengeRow[FIELD_LOCALE] = Challenge.getSolutionsLocale(challengeRow[FIELD_CHALLENGE]);
-                newRows.push(challengeRow);
-              }
-            });
+            if (!Challenge.isOfType(challengeRow[FIELD_CHALLENGE], CHALLENGE_TYPE_LISTENING)) {
+              challengeRow[FIELD_LOCALE] = Challenge.getSolutionsLocale(challengeRow[FIELD_CHALLENGE]);
+              newRows.push(challengeRow);
+            }
+          });
 
-          await database.table(TABLE_DISCUSSION_CHALLENGES).bulkDelete(obsoleteRows);
-          await database.table(TABLE_DISCUSSION_CHALLENGES).bulkPut(newRows);
-        }
-      });
+        await database.table(TABLE_DISCUSSION_CHALLENGES).bulkDelete(obsoleteRows);
+        await database.table(TABLE_DISCUSSION_CHALLENGES).bulkPut(newRows);
+      }
+    });
 
-    await database.table(TABLE_COMMENT_DISCUSSIONS).clear();
-  });
+  await database.table(TABLE_COMMENT_DISCUSSIONS).clear();
+});
 
 /**
  * @returns {number} The index of the current 30-minute slice of time.
