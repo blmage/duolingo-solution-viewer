@@ -95,78 +95,89 @@ database.version(2)
     ].join(','),
   })
   .upgrade(async () => {
-    await database.table(TABLE_COMMENT_CHALLENGES)
-      .count(async count => {
-        const sliceSize = 200;
-        const sliceCount = Math.ceil(count / sliceSize);
-
-        for (let slice = 0; slice < sliceCount; slice++) {
-          const commentRows = [];
-          const challengeRows = [];
-
-          await database.table(TABLE_COMMENT_CHALLENGES)
-            .offset(slice * sliceSize)
-            .limit(sliceSize)
-            .each(challengeRow => {
-              const discussionId = challengeRow[FIELD_CHALLENGE].discussionId;
-              const locale = Challenge.getStatementLocale(challengeRow[FIELD_CHALLENGE]);
-
-              const commentRow = {
-                [FIELD_COMMENT_ID]: challengeRow[FIELD_COMMENT_ID],
-                [FIELD_DISCUSSION_ID]: discussionId,
-                [FIELD_LOCALE]: locale,
-              };
-
-              challengeRow[FIELD_DISCUSSION_ID] = discussionId;
-              challengeRow[FIELD_LOCALE] = locale;
-              delete challengeRow[FIELD_COMMENT_ID];
-
-              commentRows.push(commentRow);
-              challengeRows.push(challengeRow);
-            });
-
-          await database.table(TABLE_COMMENT_DISCUSSIONS).bulkPut(commentRows);
-          await database.table(TABLE_DISCUSSION_CHALLENGES).bulkPut(challengeRows);
-        }
-      });
-
-    await database.table(TABLE_COMMENT_CHALLENGES).clear();
     await database.table(TABLE_DISCUSSION_COMMENTS).clear();
+
+    do {
+      const originalRows = await database.table(TABLE_COMMENT_CHALLENGES)
+        .orderBy(':id')
+        .limit(200)
+        .toArray();
+
+      if (0 === originalRows.length) {
+        break;
+      }
+
+      const obsoleteIds = [];
+      const commentRows = [];
+      const challengeRows = [];
+
+      for (const challengeRow of originalRows) {
+        const discussionId = challengeRow[FIELD_CHALLENGE].discussionId;
+        const locale = Challenge.getStatementLocale(challengeRow[FIELD_CHALLENGE]);
+
+        const commentRow = {
+          [FIELD_COMMENT_ID]: challengeRow[FIELD_COMMENT_ID],
+          [FIELD_DISCUSSION_ID]: discussionId,
+          [FIELD_LOCALE]: locale,
+        };
+
+        challengeRow[FIELD_DISCUSSION_ID] = discussionId;
+        challengeRow[FIELD_LOCALE] = locale;
+
+        obsoleteIds.push(challengeRow[FIELD_COMMENT_ID])
+        delete challengeRow[FIELD_COMMENT_ID];
+
+        commentRows.push(commentRow);
+        challengeRows.push(challengeRow);
+      }
+
+      await database.table(TABLE_COMMENT_CHALLENGES).bulkDelete(obsoleteIds);
+      await database.table(TABLE_COMMENT_DISCUSSIONS).bulkPut(commentRows);
+      await database.table(TABLE_DISCUSSION_CHALLENGES).bulkPut(challengeRows);
+
+      // eslint-disable-next-line no-constant-condition
+    } while (true);
   });
 
 // Fix detection of challenges for discussions that exist in multiple languages.
 // Clean up obsolete tables and unwanted challenges from the database.
 database.version(3).upgrade(async () => {
-  await database.table(TABLE_DISCUSSION_CHALLENGES)
-    .count(async count => {
-      const sliceSize = 200;
-      const sliceCount = Math.ceil(count / sliceSize);
-
-      for (let slice = 0; slice < sliceCount; slice++) {
-        const newRows = [];
-        const obsoleteRows = [];
-
-        await database.table(TABLE_DISCUSSION_CHALLENGES)
-          .offset(slice * sliceSize)
-          .limit(sliceSize)
-          .each(challengeRow => {
-            obsoleteRows.push([
-              challengeRow[FIELD_DISCUSSION_ID],
-              challengeRow[FIELD_LOCALE],
-            ]);
-
-            if (!Challenge.isOfType(challengeRow[FIELD_CHALLENGE], CHALLENGE_TYPE_LISTENING)) {
-              challengeRow[FIELD_LOCALE] = Challenge.getSolutionsLocale(challengeRow[FIELD_CHALLENGE]);
-              newRows.push(challengeRow);
-            }
-          });
-
-        await database.table(TABLE_DISCUSSION_CHALLENGES).bulkDelete(obsoleteRows);
-        await database.table(TABLE_DISCUSSION_CHALLENGES).bulkPut(newRows);
-      }
-    });
-
   await database.table(TABLE_COMMENT_DISCUSSIONS).clear();
+
+  let offset = 0;
+
+  do {
+    const challengeRows = await database.table(TABLE_DISCUSSION_CHALLENGES)
+      .orderBy(':id')
+      .offset(offset)
+      .limit(200)
+      .toArray();
+
+    if (0 === challengeRows.length) {
+      break;
+    }
+
+    const obsoleteIds = [];
+    const updatedRows = [];
+
+    for (const challengeRow of challengeRows) {
+      obsoleteIds.push([
+        challengeRow[FIELD_DISCUSSION_ID],
+        challengeRow[FIELD_LOCALE],
+      ]);
+
+      if (!Challenge.isOfType(challengeRow[FIELD_CHALLENGE], CHALLENGE_TYPE_LISTENING)) {
+        challengeRow[FIELD_LOCALE] = Challenge.getSolutionsLocale(challengeRow[FIELD_CHALLENGE]);
+        updatedRows.push(challengeRow);
+        ++offset;
+      }
+    }
+
+    await database.table(TABLE_DISCUSSION_CHALLENGES).bulkDelete(obsoleteIds);
+    await database.table(TABLE_DISCUSSION_CHALLENGES).bulkPut(updatedRows);
+
+    // eslint-disable-next-line no-constant-condition
+  } while (true);
 });
 
 /**
