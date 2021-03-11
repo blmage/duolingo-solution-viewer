@@ -341,7 +341,11 @@ const FilterInput =
     }
 
     useKey('f', event => {
-      if (!isAnyInputFocused() && tagsInput.current) {
+      if (
+        tagsInput.current
+        && !event.ctrlKey
+        && !isAnyInputFocused()
+      ) {
         discardEvent(event);
         setTimeout(() => tagsInput.current.focus({ preventScroll: true }));
       }
