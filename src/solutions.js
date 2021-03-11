@@ -114,14 +114,14 @@ function cleanTokenVertices(vertices, locale, isWhitespaceDelimited) {
     result = result.filter(!/[^\s]\s+[^\s]/.test(_));
   }
 
-  if (locale === 'en') {
+  if ('en' === locale) {
     // Filter out copies containing "&" as an incorrectly contracted variant of "and" within English words.
     result = result.filter(value => (
       (value.length === 1)
       || (value.indexOf('&') === -1)
       || !/(^|[^&\s])&([^&\s]|$)/.test(value))
     );
-  } else if (locale === 'fr') {
+  } else if ('fr' === locale) {
     // Filter out copies containing "ù" instead of "u" (the only French word with the letter "ù" is "où").
     result = result.filter(value => (
       (value === 'où')

@@ -183,7 +183,7 @@ export const ACTION_TYPES = [
  *
  * @type {string}
  */
-export const MESSAGE_TYPE_UI_EVENT_NOTIFICATION = `${EXTENSION_PREFIX}-ui_event_notification_`
+export const MESSAGE_TYPE_UI_EVENT_NOTIFICATION = `${EXTENSION_PREFIX}-ui_event_notification_`;
 
 /**
  * The type of the event occurring when a new practice session has been loaded.

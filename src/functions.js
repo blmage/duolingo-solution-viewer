@@ -2,7 +2,7 @@ import { _ } from 'param.macro';
 import { EXTENSION_CODE } from './constants';
 
 /**
- * A function which does nothing.
+ * A function that does nothing.
  *
  * @type {Function}
  * @returns {void}
@@ -18,6 +18,7 @@ export const noop = () => {
 export const identity = _;
 
 /**
+ * @type {Function}
  * @param {Promise} promise A promise to run solely for its effects, ignoring its result.
  * @returns {void}
  */
@@ -323,7 +324,7 @@ export function getStringWords(string) {
 /**
  * @type {Function}
  * @param {string} character A character.
- * @type {boolean} Whether the given character is a letter or a number, in the broad sense.
+ * @returns {boolean} Whether the given character is a letter or a number, in the broad sense.
  */
 const isWordCharacter = /[\p{L}\p{N}]/u.test(_);
 
