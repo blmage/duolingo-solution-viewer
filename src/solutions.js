@@ -127,6 +127,10 @@ function cleanTokenVertices(vertices, locale, isWhitespaceDelimited) {
       (value === 'où')
       || (value.indexOf('ù') === -1)
     ));
+  } else if ('tr' === locale) {
+    // Filter out copies containing a "combining dot above" after a lowercase "i" in Turkish solutions.
+    // Their combination is invalid - only the uppercase variant / "latin capital letter i with dot above" does exist.
+    result = result.filter(!/i\u0307/.test(_));
   }
 
   if (result.length > 1) {
