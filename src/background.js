@@ -485,8 +485,9 @@ async function handleCurrentListeningChallengeRequest(senderId, data, sendResult
     const result = { challenge };
 
     if (('' !== userAnswer) && (RESULT_CORRECT === data.result)) {
-      const matchingOptions = challenge.matchingData.matchingOptions;
       let variations;
+      const locale = Challenge.getSolutionsLocale(challenge);
+      const matchingOptions = challenge.matchingData.matchingOptions;
 
       if (challenge.solutions.some('score' in it)) {
         const bestScore = maxOf(challenge.solutions, it.score);
@@ -498,7 +499,7 @@ async function handleCurrentListeningChallengeRequest(senderId, data, sendResult
         variations = challenge.solutions.flatMap(Solution.getAllVariations(_));
       }
 
-      const correctionDiffs = variations.map(Solution.getVariationDiffWithAnswer(_, userAnswer, matchingOptions));
+      const correctionDiffs = variations.map(Solution.getVariationDiffWithAnswer(_, userAnswer, locale));
 
       // Do not display a correction if any variation is equivalent to the answer (regardless of the scores).
       if (correctionDiffs.every(isArray(_))) {
