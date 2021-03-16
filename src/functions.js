@@ -157,7 +157,7 @@ export const minBy = extremumBy(_, _, lt);
  * @returns {*|undefined} The smallest calculated value from the values in the list.
  */
 export const minOf = (values, getter) => {
-  const value = minOf(values, getter);
+  const value = minBy(values, getter);
   return (undefined === value) ? value : getter(value);
 }
 
