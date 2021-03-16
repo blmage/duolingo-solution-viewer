@@ -30,8 +30,10 @@ import {
   isString,
   maxOf,
   minBy,
+  minOf,
   normalizeString,
   runPromiseForEffects,
+  sumOf,
 } from './functions';
 
 import * as Challenge from './challenges';
@@ -503,7 +505,14 @@ async function handleCurrentListeningChallengeRequest(senderId, data, sendResult
 
       // Do not display a correction if any variation is equivalent to the answer (regardless of the scores).
       if (correctionDiffs.every(isArray(_))) {
-        result.correctionDiff = minBy(correctionDiffs, it.length);
+        // Use the correction with the least ..
+        const bestScore = minOf(correctionDiffs, it.length);
+
+        // .. and shortest differences.
+        result.correctionDiff = minBy(
+          correctionDiffs.filter(bestScore === it.length),
+          sumOf(_, !it.ignorable && (it.added || it.removed) && it.value.length || 0)
+        );
       }
     }
 
