@@ -129,11 +129,11 @@ const ITEM_ICON = 'item_icon';
 const CLASS_NAMES = {
   // Copied from the "More" / "..." menu in both cases.
   [CONTEXT_CHALLENGE]: {
-    [WRAPPER]: [ '_13VDF', '_3-qu7', '_2WhLi' ],
-    [ARROW]: [ '_3fuMA' ],
-    [ARROW_ICON]: [ '_2nhmY' ],
-    [ITEMS]: [ '_1Q4WV' ],
-    [ITEM_WRAPPER]: [ '_2FdDp', '_2wC9B' ],
+    [WRAPPER]: [ '_2O14B', '_2XlFZ', '_1v2Gj' ],
+    [ARROW]: [ 'ite_X' ],
+    [ARROW_ICON]: [ '_3p5e9' ],
+    [ITEMS]: [ '_1KUxv' ],
+    [ITEM_WRAPPER]: [ '_3kz3Z', '_3jIW4' ],
   },
   [CONTEXT_FORUM]: {
     [WRAPPER]: [ '_1NClK', 'K_HbT', '_2QXjq' ],

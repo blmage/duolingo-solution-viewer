@@ -167,10 +167,10 @@ const CLASS_NAMES = {
   [BASE]: {
     // Copied from the "Report" modal overlay.
     // The class name responsible for the opacity is used below.
-    [OVERLAY]: [ '_2Rpqh', '_36g-h', '_1xa0a', 'yrXBG', '_3D0pH' ],
+    [OVERLAY]: [ '_1tTsl', '_36g-h', 'xtPuL' ],
     // Copied from the global wrapper of the "Report" modal content.
     // The class name responsible for the opacity is also used below.
-    [WRAPPER]: [ '_1hEOp', '_13Rl7', '_3lUbm', '_1xa0a', '_3D0pH' ],
+    [WRAPPER]: [ '_1hEOp', '_13Rl7', '_3lUbm', 'xtPuL' ],
     // Copied from the closing button of the "Report" modal.
     [CLOSE_BUTTON]: [ 'FrL-W' ],
     [SIZE_BUTTON]: [ 'FrL-W' ],
@@ -180,21 +180,21 @@ const CLASS_NAMES = {
   [STATE_WILL_OPEN]: {
     // Found in the "app" stylesheet, or by debugging the modal animation.
     // Applies full transparency and disable pointer events.
-    [OVERLAY]: [ '_1VSis', 'qSLKO' ],
-    [WRAPPER]: [ '_1VSis', 'qSLKO' ],
+    [OVERLAY]: [ '_1edTR' ],
+    [WRAPPER]: [ '_1edTR' ],
   },
   [STATE_OPENING]: {
     // Found in the "app" stylesheet, or by debugging the modal animation.
     // Applies full opacity.
-    [OVERLAY]: [ '_2vfOI', 'kYd7N' ],
-    [WRAPPER]: [ '_1VSis', 'qSLKO' ],
+    [OVERLAY]: [ '_18W4a', ],
+    [WRAPPER]: [ '_1edTR' ],
   },
   [STATE_OPENED]: {
-    [OVERLAY]: [ '_2vfOI', 'kYd7N' ],
-    [WRAPPER]: [ '_2vfOI', 'kYd7N' ],
+    [OVERLAY]: [ '_18W4a' ],
+    [WRAPPER]: [ '_18W4a' ],
   },
   [STATE_CLOSING]: {
-    [OVERLAY]: [ '_1VSis', 'qSLKO' ],
+    [OVERLAY]: [ '_1edTR' ],
   },
 };
 
