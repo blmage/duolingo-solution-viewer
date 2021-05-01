@@ -140,7 +140,7 @@ const TRANSLATIONS = {
       title: 'Ähnlichste Lösung:',
     },
     corrected_answer: {
-      title: 'Richtige Antwort:',
+      title: 'Korrigierte Antwort:',
     },
     modal: {
       close: 'Schließen',
