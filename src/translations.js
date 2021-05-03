@@ -132,6 +132,70 @@ const TRANSLATIONS = {
       present: 'Présent',
     },
   },
+  de: {
+    challenge: {
+      statement: 'Aussage:',
+    },
+    closest_solution: {
+      title: 'Ähnlichste Lösung:',
+    },
+    corrected_answer: {
+      title: 'Korrigierte Antwort:',
+    },
+    modal: {
+      close: 'Schließen',
+      fit_to_content: 'An Inhalt anpassen',
+      maximize: 'Maximieren',
+      minimize: 'Minimieren',
+    },
+    pagination: {
+      go_to_first: 'Zur ersten Seite gehen',
+      go_to_last: 'Zur letzten Seite gehen',
+      go_to_page: 'Zu Seite {{page}} gehen',
+      go_to_next: 'Zur nächsten Seite gehen',
+      go_to_previous: 'Zur vorherigen Seite gehen',
+    },
+    solution_link: {
+      label: 'Lösungen ({{count}})',
+    },
+    solution_list: {
+      all: 'alle',
+      alphabetical_sort: 'Alphabetisch sortiert',
+      correct_solutions: 'Richtige Lösungen:',
+      filter: 'Filter:',
+      no_matching_solution: 'Es gibt keine passende Lösung.',
+      per_page: 'pro Seite:',
+      similarity_sort: 'Nach Ähnlichkeit sortiert',
+      sort_ascending: 'In aufsteigender Reihenfolge sortieren',
+      sort_alphabetically: 'Alphabetisch sortieren',
+      sort_by_similarity: 'Nach Ähnlichkeit sortieren',
+      sort_descending: 'In absteigender Reihenfolge sortieren',
+      view_list_with_word: 'Lösungen mit "{{word}}" ansehen',
+      view_list_without_word: 'Lösungen ohne "{{word}}" ansehen',
+    },
+    user_reference: {
+      cancel: 'Abbrechen',
+      none: 'Noch keine',
+      pin: 'Anpinnen',
+      title: 'Deine Referenz:',
+      unpin: 'Pin entfernen',
+      update: 'Update',
+    },
+    word_filter: {
+      absent: 'Nicht enthalten',
+      add_filter: 'Filter hinzufügen',
+      anywhere_in_solution: 'Irgendwo in der Lösung',
+      anywhere_in_word: 'Irgendwo in einem Wort',
+      at_solution_end: 'Am Ende der Lösung',
+      at_solution_start: 'Am Beginn der Lösung',
+      at_word_end: 'Am Ende eines Wortes',
+      at_word_start: 'Am Beginn eines Wortes',
+      click_to_remove_filter: 'Klicken um den Filter zu entfernen',
+      exact_solution: 'Exakte Lösung',
+      exact_word: 'Exaktes Wort',
+      present: 'Enthalten',
+    },
+  },  
 };
 
 /**
