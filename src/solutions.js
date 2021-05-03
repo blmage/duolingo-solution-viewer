@@ -809,9 +809,11 @@ export function getVariationDiffWithAnswer(variation, answer, locale) {
   // Second run to restore case differences, and mark them as ignorable too.
   const { result } = diffTokens.reduce(({ result, left, right }, token) => {
     if (token.added) {
+      token.value = right.substring(0, token.value.length);
       result.push(token);
       return { result, left, right: right.substring(token.value.length) };
     } else if (token.removed) {
+      token.value = left.substring(0, token.value.length);
       result.push(token);
       return { result, right, left: left.substring(token.value.length) };
     }
