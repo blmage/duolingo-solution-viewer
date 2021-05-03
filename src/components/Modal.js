@@ -115,7 +115,7 @@ const Modal =
 
     const { modalSizeTitle } = useText({
       modalSizeTitle: (
-        <Text id={MODAL_SIZES[nextModalSize].actionTitleId}>
+        <Text id={`modal.${MODAL_SIZES[nextModalSize].actionTitleId}`}>
           {MODAL_SIZES[nextModalSize].defaultActionTitle}
         </Text>
       )
