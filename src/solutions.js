@@ -10,11 +10,12 @@ import {
   getStringWords,
   groupBy,
   isArray,
+  isObject,
   isString,
   max,
   mergeMapsWith,
   normalizeString,
-  sumOf
+  sumOf,
 } from './functions';
 
 /**
@@ -741,6 +742,29 @@ export function getBestMatchingVariationsForAnswer(solution, answer, matchingOpt
  */
 
 /**
+ * @type {Object}
+ */
+const DIFF_IGNORABLE_VARIANTS = {
+  ru: {
+    ё: 'e',
+  },
+};
+
+/**
+ * @param {string} string A string.
+ * @param {locale} locale The locale of the string.
+ * @returns {string} The given string, ready for diffing.
+ */
+const prepareDiffedString = (string, locale) => {
+  const variants = DIFF_IGNORABLE_VARIANTS[locale];
+  const result = normalizeString(string).toLocaleLowerCase(locale);
+
+  return !isObject(variants)
+    ? result
+    : result.replace(new RegExp(`(${Object.keys(variants).join('|')})`, 'g'), lift(variants[_]));
+};
+
+/**
  * @param {string} variation A variant of a solution.
  * @param {string} answer A user answer.
  * @param {string} locale The locale of the solution.
@@ -752,8 +776,8 @@ export function getBestMatchingVariationsForAnswer(solution, answer, matchingOpt
 export function getVariationDiffWithAnswer(variation, answer, locale) {
   // Note: the order of tokens is guaranteed (see https://github.com/kpdecker/jsdiff/issues/14).
   const diffTokens = TextDiff.diffChars(
-    normalizeString(variation).toLocaleLowerCase(locale),
-    normalizeString(answer).toLocaleLowerCase(locale)
+    prepareDiffedString(variation, locale),
+    prepareDiffedString(answer, locale)
   ).flatMap(token => {
     // First run to mark punctuation and separator differences as ignorable.
     const subTokens = [];
