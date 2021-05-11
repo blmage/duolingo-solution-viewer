@@ -136,12 +136,12 @@ const CLASS_NAMES = {
     [ITEM_WRAPPER]: [ '_3kz3Z', '_3jIW4' ],
   },
   [CONTEXT_FORUM]: {
-    [WRAPPER]: [ '_1NClK', 'K_HbT', '_2QXjq' ],
-    [ARROW]: [ '_3f_zH' ],
-    [ARROW_ICON]: [ 'SaEU8' ],
-    [ITEMS]: [ '_2iJ6U' ],
-    // The class corresponding to the item text is added here to get the correct color.
-    [ITEM_WRAPPER]: [ '_21W8z', '_3QGyY', '_21hmH' ],
+    [WRAPPER]: [ '_32PCq', 'MAAV-', 'dkZje' ],
+    [ARROW]: [ '_7UVIL' ],
+    [ARROW_ICON]: [ 'QNCcj' ],
+    [ITEMS]: [ '_1UtJe' ],
+    // The class corresponding to the item text is also added here to get the correct color.
+    [ITEM_WRAPPER]: [ '_3_pNV', 'H_C0j', '_2Iddf' ],
   },
 };
 

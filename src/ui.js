@@ -952,7 +952,7 @@ const CHALLENGE_MODAL_CLOSE_BUTTON_SELECTOR = '#overlays *[data-test="close-butt
  *
  * @type {string}
  */
-const FORUM_FIXED_PAGE_HEADER_SELECTOR = '._1K9ZC, ._2Jt0i, ._2i8Km, ._2V4l4';
+const FORUM_FIXED_PAGE_HEADER_SELECTOR = '._2i8Km, ._13Hyj';
 
 /**
  * A CSS selector for the wrapper of the original post in a forum discussion.
