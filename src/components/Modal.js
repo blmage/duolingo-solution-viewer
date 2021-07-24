@@ -200,6 +200,9 @@ const CLASS_NAMES = {
 
 const STYLE_SHEETS = {
   [BASE]: StyleSheet.create({
+    [OVERLAY]: {
+      transitionDuration: '300ms',
+    },
     [WRAPPER]: {
       maxHeight: 'calc(95vh - 30px)',
       maxWidth: 'calc(95vw - 30px)',
@@ -213,6 +216,7 @@ const STYLE_SHEETS = {
       overflowY: 'auto',
       paddingRight: '0.5em',
       position: 'relative',
+      transitionDuration: '300ms',
     },
     [SIZE_BUTTON]: {
       border: 0,
