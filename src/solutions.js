@@ -126,6 +126,7 @@ function cleanTokenVertices(vertices, locale, isWhitespaceDelimited) {
     // Filter out copies containing "ù" instead of "u" (the only French word with the letter "ù" is "où").
     result = result.filter(value => (
       (value === 'où')
+      || (value === 'Où')
       || (value.indexOf('ù') === -1)
     ));
   } else if ('tr' === locale) {
