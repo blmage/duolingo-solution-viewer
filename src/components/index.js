@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef } from 'preact/hooks';
 import { createGlobalState, useLocalStorage as useRawLocalStorage, useStateList } from 'preact-use';
 import { css } from 'aphrodite';
+import { isArray } from 'duo-toolbox/utils/functions';
+import { getUniqueElementId } from 'duo-toolbox/utils/ui';
 import { EXTENSION_PREFIX, IMAGE_CDN_DEFAULT_BASE_URL } from '../constants';
-import { getUniqueElementId, isArray } from '../functions';
 
 /**
  * The key under which to store the class names and styles of an element that are always applicable,
@@ -27,7 +28,6 @@ export const CONTEXT_CHALLENGE = Symbol('challenge');
 export const CONTEXT_FORUM = Symbol('forum');
 
 /**
- * @type {Function}
  * @param {Function} component A functional component.
  * @param {object} forcedProps A set of props to be forced on the component.
  * @returns {Function} The same functional component with the given props forced.
@@ -35,7 +35,6 @@ export const CONTEXT_FORUM = Symbol('forum');
 export const withForcedProps = (component, forcedProps) => props => component({ ...props, ...forcedProps });
 
 /**
- * @type {Function}
  * @param {Function} component A functional component.
  * @param {string} context A context.
  * @returns {Function} The same functional component with the given context forced.
@@ -59,7 +58,6 @@ export const useLocalStorage = (key, initialValue, options) => {
 /**
  * A hook for circularly iterating over an array and storing the current value in the local storage.
  *
- * @type {Function}
  * @param {string} key The base storage key.
  * @param {Array} stateSet The different state values.
  * @param {*} initialValue The initial state value.
@@ -91,7 +89,6 @@ export const useLocalStorageList = (key, stateSet, initialValue) => {
 /**
  * A hook for globally throttling a callback. The delay is never reset when dependencies change.
  *
- * @type {Function}
  * @param {Function} callback The callback to throttle.
  * @param {number} delay The delay during which any subsequent call will be ignored (in milliseconds).
  * @param {Array} args The arguments to the callback.
@@ -118,7 +115,6 @@ const useRawPortalContainer = createGlobalState(() => {
 });
 
 /**
- * @type {Function}
  * @returns {Element} A container for components which should be rendered outside the DOM hierarchy of their parents.
  */
 export const usePortalContainer = () => useRawPortalContainer()[0];
@@ -127,7 +123,6 @@ export const usePortalContainer = () => useRawPortalContainer()[0];
  * A hook for getting all the class names applicable to an element,
  * based on the current state / context of the component that embeds it.
  *
- * @type {Function}
  * @param {object} classNames Some nested maps from state and element keys to class names.
  * @param {object} styleSheets Some nested maps from state and element keys to style sheets.
  * @param {(string|symbol)[]} stateKeys A list of keys describing the current state / context of the component.
@@ -178,7 +173,6 @@ const useImageCdnBaseUrl = createGlobalState(() => {
 });
 
 /**
- * @type {Function}
  * @param {string} path A path on the image CDN.
  * @returns {string} The corresponding URL.
  */

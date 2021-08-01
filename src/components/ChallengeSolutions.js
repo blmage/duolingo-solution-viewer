@@ -3,7 +3,8 @@ import { useCallback, useRef, useState } from 'preact/hooks';
 import { IntlProvider, Localizer, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { isArray, noop, scrollElementIntoParentView } from '../functions';
+import { isArray, noop  } from 'duo-toolbox/utils/functions';
+import { scrollElementIntoParentView  } from 'duo-toolbox/utils/ui';
 import { BASE, CONTEXT_CHALLENGE, useLocalStorage, useStyles } from './index';
 import Loader from './Loader';
 import SolutionList from './SolutionList';

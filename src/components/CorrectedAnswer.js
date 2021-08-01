@@ -2,8 +2,8 @@ import { h } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import { IntlProvider, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
-import { _ } from 'param.macro';
-import { RESULT_CORRECT, RESULT_INCORRECT } from '../constants';
+import { _ } from 'one-liner.macro';
+import { RESULT_CORRECT, RESULT_INCORRECT } from 'duo-toolbox/duo/challenges';
 import { BASE, useStyles } from './index';
 
 const DISPLAY_MODE_ORIGINAL = 'original';

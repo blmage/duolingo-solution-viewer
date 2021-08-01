@@ -4,7 +4,8 @@ import { useKey, useKeyPress } from 'preact-use';
 import { IntlProvider, Localizer, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import Paginator from 'paginator';
-import { isAnyInputFocused, isNumber, noop } from '../functions';
+import { isNumber, noop } from 'duo-toolbox/utils/functions';
+import { isAnyInputFocused } from 'duo-toolbox/utils/ui';
 import { BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, useStyles, useThrottledCallback } from './index';
 
 const Pagination =

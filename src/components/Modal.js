@@ -2,7 +2,8 @@ import { h } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { IntlProvider, Localizer, Text, useText } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
-import { discardEvent, noop } from '../functions';
+import { noop } from 'duo-toolbox/utils/functions';
+import { discardEvent } from 'duo-toolbox/utils/ui';
 import { BASE, useImageCdnUrl, useLocalStorageList, useStyles } from './index';
 
 const STATE_WILL_OPEN = 'will_open';

@@ -1,13 +1,14 @@
 import { h } from 'preact';
 import { createPortal, forwardRef } from 'preact/compat';
 import { useEffect, useRef } from 'preact/hooks';
+import { Localizer, Text } from 'preact-i18n';
 import { useMergeRefs } from 'use-callback-ref';
 import { StyleSheet } from 'aphrodite';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { it } from 'param.macro';
-import { discardEvent, getScrollableAncestors, noop } from '../functions';
+import { it } from 'one-liner.macro';
+import { noop } from 'duo-toolbox/utils/functions';
+import { discardEvent, getAncestorsWithScrollOverflow } from 'duo-toolbox/utils/ui';
 import { BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, usePortalContainer, useStyles } from './index';
-import { Localizer, Text } from "preact-i18n";
 
 export const Item =
   ({
@@ -70,14 +71,14 @@ const Dropdown = forwardRef(
         content.current.style.setProperty('left', `${itemsLeft}px`);
         content.current.style.setProperty('visibility', 'visible', 'important');
 
-        const ancestors = getScrollableAncestors(wrapper.current);
+        const scrollableAncestors = getAncestorsWithScrollOverflow(wrapper.current);
 
         window.addEventListener('resize', onClose);
-        ancestors.forEach(it.addEventListener('scroll', onClose));
+        scrollableAncestors.forEach(it.addEventListener('scroll', onClose));
 
         return () => {
           window.removeEventListener('resize', onClose);
-          ancestors.forEach(it.removeEventListener('scroll', onClose));
+          scrollableAncestors.forEach(it.removeEventListener('scroll', onClose));
         }
       }
     }, [ onClose, wrapper, content ]);

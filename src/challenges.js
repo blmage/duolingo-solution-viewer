@@ -1,4 +1,5 @@
-import { _, it } from 'param.macro';
+import { _, _1, _2, it } from 'one-liner.macro';
+import { isArray, isObject, isString } from 'duo-toolbox/utils/functions';
 
 import {
   UI_NAMING_CHALLENGE_TYPES,
@@ -11,7 +12,7 @@ import {
   EXTENSION_PREFIX
 } from './constants';
 
-import { isArray, isObject, isString, normalizeString } from './functions';
+import { normalizeString } from './strings';
 import * as Solution from './solutions';
 
 /**
@@ -66,28 +67,30 @@ export const isOfType = (challenge, type) => (challenge.type & type) > 0;
 export const getUniqueKey = challenge => (
   challenge.discussionId
   || `${EXTENSION_PREFIX}-${challenge.type}-${challenge.statement}`
-)
+);
 
 /**
+ * @type {Function}
  * @param {Challenge} challengeA A listening challenge.
  * @param {Challenge} challengeB Another listening challenge.
  * @returns {boolean} Whether the two given challenges are the same.
  */
-export function isSameListeningChallenge(challengeA, challengeB) {
-  return !!challengeA.ttsMediaUrl && (challengeA.ttsMediaUrl === challengeB.ttsMediaUrl)
-    || !!challengeA.slowTtsMediaUrl && (challengeA.slowTtsMediaUrl === challengeB.slowTtsMediaUrl);
-}
+export const isSameListeningChallenge = (
+  !!_1.ttsMediaUrl && (_1.ttsMediaUrl === _2.ttsMediaUrl)
+  || !!_1.slowTtsMediaUrl && (_1.slowTtsMediaUrl === _2.slowTtsMediaUrl)
+);
 
 /**
- * @param {string} x A locale.
- * @param {string} y Another locale.
+ * @type {Function}
+ * @param {string} localeA A locale.
+ * @param {string} localeB Another locale.
  * @returns {boolean} Whether the given locales can be considered identical.
  */
-function isSameLocale(x, y) {
-  return (x === y)
-    || ('zh' === x) && ('zs' === y)
-    || ('zs' === x) && ('zh' === y);
-}
+export const isSameLocale = (
+  (_1 === _2)
+  || (('zh' === _1) && ('zs' === _2))
+  || (('zs' === _1) && ('zh' === _2))
+);
 
 /**
  * @type {Function}
@@ -97,7 +100,6 @@ function isSameLocale(x, y) {
 export const getSolutionsLocale = it.solutions[0]?.locale || null;
 
 /**
- * @type {Function}
  * @param {Challenge} challenge A challenge.
  * @returns {string|null} The locale used by the statement of the given challenge.
  */
@@ -111,8 +113,9 @@ export const getStatementLocale = challenge => (
  * Adds matching data to a challenge and the corresponding solutions.
  *
  * @param {Challenge} challenge The challenge.
+ * @returns {void}
  */
-export function addMatchingData(challenge) {
+export const addMatchingData = challenge => {
   if (!isObject(challenge.matchingData)) {
     const locale = getSolutionsLocale(challenge);
 
@@ -139,7 +142,7 @@ export function addMatchingData(challenge) {
       challenge.solutions.forEach(Solution.addSummaryMatchingData(_, _, matchingOptions));
     }
   }
-}
+};
 
 /**
  * Matches a user answer against each solution of a challenge, and updates their similarity scores.
@@ -148,8 +151,9 @@ export function addMatchingData(challenge) {
  *
  * @param {Challenge} challenge A challenge.
  * @param {string} userAnswer A user answer.
+ * @returns {void}
  */
-export function addSimilarityScores(challenge, userAnswer) {
+export const addSimilarityScores = (challenge, userAnswer) => {
   addMatchingData(challenge);
 
   if (('' !== userAnswer) && challenge.matchingData.words) {
@@ -161,13 +165,13 @@ export function addSimilarityScores(challenge, userAnswer) {
       );
     });
   }
-}
+};
 
 /**
  * @param {object} challenge Raw challenge data from the UI.
  * @returns {import('./solutions.js').Solution[]} The list of solutions to the challenge.
  */
-function getUiChallengeSolutions(challenge) {
+const getUiChallengeSolutions = challenge => {
   const grader = isObject(challenge.grader) ? challenge.grader : {};
   const metaData = isObject(challenge.metadata) ? challenge.metadata : {};
 
@@ -210,7 +214,7 @@ function getUiChallengeSolutions(challenge) {
   }
 
   return [];
-}
+};
 
 /**
  * @param {object[]} uiChallenges A set of raw challenge data from the UI.
@@ -218,7 +222,7 @@ function getUiChallengeSolutions(challenge) {
  * @param {string} toLanguage The language the user learns.
  * @returns {Challenge[]} The challenges that are relevant to the extension, parsed and ready for use.
  */
-export function parseUiChallenges(uiChallenges, fromLanguage, toLanguage) {
+export const parseUiChallenges = (uiChallenges, fromLanguage, toLanguage) => {
   return uiChallenges.map(uiChallenge => {
     const solutions = getUiChallengeSolutions(uiChallenge);
 
@@ -264,4 +268,4 @@ export function parseUiChallenges(uiChallenges, fromLanguage, toLanguage) {
       }
     }
   }).filter(isObject);
-}
+};

@@ -202,8 +202,6 @@ const TRANSLATIONS = {
  * @param {string} languageTag A language tag.
  * @returns {object} The available translations for the given language tag.
  */
-export function getTranslations(languageTag) {
-  return (
-    TRANSLATIONS[languageTag] || TRANSLATIONS[languageTag.substring(0, 2)] || {}
-  );
-}
+export const getTranslations = languageTag => (
+  TRANSLATIONS[languageTag] || TRANSLATIONS[languageTag.substring(0, 2)] || {}
+);

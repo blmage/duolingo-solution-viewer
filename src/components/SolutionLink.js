@@ -2,8 +2,8 @@ import { h } from 'preact';
 import { IntlProvider, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { RESULT_CORRECT, RESULT_INCORRECT, RESULT_NONE } from '../constants';
-import { discardEvent, } from '../functions';
+import { discardEvent } from 'duo-toolbox/utils/ui';
+import { RESULT_CORRECT, RESULT_INCORRECT, RESULT_NONE } from 'duo-toolbox/duo/challenges';
 import * as Solution from '../solutions';
 import { CONTEXT_CHALLENGE, CONTEXT_FORUM, useStyles } from './index';
 import Loader from './Loader';

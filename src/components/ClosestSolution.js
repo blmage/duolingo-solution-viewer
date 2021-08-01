@@ -1,7 +1,7 @@
 import { h } from 'preact';
 import { IntlProvider, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
-import { RESULT_CORRECT, RESULT_INCORRECT } from '../constants';
+import { RESULT_CORRECT, RESULT_INCORRECT } from 'duo-toolbox/duo/challenges';
 import { BASE, useStyles } from './index';
 
 const ClosestSolution = ({ solution = '', result = RESULT_CORRECT }) => {

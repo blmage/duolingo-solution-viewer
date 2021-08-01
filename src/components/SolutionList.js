@@ -4,8 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { useStateRef } from 'preact-use';
 import { IntlProvider, Localizer, Text, useText } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
-import { _, it } from 'param.macro';
+import { _, _1, _2, it } from 'one-liner.macro';
 import moize from 'moize';
+import { identity, invertComparison, noop } from 'duo-toolbox/utils/functions';
+import { getFixedElementPositioningParent, scrollElementIntoParentView } from 'duo-toolbox/utils/ui';
 
 import {
   STRING_MATCH_MODE_GLOBAL,
@@ -17,17 +19,8 @@ import {
   STRING_MATCH_TYPE_START,
 } from '../constants';
 
-import {
-  boundIndicesOf,
-  getFixedElementPositioningParent,
-  getWordAt,
-  identity,
-  invertComparison,
-  noop,
-  scrollElementIntoParentView,
-} from '../functions';
-
-import * as Solution from '../solutions.js';
+import { boundIndicesOf, getWordAt } from '../strings';
+import * as Solution from '../solutions';
 
 import {
   BASE,
@@ -39,8 +32,8 @@ import {
 } from './index';
 
 import Dropdown from './Dropdown';
-import Pagination from './Pagination';
 import FilterInput from './FilterInput';
+import Pagination from './Pagination';
 
 const SORT_TYPE_SIMILARITY = 'similarity';
 const SORT_TYPE_ALPHABETICAL = 'alphabetical';
@@ -61,7 +54,6 @@ const SORT_TYPES = {
 };
 
 /**
- * @type {Function}
  * @param {boolean} isScoreAvailable Whether similarity scores are available on solutions.
  * @returns {string[]} The available sort types.
  */
@@ -316,10 +308,9 @@ const ListPagination =
  * @param {number} matches A set of match results.
  * @returns {boolean} Whether the given results include a match of the given type.
  */
-const testMatches = (matchType, matches) => (matchType & matches) === matchType;
+const testMatches = (_1 & _2) === _1;
 
 /**
- * @type {Function}
  * @param {string} string A string.
  * @param {string} substring The substring to search in the given string.
  * @returns {number} A set of match results corresponding to the positions of the substring in the string.
@@ -354,7 +345,6 @@ const matchSubstring = (string, substring) => {
  */
 
 /**
- * @type {Function}
  * @param {import('../solutions.js').Solution} solution A solution.
  * @param {import('./FilterInput.js').WordFilter} filter A filter.
  * @param {number} matches A set of previous match results.
@@ -382,7 +372,6 @@ const matchSolutionOnWords = (solution, filter, matches, index = 0) => {
 };
 
 /**
- * @type {Function}
  * @param {import('../solutions.js').Solution} solution A solution.
  * @param {import('./FilterInput.js').WordFilter} filter A filter.
  * @returns {MatchResult} The result of the match between the given solution and filter.
@@ -398,7 +387,6 @@ const matchSolutionOnSummary = (solution, filter) => {
 };
 
 /**
- * @type {Function}
  * @param {Function} matchSolution The callback usable to match a solution against a filter.
  * @param {import('../solutions.js').Solution[]} solutions A list of solutions.
  * @param {import('./FilterInput.js').WordFilter[]} filters A list of filters.
@@ -445,6 +433,7 @@ const filterSolutions = (matchSolution, solutions, filters, filterCache) => {
 /**
  * Filters a list of solutions based on the words they contain.
  *
+ * @type {Function}
  * @param {import('../solutions.js').Solution[]} solutions A list of solutions.
  * @param {import('./FilterInput.js').WordFilter[]} filters A list of filters.
  * @param {Object} filterCache A cache for the results of filters.
@@ -455,6 +444,7 @@ const filterSolutionsUsingWords = filterSolutions(matchSolutionOnWords, _, _, _)
 /**
  * Filters a list of solutions based on their summaries.
  *
+ * @type {Function}
  * @param {import('../solutions.js').Solution[]} solutions A list of solutions.
  * @param {import('./FilterInput.js').WordFilter[]} filters A list of filters.
  * @param {Object} filterCache A cache for the results of filters.
@@ -502,7 +492,7 @@ const SolutionList =
 
       const isFilterWordBased = !!matchingData.words;
 
-      // 1. Sort the solutions.
+      // Sort the solutions.
 
       const sortedSolutions = useMemo(() => (
         solutions.slice()
@@ -513,7 +503,7 @@ const SolutionList =
           )
       ), [ solutions, sortType, sortDirection ]);
 
-      // 2. Filter the solutions.
+      // Filter the solutions.
 
       const filterCache = useRef({}).current;
       const [ filters, filtersRef, setFilters ] = useStateRef([]);
@@ -527,7 +517,7 @@ const SolutionList =
         [ sortedSolutions, filters, filterCache, isFilterWordBased ]
       );
 
-      // 3. Paginate and render the current solutions.
+      // Paginate and render the current solutions.
 
       const [ rawPage, setRawPage ] = useState(1);
       const shouldTriggerPageChange = useRef(false);
@@ -601,7 +591,7 @@ const SolutionList =
       // Focuses the solution list when the filter input loses focus, to ensure that the list is scrollable again.
       const onFilterBlur = useCallback(() => listRef.current?.closest('[tabindex]')?.focus(), [ listRef ]);
 
-      // Detects word selections, and proposes new filter options when relevant.
+      // Detects selected words, and proposes new filter options when relevant.
       const [ selectedWord, setSelectedWord ] = useState(null);
 
       useEffect(() => {

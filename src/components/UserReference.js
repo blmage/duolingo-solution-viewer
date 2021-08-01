@@ -3,7 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { IntlProvider, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import moize from 'moize';
-import { discardEvent, noop } from '../functions';
+import { noop } from 'duo-toolbox/utils/functions';
+import { discardEvent } from 'duo-toolbox/utils/ui';
 import { BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, useStyles } from './index';
 
 const FORUM_FOLLOW_BUTTON_SELECTOR = '._13Bfz button';

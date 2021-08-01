@@ -1,22 +1,21 @@
-import { _, it, lift } from 'param.macro';
+import { _, it, lift } from 'one-liner.macro';
 import moize from 'moize';
 import TextDiff from 'diff';
 
 import {
   cartesianProduct,
-  compareStrings,
   dedupeAdjacent,
   dedupeAdjacentBy,
-  getStringWords,
   groupBy,
   isArray,
   isObject,
   isString,
   max,
   mergeMapsWith,
-  normalizeString,
   sumOf,
-} from './functions';
+} from 'duo-toolbox/utils/functions';
+
+import { compareStrings, getStringWords, getWordBigramMap, normalizeString } from './strings';
 
 /**
  * A single vertex of a solution graph.
@@ -101,7 +100,7 @@ const compareTokenStrings = moize(compareStrings);
  * @param {boolean} isWhitespaceDelimited Whether tokens are whitespace-delimited.
  * @returns {Vertex[]} The given list, from which duplicate / invalid / irrelevant vertices have been excluded.
  */
-function cleanTokenVertices(vertices, locale, isWhitespaceDelimited) {
+const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
   let result = vertices;
 
   // Sometimes, invalid non-auto non-typo copies of valid tokens occur in graphs.
@@ -157,7 +156,7 @@ function cleanTokenVertices(vertices, locale, isWhitespaceDelimited) {
   }
 
   return result;
-}
+};
 
 /**
  * @param {Vertex[]} vertices A list of vertices taken from a solution graph, and corresponding to a single token.
@@ -166,7 +165,7 @@ function cleanTokenVertices(vertices, locale, isWhitespaceDelimited) {
  * @returns {{ token: Token, solutionBase: { isComplex: boolean, reference: string }}}
  * The parsed token, and the corresponding solution data.
  */
-function parseTokenVertices(vertices, locale, isWhitespaceDelimited) {
+const parseTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
   let token = cleanTokenVertices(
     vertices.map(vertex => String(vertex.orig || vertex.lenient || '')),
     locale,
@@ -180,7 +179,7 @@ function parseTokenVertices(vertices, locale, isWhitespaceDelimited) {
       isComplex: token.length > 1,
     },
   };
-}
+};
 
 const EMPTY_TOKEN = { size: 0 };
 
@@ -193,7 +192,7 @@ const EMPTY_TOKEN = { size: 0 };
  * @param {boolean} isWhitespaceDelimited Whether tokens are whitespace-delimited.
  * @returns {Solution[]} The set of all the possible partial solutions starting at the given index.
  */
-function fromGroupedVertices(groupedVertices, startIndex, locale, isWhitespaceDelimited) {
+const fromGroupedVertices = (groupedVertices, startIndex, locale, isWhitespaceDelimited) => {
   if (!groupedVertices[startIndex]) {
     return [];
   }
@@ -247,15 +246,14 @@ function fromGroupedVertices(groupedVertices, startIndex, locale, isWhitespaceDe
   groupedVertices[startIndex].solutions = solutions;
 
   return solutions;
-}
+};
 
 /**
+ * @type {Function}
  * @param {Vertex} vertex A vertex from a solution graph.
  * @returns {boolean} Whether the vertex is considered relevant (= is not a typo / was not automatically derived).
  */
-function isRelevantVertex(vertex) {
-  return !vertex.auto && ('typo' !== vertex.type);
-}
+const isRelevantVertex = !it.auto && ('typo' !== it.type);
 
 /**
  * @param {Vertex[][]} vertices A flattened list of vertices taken from a solution graph.
@@ -263,7 +261,7 @@ function isRelevantVertex(vertex) {
  * @param {boolean} isWhitespaceDelimited Whether tokens are whitespace-delimited.
  * @returns {Solution[]} The corresponding set of solutions.
  */
-export function fromVertices(vertices, locale, isWhitespaceDelimited) {
+export const fromVertices = (vertices, locale, isWhitespaceDelimited) => {
   let solutions = fromGroupedVertices(
     vertices.map(groupBy(_.filter(isRelevantVertex(_)), it.to)),
     0,
@@ -295,15 +293,15 @@ export function fromVertices(vertices, locale, isWhitespaceDelimited) {
     });
 
   return solutions;
-}
+};
 
 /**
  * @param {string[]} sentences A list of sentences.
  * @param {string} locale The locale of the sentences.
  * @returns {Solution[]} The corresponding set of solutions.
  */
-export function fromSentences(sentences, locale) {
-  return sentences
+export const fromSentences = (sentences, locale) => (
+  sentences
     .filter(isString)
     .map(sentence => {
       const reference = normalizeString(sentence);
@@ -315,15 +313,15 @@ export function fromSentences(sentences, locale) {
         tokens,
         isComplex: false,
       };
-    });
-}
+    })
+);
 
 /**
  * @param {string[]} wordTokens A list of correct tokens from a word bank.
  * @param {string} locale The locale of the words.
  * @returns {Solution[]} The corresponding set of solutions.
  */
-export function fromWordBankTokens(wordTokens, locale) {
+export const fromWordBankTokens = (wordTokens, locale) => {
   const words = wordTokens.filter(isString);
   const reference = normalizeString(words.join(' '));
 
@@ -342,7 +340,7 @@ export function fromWordBankTokens(wordTokens, locale) {
   }
 
   return [];
-}
+};
 
 /**
  * The (unique) key under which to consolidate reader-friendly strings on a solution.
@@ -355,7 +353,7 @@ const KEY_SUMMARY = Symbol('summary');
  * @param {Solution} solution A solution.
  * @returns {string} A reader-friendly string summarizing all the variations of the given solution.
  */
-export function getReaderFriendlySummary(solution) {
+export const getReaderFriendlySummary = solution => {
   if (!solution[KEY_SUMMARY]) {
     // Add more space between choices and the rest to help with readability when words are not separated by spaces.
     const space = hasLocaleWordBasedTokens(solution.locale) ? '' : ' ';
@@ -370,14 +368,14 @@ export function getReaderFriendlySummary(solution) {
   }
 
   return solution[KEY_SUMMARY];
-}
+};
 
 /**
  * @param {Solution[]} solutions A list of solutions.
  * @returns {{display: string, plural: number}}
  * An object holding a displayable count and a number usable for pluralization with "preact-i18n".
  */
-export function getI18nCounts(solutions) {
+export const getI18nCounts = solutions => {
   let plural = solutions.length;
   let display = plural.toString();
 
@@ -387,7 +385,7 @@ export function getI18nCounts(solutions) {
   }
 
   return { display, plural };
-}
+};
 
 /**
  * @param {Solution} x A solution.
@@ -417,14 +415,13 @@ export function compareByReference(x, y) {
  * - a positive value if x comes after y,
  *  - 0 if both solutions are similar.
  */
-export function compareByScore(x, y) {
+export const compareByScore = (x, y) => {
   const result = (y.score || 0) - (x.score || 0);
   // Note to self: this is the right order.
   return (0 !== result) ? result : compareByReference(x, y);
-}
+};
 
 /**
- * @type {Function}
  * @param {string} string A string.
  * @param {string} locale The locale of the string.
  * @param {import('./challenges.js').MatchingOptions} matchingOptions A set of matching options.
@@ -435,7 +432,6 @@ export const getStringMatchableWords = (string, locale, matchingOptions) => (
 );
 
 /**
- * @type {Function}
  * @param {string} token A token.
  * @param {string} locale The locale of the token.
  * @returns {string[]} A list of the words contained in the token, in which diacritics have been preserved.
@@ -445,7 +441,6 @@ const getTokenMatchableWordsWithDiacritics = moize(
 );
 
 /**
- * @type {Function}
  * @param {string} token A token.
  * @param {string} locale The locale of the token.
  * @returns {string[]} A list of the words contained in the token, in which diacritics have been removed.
@@ -475,7 +470,7 @@ const getTokenMatchableWords = (token, locale, matchingOptions) => (
  * @param {number} id A unique ID to assign to the solution.
  * @param {import('./challenges.js').MatchingOptions} matchingOptions A set of matching options.
  */
-export function addWordsMatchingData(solution, id, matchingOptions) {
+export const addWordsMatchingData = (solution, id, matchingOptions) => {
   const allWords = new Set();
 
   const tokens = solution.tokens
@@ -495,7 +490,7 @@ export function addWordsMatchingData(solution, id, matchingOptions) {
     tokens,
     words: Array.from(allWords),
   };
-}
+};
 
 /**
  * Adds matching data to a solution based on its reader-friendly summary.
@@ -504,7 +499,7 @@ export function addWordsMatchingData(solution, id, matchingOptions) {
  * @param {number} id A unique ID to assign to the solution.
  * @param {import('./challenges.js').MatchingOptions} matchingOptions A set of matching options.
  */
-export function addSummaryMatchingData(solution, id, matchingOptions) {
+export const addSummaryMatchingData = (solution, id, matchingOptions) => {
   const baseSummary = normalizeString(
     getReaderFriendlySummary(solution),
     true,
@@ -515,7 +510,7 @@ export function addSummaryMatchingData(solution, id, matchingOptions) {
   const summary = /^[^\p{L}\p{N}]*(.*?)[^\p{L}\p{N}]*?$/ug.exec(baseSummary)?.[1] || baseSummary;
 
   solution.matchingData = { id, summary };
-}
+};
 
 /**
  * @type {WordStats}
@@ -534,25 +529,6 @@ const EMPTY_WORD_STATS = {
 const KEY_WORD_STATS = Symbol('word_stats');
 
 /**
- * @param {string} word A word.
- * @returns {Map<string, number>} A map from the bigrams of the given word to the corresponding number of occurrences.
- */
-function getWordBigramMap(word) {
-  const map = new Map();
-
-  if (word.length <= 2) {
-    map.set(word, (map.get(word) || 0) + 1);
-  } else {
-    for (let i = 0, l = word.length - 1; i < l; i++) {
-      const bigram = word.substring(i, i + 2);
-      map.set(bigram, (map.get(bigram) || 0) + 1);
-    }
-  }
-
-  return map;
-}
-
-/**
  * @type {Function}
  * @param {string} word A word.
  * @returns {WordStats} A set of statistics about the given word.
@@ -568,13 +544,15 @@ const getWordStats = word => ({
  * @param {WordStats[]} stats A set of different word statistics.
  * @returns {WordStats} The union of all the given word statistics.
  */
-const mergeWordStats = stats => (0 === stats.length)
-  ? EMPTY_WORD_STATS
-  : {
-    charCount: sumOf(stats, it.charCount),
-    wordCount: sumOf(stats, it.wordCount),
-    bigramMap: mergeMapsWith(lift(_ + _), ...stats.map(it.bigramMap)),
-  };
+const mergeWordStats = stats => (
+  (0 === stats.length)
+    ? EMPTY_WORD_STATS
+    : {
+      charCount: sumOf(stats, it.charCount),
+      wordCount: sumOf(stats, it.wordCount),
+      bigramMap: mergeMapsWith(lift(_ + _), ...stats.map(it.bigramMap)),
+    }
+);
 
 /**
  * @param {Solution} solution A solution.
@@ -583,7 +561,7 @@ const mergeWordStats = stats => (0 === stats.length)
  * - "shared": the statistics for the words shared by all the variations,
  * - "paths": for each variation, the statistics for their unshared words.
  */
-function getSolutionWordStats(solution) {
+const getSolutionWordStats = solution => {
   if (!solution.matchingData) {
     return { shared: EMPTY_WORD_STATS };
   }
@@ -609,7 +587,7 @@ function getSolutionWordStats(solution) {
   }
 
   return solution[KEY_WORD_STATS];
-}
+};
 
 /**
  * @param {Solution} solution A solution.
@@ -619,7 +597,7 @@ function getSolutionWordStats(solution) {
  * The similarity scores (from 0 to 1) between the given answer and each variation of the given solution.
  * The higher the score, the more a variation corresponds to the answer.
  */
-function matchAgainstAnswer(solution, answer, matchingOptions) {
+const matchAgainstAnswer = (solution, answer, matchingOptions) => {
   const solutionWordStats = getSolutionWordStats(solution);
 
   const answerWordStats = mergeWordStats(
@@ -665,10 +643,9 @@ function matchAgainstAnswer(solution, answer, matchingOptions) {
 
     return 2.0 * (sharedIntersectionSize + pathIntersectionSize) / (totalCharCount - totalWordCount);
   });
-}
+};
 
 /**
- * @type {Function}
  * @param {Solution} solution A solution.
  * @param {string} answer A user answer.
  * @param {import('./challenges.js').MatchingOptions} matchingOptions A set of matching options.
@@ -692,7 +669,7 @@ export const getAllVariations = cartesianProduct(_.tokens.map(it)).map(it.join('
  * @param {import('./challenges.js').MatchingOptions} matchingOptions A set of matching options.
  * @returns {string[]} The variations from the given solution that best match the given answer.
  */
-export function getBestMatchingVariationsForAnswer(solution, answer, matchingOptions) {
+export const getBestMatchingVariationsForAnswer = (solution, answer, matchingOptions) => {
   if (!solution.isComplex) {
     return [ solution.reference ];
   }
@@ -731,7 +708,7 @@ export function getBestMatchingVariationsForAnswer(solution, answer, matchingOpt
 
     return reference;
   }).filter(isString);
-}
+};
 
 /**
  * @typedef {object} DiffToken
@@ -774,7 +751,7 @@ const prepareDiffedString = (string, locale) => {
  * (ignoring case, insignificant punctuation marks and spaces),
  * or null if they can be considered equivalent.
  */
-export function getVariationDiffWithAnswer(variation, answer, locale) {
+export const getVariationDiffWithAnswer = (variation, answer, locale) => {
   // Note: the order of tokens is guaranteed (see https://github.com/kpdecker/jsdiff/issues/14).
   const diffTokens = TextDiff.diffChars(
     prepareDiffedString(variation, locale),
@@ -871,4 +848,4 @@ export function getVariationDiffWithAnswer(variation, answer, locale) {
   });
 
   return result;
-}
+};

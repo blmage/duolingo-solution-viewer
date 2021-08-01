@@ -5,8 +5,10 @@ import { IntlProvider, Localizer, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import ReactTags from 'react-tag-autocomplete';
-import { _, it } from 'param.macro';
+import { _, it } from 'one-liner.macro';
 import { matchSorter } from 'match-sorter';
+import { identity, noop } from 'duo-toolbox/utils/functions';
+import { discardEvent, isAnyInputFocused } from 'duo-toolbox/utils/ui';
 
 import {
   EXTENSION_CODE,
@@ -18,7 +20,7 @@ import {
   STRING_MATCH_TYPE_START,
 } from '../constants';
 
-import { discardEvent, identity, isAnyInputFocused, noop, normalizeString } from '../functions';
+import { normalizeString } from '../strings';
 import { getStringMatchableWords } from '../solutions';
 
 import {
@@ -302,7 +304,7 @@ const FilterInput =
     const onAddFilter = useCallback(({ id = null, name }, query) => {
       let filter;
 
-      if (id) {
+      if (null !== id) {
         const { matchType, isExcluded } = parseWordFilter(query);
         filter = { word: name, matchType, isExcluded };
       } else {
