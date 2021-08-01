@@ -199,6 +199,7 @@ const Filter =
     <div onClick={onDelete} title={removeButtonText} className={classNames.selectedTag}>
       {getFilterSettings(matchMode).map(setting => (
         <FilterSetting
+          key={setting.key}
           context={context}
           setting={setting}
           currentFilter={filter}
