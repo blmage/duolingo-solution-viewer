@@ -3,7 +3,7 @@
  *
  * @type {object}
  */
-const TRANSLATIONS = {
+ const TRANSLATIONS = {
   de: {
     challenge: {
       statement: 'Aussage:',
@@ -130,6 +130,70 @@ const TRANSLATIONS = {
       exact_solution: 'Exact solution',
       exact_word: 'Exact word',
       present: 'Present',
+    },
+  },
+  pt: {
+    challenge: {
+      statement: 'Frase de referencia:',
+    },
+    closest_solution: {
+      title: 'Soluções parecidas:',
+    },
+    corrected_answer: {
+      title: 'Resposta correta:',
+    },
+    modal: {
+      close: 'Fechar',
+      fit_to_content: 'Ajustar a tela',
+      maximize: 'Maximizar',
+      minimize: 'Minimizar',
+    },
+    pagination: {
+      go_to_first: 'Vá para a primeira pagina',
+      go_to_last: 'Vá para a ultima pagina',
+      go_to_page: 'Vá para a página {{page}}',
+      go_to_next: 'Vá para a proxima pagina',
+      go_to_previous: 'Vá para a anterior pagina',
+    },
+    solution_link: {
+      label: 'Soluções ({{count}})',
+    },
+    solution_list: {
+      all: 'Todas',
+      alphabetical_sort: 'Ordem alfabética',
+      correct_solutions: 'Soluções corretas:',
+      filter: 'Filtrar:',
+      no_matching_solution: 'Não há solução compativel',
+      per_page: 'por página:',
+      similarity_sort: 'Ordem semelhante',
+      sort_ascending: 'Classifique por ordem crescente',
+      sort_alphabetically: 'Classifique por ordem alfabética',
+      sort_by_similarity: 'Classifique por similaridade',
+      sort_descending: 'Classifique por ordem decrescente',
+      view_list_with_word: 'Veja Soluções com "{{word}}"',
+      view_list_without_word: 'Veja soluções sem "{{word}}"',
+    },
+    user_reference: {
+      cancel: 'Cancelar',
+      none: 'Nenhum ainda',
+      pin: 'Fixar',
+      unpin: 'Desfixar',
+      update: 'Atualizar',
+      your_reference: 'Sua referencia:',
+    },
+    word_filter: {
+      absent: 'Nao Tem/Contem',
+      add_filter: 'Adicionar um filtro',
+      anywhere_in_solution: 'Em qualquer lugar da solução',
+      anywhere_in_word: 'em qualquer lugar em uma palavra',
+      at_solution_end: 'No final da solução',
+      at_solution_start: 'No início da solução',
+      at_word_end: 'A frase termina com a palavra',
+      at_word_start: 'A frase inicia com a palavra',
+      click_to_remove_filter: 'Clique para remover o filtro',
+      exact_solution: 'Solução certa',
+      exact_word: 'Palavra certa',
+      present: 'Tem/Contem',
     },
   },
   fr: {
