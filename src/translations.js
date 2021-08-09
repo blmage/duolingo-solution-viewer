@@ -3,7 +3,7 @@
  *
  * @type {object}
  */
- const TRANSLATIONS = {
+const TRANSLATIONS = {
   de: {
     challenge: {
       statement: 'Aussage:',
