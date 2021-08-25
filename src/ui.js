@@ -980,7 +980,7 @@ const SELECTOR_CHALLENGE_SOLUTION_WRAPPER = '._2ez4I';
  *
  * @type {string}
  */
-const SELECTOR_CHALLENGE_ACTION_LINK_LIST = '._2AOD4, ._3MD8I';
+const SELECTOR_CHALLENGE_ACTION_LINK_LIST = '._3MD8I';
 
 /**
  * A CSS selector for the report (flag) icon of the challenge screen.
