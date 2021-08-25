@@ -128,10 +128,16 @@ const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
       || (value === 'Où')
       || (value.indexOf('ù') === -1)
     ));
-  } else if ('tr' === locale) {
-    // Filter out copies containing a "combining dot above" after a lowercase "i" in Turkish solutions.
-    // Their combination is invalid, since the "i" is already dotted, contrary to the "I" (which would result in "İ").
-    result = result.filter(!/i\u0307/.test(_));
+  }
+
+  // Filter out copies containing a "combining dot above" after a lowercase "i".
+  // Their combination is invalid, since the "i" is already dotted, contrary to the "I" (which would result in "İ").
+  // This previously only occurred in Turkish solutions, but has since been widespread.
+  result = result.filter(!/i\u0307/.test(_));
+
+  if ('tr' !== locale) {
+    // Filter out copies containing a lowercase "dotless i" from non-Turkish solutions.
+    result = result.filter(it.indexOf('ı') === -1);
   }
 
   if (result.length > 1) {
