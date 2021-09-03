@@ -207,6 +207,7 @@ const STYLE_SHEETS = {
     [WRAPPER]: {
       maxHeight: 'calc(95vh - 30px)',
       maxWidth: 'calc(95vw - 30px)',
+      transitionDuration: '300ms',
       '@media (max-width: 699px)': {
         maxHeight: '95vh',
         maxWidth: '95vw',
@@ -217,7 +218,6 @@ const STYLE_SHEETS = {
       overflowY: 'auto',
       paddingRight: '0.5em',
       position: 'relative',
-      transitionDuration: '300ms',
     },
     [SIZE_BUTTON]: {
       border: 0,
