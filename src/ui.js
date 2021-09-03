@@ -91,9 +91,10 @@ const componentWrappers = {};
 /**
  * @param {Function} component A UI component from the extension.
  * @param {Element} parentElement The parent element to which the wrapper should be appended.
+ * @param {object} styles A set of styles to apply to the wrapper.
  * @returns {Element} A wrapper element for the given UI component.
  */
-const getComponentWrapper = (component, parentElement) => {
+const getComponentWrapper = (component, parentElement, styles = {}) => {
   if (!componentWrappers[component.name] || !componentWrappers[component.name].isConnected) {
     const wrapper = document.createElement('div');
     wrapper.id = getUniqueElementId(`${EXTENSION_PREFIX}-${component.name}-`);
@@ -102,6 +103,10 @@ const getComponentWrapper = (component, parentElement) => {
 
   if (parentElement !== componentWrappers[component.name].parentElement) {
     parentElement.appendChild(componentWrappers[component.name]);
+  }
+
+  for (const [ key, value ] of Object.entries(styles)) {
+    componentWrappers[component.name].style[key] = value;
   }
 
   return componentWrappers[component.name];
@@ -174,7 +179,7 @@ const renderChallengeSolutionLoader = (result) => {
         <IntlProvider definition={getTranslations(getUiLocale())}>
           <SolutionLink result={result} isLoading={true} />
         </IntlProvider>,
-        getComponentWrapper(SolutionLink, actionLinkList)
+        getComponentWrapper(SolutionLink, actionLinkList, { display: 'inherit' })
       );
     } else {
       throw new Error('Could not find the action link list element.');
@@ -329,7 +334,7 @@ const renderChallengeSolutionLink = (challenge, result, userAnswer) => {
             onClick={() => renderChallengeSolutionListModal(challenge, result, userAnswer, true).catch(noop)}
           />
         </IntlProvider>,
-        getComponentWrapper(SolutionLink, actionLinkList)
+        getComponentWrapper(SolutionLink, actionLinkList, { display: 'inherit' })
       );
     } else {
       throw new Error('Could not find the action link list element.');

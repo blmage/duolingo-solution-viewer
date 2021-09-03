@@ -170,6 +170,7 @@ const CLASS_NAMES = {
     [BUTTON]: [
       '_3f9XI',
       '_3iVqs',
+      '_3HHNB',
       '_2A7uO',
       '_2gwtT',
       '_1nlVc',

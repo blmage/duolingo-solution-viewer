@@ -187,6 +187,7 @@ const CLASS_NAMES = {
       // Copied from the special letter buttons provided for some languages (such as French).
       // The class responsible for the small and square dimensions is ignored here.
       '_3iVqs',
+      '_3HHNB',
       '_2A7uO',
       '_2gwtT',
       '_1nlVc',
