@@ -730,7 +730,7 @@ export const getBestMatchingVariationsForAnswer = (solution, answer, matchingOpt
  */
 const DIFF_IGNORABLE_VARIANTS = {
   ru: {
-    ё: 'e',
+    ё: 'е',
   },
 };
 
