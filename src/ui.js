@@ -546,14 +546,11 @@ const handleTranslationChallengeResult = async (result, userAnswer) => {
     return false;
   }
 
-  const cleanWrapper = statementWrapper.cloneNode(true);
-  const elementHints = cleanWrapper.querySelectorAll(SELECTOR_CHALLENGE_STATEMENT_HINT);
-
-  if (elementHints.length > 0) {
-    elementHints.forEach(hint => hint.parentNode.removeChild(hint));
-  }
-
-  let statement = cleanWrapper.innerText.trim();
+  let statement = (
+    !statementWrapper.matches(SELECTOR_CHALLENGE_STATEMENT_HINT_TOKEN)
+      ? statementWrapper
+      : statementWrapper.parentNode
+  ).innerText.trim();
 
   const isNamingChallenge = UI_NAMING_CHALLENGE_TYPES.some(
     type => challengeWrapper.matches(`[data-test~="challenge-${type}"]`)
@@ -909,6 +906,20 @@ const SELECTOR_RESULT_WRAPPER = '._1tuLI';
 const CLASS_NAME_CORRECT_RESULT_WRAPPER = '_3e9O1';
 
 /**
+ * A CSS selector for the words in the current challenge statement.
+ *
+ * @type {string}
+ */
+const SELECTOR_CHALLENGE_STATEMENT_HINT_TOKEN = '[data-test="hint-token"]';
+
+/**
+ * A CSS selector for the hints added to words in the current challenge statement.
+ *
+ * @type {string}
+ */
+const SELECTOR_CHALLENGE_STATEMENT_HINT_POPOVER = '[data-test="hint-popover"]';
+
+/**
  * Some of the possible CSS selectors for the statement of the current challenge (holding the sentence to translate),
  * ordered by priority.
  *
@@ -916,16 +927,10 @@ const CLASS_NAME_CORRECT_RESULT_WRAPPER = '_3e9O1';
  */
 const SELECTORS_CHALLENGE_STATEMENT = [
   '[data-test="hint-sentence"]',
+  SELECTOR_CHALLENGE_STATEMENT_HINT_TOKEN,
   '[data-test="challenge-header"]',
   '[data-test="challenge-translate-prompt"]',
 ];
-
-/**
- * A CSS selector for the hints added to the statement of the current challenge.
- *
- * @type {string}
- */
-const SELECTOR_CHALLENGE_STATEMENT_HINT = '[data-test="hint-popover"]';
 
 /**
  * A CSS selector for the translated solution of the current challenge.
