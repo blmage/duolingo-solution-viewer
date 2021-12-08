@@ -917,7 +917,7 @@ const SELECTOR_CHALLENGE_STATEMENT_HINT_TOKEN = '[data-test="hint-token"]';
  *
  * @type {string}
  */
-const SELECTOR_CHALLENGE_STATEMENT_HINT_POPOVER = '[data-test="hint-popover"]';
+const SELECTOR_CHALLENGE_STATEMENT_HINT_POPOVER = '[data-test="hint-popover"]'; // eslint-disable-line no-unused-vars
 
 /**
  * Some of the possible CSS selectors for the statement of the current challenge (holding the sentence to translate),
