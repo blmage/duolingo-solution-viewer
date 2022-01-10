@@ -1,6 +1,6 @@
 {
   "name": "Duolingo Solution Viewer",
-  "version": "4.9.2",
+  "version": "4.10.0",
   "description": "Provides access to the lists of solutions for Duolingo's translation / listening challenges, and restores the correction of typos.",
   "permissions": [
     "activeTab",
@@ -19,6 +19,7 @@
     }
   ],
   "web_accessible_resources": [
+    "assets/css/ui.css",
     "src/observer.js",
     "src/ui.js"
   ],
