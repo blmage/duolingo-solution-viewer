@@ -4,7 +4,8 @@ import { h, render } from 'preact';
 import { IntlProvider } from 'preact-i18n';
 import { it } from 'one-liner.macro';
 import Cookies from 'js-cookie';
-import { library } from '@fortawesome/fontawesome-svg-core';
+import { config as faConfig, library } from '@fortawesome/fontawesome-svg-core';
+import '@fortawesome/fontawesome-svg-core/styles.css'
 import { faCheck, faEquals, faTimes, faQuestion } from '@fortawesome/free-solid-svg-icons';
 import { faKey, faThumbtack } from '@fortawesome/pro-regular-svg-icons';
 import { faArrowFromLeft, faArrowToRight } from '@fortawesome/pro-solid-svg-icons';
@@ -50,6 +51,9 @@ import ClosestSolution from './components/ClosestSolution';
 import CorrectedAnswer from './components/CorrectedAnswer';
 import Modal from './components/Modal';
 import SolutionLink from './components/SolutionLink';
+
+// When using the default behavior, FA styles are not always properly added to the pages, resulting in huge icons.
+faConfig.autoAddCss = false;
 
 // Register the FontAwesome icons.
 library.add(
