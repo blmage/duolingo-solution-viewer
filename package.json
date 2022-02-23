@@ -35,20 +35,19 @@
     "@babel/plugin-transform-react-jsx": "^7.14.5",
     "@babel/preset-env": "^7.14.8",
     "@rollup/plugin-babel": "^5.3.0",
-    "@rollup/plugin-commonjs": "^15.1.0",
-    "@rollup/plugin-node-resolve": "^11.2.0",
-    "@rollup/plugin-replace": "^2.4.2",
-    "babel-plugin-macros": "^2.8.0",
-    "eslint": "^7.32.0",
+    "@rollup/plugin-commonjs": "^21.0.1",
+    "@rollup/plugin-node-resolve": "^13.1.3",
+    "@rollup/plugin-replace": "^3.1.0",
+    "babel-plugin-macros": "^3.1.0",
+    "eslint": "^8.9.0",
     "eslint-config-preact": "^1.1.4",
-    "eslint-plugin-jsdoc": "^30.7.13",
+    "eslint-plugin-jsdoc": "^37.9.4",
     "eslint-plugin-react": "^7.24.0",
     "one-liner.macro": "git+https://github.com/blmage/one-liner.macro.git#semver:^3.2.2-patch",
     "rollup": "^2.55.1",
-    "rollup-plugin-babel": "^4.4.0",
-    "rollup-plugin-purified-css": "git+https://github.com/blmage/rollup-plugin-purified-css.git#semver:^1.0.0",
+    "rollup-plugin-purified-css": "git+https://github.com/blmage/rollup-plugin-purified-css.git#semver:^1.1.0",
     "rollup-plugin-strict-alias": "^1.0.0",
     "rollup-plugin-terser": "^7.0.2",
-    "rollup-plugin-visualizer": "^4.2.2"
+    "rollup-plugin-visualizer": "^5.5.4"
   }
 }
