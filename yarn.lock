@@ -1644,9 +1644,9 @@ doctrine@^3.0.0:
   dependencies:
     esutils "^2.0.2"
 
-"duo-toolbox@git+https://github.com/blmage/duo-toolbox.git#semver:^2.0.2":
-  version "2.0.3"
-  resolved "git+https://github.com/blmage/duo-toolbox.git#889be0c0b75fdcf6fb0f2bbe8aedfcd6ddf036e1"
+"duo-toolbox@git+https://github.com/blmage/duo-toolbox.git#semver:^3.2.0":
+  version "3.2.0"
+  resolved "git+https://github.com/blmage/duo-toolbox.git#9ae4466f611e92437fb1900e44470ee667837a18"
 
 electron-to-chromium@^1.4.71:
   version "1.4.71"
@@ -2775,9 +2775,9 @@ react-is@^16.13.1:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
-"react-tag-autocomplete@git+https://github.com/blmage/react-tags.git#semver:^6.2.0":
-  version "6.2.0"
-  resolved "git+https://github.com/blmage/react-tags.git#9b71522b694d575a4d3ae5120449ef67158a24d0"
+"react-tag-autocomplete@git+https://github.com/blmage/react-tags.git#semver:^6.3.0":
+  version "6.3.0"
+  resolved "git+https://github.com/blmage/react-tags.git#4a6fc7c9f6fef2bae0407fa60aa7ddf22bec6035"
 
 react-universal-interface@^0.6.2:
   version "0.6.2"

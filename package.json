@@ -19,7 +19,7 @@
     "aphrodite": "^2.4.0",
     "dexie": "^3.0.3",
     "diff": "^4.0.2",
-    "duo-toolbox": "git+https://github.com/blmage/duo-toolbox.git#semver:^2.0.2",
+    "duo-toolbox": "git+https://github.com/blmage/duo-toolbox.git#semver:^3.2.0",
     "js-cookie": "^2.2.1",
     "match-sorter": "^5.0.0",
     "moize": "^5.4.7",
@@ -27,7 +27,7 @@
     "preact": "^10.5.14",
     "preact-i18n": "^2.1.1-preactx",
     "preact-use": "git+https://github.com/blmage/preact-use.git#semver:^17.4.0",
-    "react-tag-autocomplete": "git+https://github.com/blmage/react-tags.git#semver:^6.2.0",
+    "react-tag-autocomplete": "git+https://github.com/blmage/react-tags.git#semver:^6.3.0",
     "use-callback-ref": "^1.2.5"
   },
   "devDependencies": {
