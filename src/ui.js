@@ -687,7 +687,7 @@ const isAnyModalDisplayed = () => !!document.querySelector(SELECTOR_VISIBLE_MODA
  */
 const clickOriginalUiFooterButton = iconSelector => {
   const button = document.querySelector(iconSelector)?.closest('button');
-  button && renderCompletedChallengeSolutionListModal(false).then(() => button.click()).catch(noop);
+  button && renderCompletedChallengeSolutionListModal(false).finally(() => button.click());
 };
 
 /**
