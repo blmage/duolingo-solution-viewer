@@ -71,7 +71,7 @@ const CLASS_NAMES = {
     [BUTTON_CONTENT]: [ '_1-Ukw' ],
     // Copied from the "Report" and "Discuss" icons.
     // The class name responsible for the background image is ignored here.
-    [ICON]: [ '_1eGRT', 'sf9Rc' ],
+    [ICON]: [ 'sf9Rc', '_29maR' ],
     // Copied from the "Report" and "Discuss" titles.
     [TITLE]: [ '_28V9T', '_3yAjN' ]
   },
