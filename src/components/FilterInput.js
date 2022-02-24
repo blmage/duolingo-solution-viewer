@@ -347,6 +347,7 @@ const FilterInput =
       if (
         tagsInput.current
         && !event.ctrlKey
+        && !event.metaKey
         && !isAnyInputFocused()
       ) {
         discardEvent(event);

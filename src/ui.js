@@ -615,10 +615,10 @@ const renderCompletedChallengeSolutionListModal = opened => (
   (null === completedChallenge)
     ? Promise.reject()
     : renderChallengeSolutionListModal(
-    completedChallenge.challenge,
-    completedChallenge.result,
-    completedChallenge.userAnswer,
-    opened
+      completedChallenge.challenge,
+      completedChallenge.result,
+      completedChallenge.userAnswer,
+      opened
     )
 );
 
@@ -801,7 +801,7 @@ const releaseHotkeysMutex = () => {
 // Clicks the discussion button when "D" is pressed, if available.
 // Clicks the report button when "R" is pressed, if available.
 document.addEventListener('keydown', event => {
-  if (!event.ctrlKey && !isAnyInputFocused()) {
+  if (!event.ctrlKey && !event.metaKey && !isAnyInputFocused()) {
     const key = event.key.toLowerCase();
     let callback = null;
 
