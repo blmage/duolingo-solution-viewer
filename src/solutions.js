@@ -12,6 +12,7 @@ import {
   isString,
   max,
   mergeMapsWith,
+  partition,
   sumOf,
 } from 'duo-toolbox/utils/functions';
 
@@ -102,6 +103,7 @@ const compareTokenStrings = moize(compareStrings);
  */
 const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
   let result = vertices;
+  let filtered;
 
   // Sometimes, invalid non-auto non-typo copies of valid tokens occur in graphs.
   // Filter out as many of these copies as possible.
@@ -133,11 +135,17 @@ const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
   // Filter out copies containing a "combining dot above" after a lowercase "i".
   // Their combination is invalid, since the "i" is already dotted, contrary to the "I" (which would result in "İ").
   // This previously only occurred in Turkish solutions, but has since been widespread.
-  result = result.filter(!/i\u0307/.test(_));
+  [ result, filtered ] = partition(result, it.includes('i\u0307'));
 
   if ('tr' !== locale) {
     // Filter out copies containing a lowercase "dotless i" from non-Turkish solutions.
     result = result.filter(it.indexOf('ı') === -1);
+  }
+
+  if (result.length === 0) {
+    // Sometimes, valid words w.r.t. variations of "i" are marked as "auto", and only invalid copies remain.
+    // Attempt to correct them rather than returning incomplete solutions.
+    result = filtered.map(it.replaceAll('i\u0307', 'i'));
   }
 
   if (result.length > 1) {
