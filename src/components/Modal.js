@@ -1,9 +1,10 @@
 import { h } from 'preact';
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useRef } from 'preact/hooks';
+import { useStateRef } from 'preact-use';
 import { IntlProvider, Localizer, Text, useText } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import { noop } from 'duo-toolbox/utils/functions';
-import { discardEvent } from 'duo-toolbox/utils/ui';
+import { discardEvent, isAnyInputFocused } from 'duo-toolbox/utils/ui';
 import { BASE, useImageCdnUrl, useLocalStorageList, useStyles } from './index';
 
 const STATE_WILL_OPEN = 'will_open';
@@ -49,7 +50,7 @@ const Modal =
      onAfterClose = noop,
      onRequestClose = noop,
    }) => {
-    const [ modalState, setModalState ] = useState(STATE_CLOSED);
+    const [ modalState, modalStateRef, setModalState ] = useStateRef(STATE_CLOSED);
 
     const {
       state: modalSize,
@@ -103,13 +104,19 @@ const Modal =
     // Closes the modal when the "Escape" key is pressed.
     useEffect(() => {
       const handleKeyDown = event => {
-        if ('Escape' === event.key) {
-          onRequestClose();
-          discardEvent(event);
+        if (!isAnyInputFocused()) {
+          if ('Escape' === event.key) {
+            onRequestClose();
+            discardEvent(event);
+          } else if ('Enter' === event.key) {
+            if (modalStateRef.current === STATE_OPENED) {
+              discardEvent(event);
+            }
+          }
         }
       };
 
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('keydown', handleKeyDown, true);
 
       return () => document.removeEventListener('keydown', handleKeyDown);
     }, [ onRequestClose ]);
