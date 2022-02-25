@@ -145,14 +145,42 @@ The extension falls back to _English_ when translations for the current UI langu
 The currently supported languages are:
 
 <table>
-  <tr>
-    <td><img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/flags/US.svg" width="30" /></td>
-    <td>English</td>
-  </tr>
-  <tr>
-    <td><img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/flags/FR.svg" width="30" /></td>
-    <td>French</td>
-  </tr>
+  <thead>
+    <tr>
+      <td align="center"><strong>Language</strong></td>
+      <td align="center"><strong>Thanks to</strong></td>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/flags/US.svg" width="30" />
+        English
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>
+        <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/flags/FR.svg" width="30" />
+        French
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>
+        <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/flags/DE.svg" width="30" />
+        German
+      </td>
+      <td><a href="https://github.com/suoxons">suoxons</a></td>
+    </tr>
+    <tr>
+      <td>
+        <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/flags/PT.svg" width="30" />
+        Portuguese
+      </td>
+      <td><a href="https://github.com/MarlonPassos-git">Marlon Passos</a></td>
+    </tr>
+  </tbody>
 </table>
 
 If you wish to contribute a new language, or to improve on existing translations, please update the
