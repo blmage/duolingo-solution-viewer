@@ -135,7 +135,7 @@ const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
   // Filter out copies containing a "combining dot above" after a lowercase "i".
   // Their combination is invalid, since the "i" is already dotted, contrary to the "I" (which would result in "İ").
   // This previously only occurred in Turkish solutions, but has since been widespread.
-  [ result, filtered ] = partition(result, it.includes('i\u0307'));
+  [ filtered, result ] = partition(result, it.includes('i\u0307'));
 
   if ('tr' !== locale) {
     // Filter out copies containing a lowercase "dotless i" from non-Turkish solutions.
