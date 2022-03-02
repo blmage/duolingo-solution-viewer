@@ -81,19 +81,19 @@ const CLASS_NAMES = {
   },
   [RESULT_CORRECT]: {
     // Adds the "correct" color.
-    [WRAPPER]: [ '_1Nmv6 ' ],
+    [WRAPPER]: [ '_1Nmv6', '_1D8II' ],
     // Adds the "incorrect" color.
-    [ADDED_TOKEN]: [ '_1sqiF' ],
+    [ADDED_TOKEN]: [ '_1sqiF', 'RnDo_' ],
   },
   [RESULT_INCORRECT]: {
-    [WRAPPER]: [ '_1sqiF' ],
+    [WRAPPER]: [ '_1sqiF', '_3vF5k' ],
   },
 };
 
 const STYLE_SHEETS = {
   [BASE]: StyleSheet.create({
     [WRAPPER]: {
-      margin: '10px 0',
+      margin: '10px 0 0',
     },
     [REMOVED_TOKEN]: {
       textDecoration: 'underline',

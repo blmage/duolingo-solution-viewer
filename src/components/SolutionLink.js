@@ -84,14 +84,14 @@ const CLASS_NAMES = {
   [RESULT_CORRECT]: {
     // Copied from the wrapper of the "Report" and "Discuss" icons and links when the result is correct.
     // Adds the "correct" color.
-    [BUTTON]: [ '_1xOpZ' ],
+    [BUTTON]: [ '_1xOpZ', 'jTP0E' ],
     // This class is now only defined in Darklingo++, and applies the same color as the other icons.
     [ICON]: [ '_3NwXb' ],
   },
   [RESULT_INCORRECT]: {
     // Copied from the wrapper of the "Report" and "Discuss" icons and links when the result is incorrect.
     // Adds the "incorrect" color.
-    [BUTTON]: [ 'I5L6p' ],
+    [BUTTON]: [ 'I5L6p', 'RnDo_' ],
     // This class is now only defined in Darklingo++, and applies the same color as the other icons.
     [ICON]: [ '_1BszG' ],
   },

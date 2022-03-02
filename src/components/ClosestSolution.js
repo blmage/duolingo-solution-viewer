@@ -39,18 +39,18 @@ const CLASS_NAMES = {
   },
   [RESULT_CORRECT]: {
     // Adds the "correct" color
-    [WRAPPER]: [ '_1Nmv6' ],
+    [WRAPPER]: [ '_1Nmv6', '_1D8II' ],
   },
   [RESULT_INCORRECT]: {
     // Adds the "incorrect" color.
-    [WRAPPER]: [ '_1sqiF' ],
+    [WRAPPER]: [ '_1sqiF', '_3vF5k' ],
   },
 };
 
 const STYLE_SHEETS = {
   [BASE]: StyleSheet.create({
     [WRAPPER]: {
-      margin: '10px 0',
+      margin: '10px 0 0',
     }
   }),
 };

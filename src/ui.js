@@ -1001,14 +1001,14 @@ const SELECTOR_CHALLENGE_ACTION_LINK_LIST = '._3MD8I';
  *
  * @type {string}
  */
-const SELECTOR_CHALLENGE_REPORT_ICON = '._1NTcn, ._3cRbJ';
+const SELECTOR_CHALLENGE_REPORT_ICON = '._1NTcn, ._3cRbJ, ._3tFbb, ._1SnxH';
 
 /**
  * A CSS selector for the discussion icon of the challenge screen.
  *
  * @type {string}
  */
-const SELECTOR_CHALLENGE_DISCUSSION_ICON = '._1Gda2, ._1BpR_';
+const SELECTOR_CHALLENGE_DISCUSSION_ICON = '._1Gda2, ._1BpR_, ._2oQNn, ._3o1ZL';
 
 /**
  * A CSS selector for the close button of original modals on the challenge screen.
