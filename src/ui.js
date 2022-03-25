@@ -544,17 +544,23 @@ const handleTranslationChallengeResult = async (result, userAnswer) => {
     return false;
   }
 
-  const statementWrapper = querySelectors(SELECTORS_CHALLENGE_STATEMENT);
+  let statementWrapper = querySelectors(SELECTORS_CHALLENGE_STATEMENT);
 
   if (!statementWrapper) {
     return false;
   }
 
-  let statement = (
-    !statementWrapper.matches(SELECTOR_CHALLENGE_STATEMENT_HINT_TOKEN)
-      ? statementWrapper
-      : statementWrapper.parentNode
-  ).innerText.trim();
+  if (statementWrapper.matches(SELECTOR_CHALLENGE_STATEMENT_HINT_TOKEN)) {
+    statementWrapper = statementWrapper.parentNode;
+
+    if (statementWrapper.tagName.toLowerCase() === 'rb') {
+      // Pronunciation hints are present in the statement.
+      statementWrapper = statementWrapper.parentNode.cloneNode(true);
+      Array.from(statementWrapper.getElementsByTagName('rt')).forEach(it.remove());
+    }
+  }
+
+  let statement = statementWrapper.innerText.trim();
 
   const isNamingChallenge = UI_NAMING_CHALLENGE_TYPES.some(
     type => challengeWrapper.matches(`[data-test~="challenge-${type}"]`)
