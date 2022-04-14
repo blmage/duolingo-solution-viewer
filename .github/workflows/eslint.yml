@@ -1,15 +1,11 @@
 name: ESLint
-
-on: [push]
-
+on: push
 jobs:
-  eslint:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: blmage/eslint-action@2.0.0
-        with:
-          files: src/
-          maxWarnings: 0
-        env:
-          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
+    - uses: actions/checkout@v2
+    - name: Install modules
+      run: yarn
+    - name: Run ESLint
+      run: eslint src
