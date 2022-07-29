@@ -541,7 +541,7 @@ const SolutionList =
           // Update the current page to keep the same solution at the top of the list.
           const sizeValue = Number(size);
 
-          if (PAGE_SIZES.indexOf(sizeValue) === -1) {
+          if (!PAGE_SIZES.includes(sizeValue)) {
             return;
           }
 

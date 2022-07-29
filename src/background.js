@@ -414,7 +414,7 @@ const handleCurrentTranslationChallengeRequest = async (senderId, data, sendResu
       challenge = findSessionChallengeOfType(
         senderId,
         CHALLENGE_TYPE_NAMING,
-        statement.indexOf(it.statement) >= 0
+        statement.includes(it.statement)
       );
     }
 

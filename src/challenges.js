@@ -185,7 +185,7 @@ const getUiChallengeSolutions = challenge => {
 
   if (
     isArray(challenge.correctSolutions)
-    && (UI_NAMING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0)
+    && UI_NAMING_CHALLENGE_TYPES.includes(challenge.type)
   ) {
     return Solution.fromSentences(challenge.correctSolutions, locale);
   }
@@ -201,14 +201,14 @@ const getUiChallengeSolutions = challenge => {
   if (
     isString(challenge.prompt)
     && ('' !== challenge.prompt)
-    && (UI_LISTENING_CHALLENGE_TYPES.indexOf(challenge.type) >= 0)
+    && UI_LISTENING_CHALLENGE_TYPES.includes(challenge.type)
   ) {
     return Solution.fromSentences([ challenge.prompt ], locale);
   }
 
   if (
     isArray(challenge.correctTokens)
-    && (UI_WORD_BANK_CHALLENGE_TYPES.indexOf(challenge.type) >= 0)
+    && UI_WORD_BANK_CHALLENGE_TYPES.includes(challenge.type)
   ) {
     return Solution.fromWordBankTokens(challenge.correctTokens, locale);
   }
@@ -232,9 +232,9 @@ export const parseUiChallenges = (uiChallenges, fromLanguage, toLanguage) => {
 
       if (
         ('' !== statement)
-        && (UI_TRANSLATION_CHALLENGE_TYPES.indexOf(uiChallenge.type) >= 0)
+        && UI_TRANSLATION_CHALLENGE_TYPES.includes(uiChallenge.type)
       ) {
-        const type = (UI_NAMING_CHALLENGE_TYPES.indexOf(uiChallenge.type) >= 0)
+        const type = UI_NAMING_CHALLENGE_TYPES.includes(uiChallenge.type)
           ? CHALLENGE_TYPE_NAMING
           : CHALLENGE_TYPE_TRANSLATION;
 
@@ -247,7 +247,7 @@ export const parseUiChallenges = (uiChallenges, fromLanguage, toLanguage) => {
           discussionId,
         };
       } else if (
-        (UI_LISTENING_CHALLENGE_TYPES.indexOf(uiChallenge.type) >= 0)
+        UI_LISTENING_CHALLENGE_TYPES.includes(uiChallenge.type)
         && ('' !== String(uiChallenge.solutionTranslation || '').trim())
       ) {
         const solutionTranslation = normalizeString(String(uiChallenge.solutionTranslation));

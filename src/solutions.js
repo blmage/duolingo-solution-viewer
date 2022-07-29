@@ -78,7 +78,7 @@ import { compareStrings, getStringWords, getWordBigramMap, normalizeString } fro
  * @param {string} locale A locale.
  * @returns {boolean} Whether solutions in the given locale use tokens that correspond to words.
  */
-export const hasLocaleWordBasedTokens = [ 'ja', 'zh', 'zs' ].indexOf(_) === -1;
+export const hasLocaleWordBasedTokens = ![ 'ja', 'zh', 'zs' ].includes(_);
 
 /**
  * A memoized version of {@see compareStrings}, used to efficiently compare words or small strings,
@@ -120,7 +120,7 @@ const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
     // Filter out copies containing "&" as an incorrectly contracted variant of "and" within English words.
     result = result.filter(value => (
       (value.length === 1)
-      || (value.indexOf('&') === -1)
+      || !value.includes('&')
       || !/(^|[^&\s])&([^&\s]|$)/.test(value))
     );
   } else if ('fr' === locale) {
@@ -128,7 +128,7 @@ const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
     result = result.filter(value => (
       (value === 'où')
       || (value === 'Où')
-      || (value.indexOf('ù') === -1)
+      || !value.includes('ù')
     ));
   }
 
@@ -139,7 +139,7 @@ const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
 
   if ('tr' !== locale) {
     // Filter out copies containing a lowercase "dotless i" from non-Turkish solutions.
-    result = result.filter(it.indexOf('ı') === -1);
+    result = result.filter(!it.includes('ı'));
   }
 
   if (result.length === 0) {

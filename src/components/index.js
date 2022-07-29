@@ -71,7 +71,7 @@ export const useLocalStorageList = (key, stateSet, initialValue) => {
 
   const { state, prevState, nextState, prev, next } = useStateList(
     stateSet,
-    stateSet.indexOf(storedState) === -1 ? initialValue : storedState
+    !stateSet.includes(storedState) ? initialValue : storedState
   );
 
   useEffect(() => {

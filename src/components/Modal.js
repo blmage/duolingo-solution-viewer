@@ -92,7 +92,7 @@ const Modal =
 
     // Opens / closes the modal when requested.
     useEffect(() => {
-      const isCurrentlyOpened = [ STATE_WILL_OPEN, STATE_OPENING, STATE_OPENED ].indexOf(modalState) >= 0;
+      const isCurrentlyOpened = [ STATE_WILL_OPEN, STATE_OPENING, STATE_OPENED ].includes(modalState);
 
       if (opened && !isCurrentlyOpened) {
         openModal();
