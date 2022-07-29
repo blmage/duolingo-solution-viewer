@@ -102,14 +102,17 @@ const Modal =
     }, [ opened, modalState, openModal, closeModal ]);
 
     // Closes the modal when the "Escape" key is pressed.
+    // Prevents the "Enter" key from moving to the next challenge while the modal is open.
     useEffect(() => {
       const handleKeyDown = event => {
         if (!isAnyInputFocused()) {
           if ('Escape' === event.key) {
-            onRequestClose();
-            discardEvent(event);
+            if (![ STATE_CLOSING, STATE_CLOSED ].includes(modalStateRef.current)) {
+              onRequestClose();
+              discardEvent(event);
+            }
           } else if ('Enter' === event.key) {
-            if (modalStateRef.current === STATE_OPENED) {
+            if (STATE_OPENED === modalStateRef.current) {
               discardEvent(event);
             }
           }
@@ -119,7 +122,7 @@ const Modal =
       document.addEventListener('keydown', handleKeyDown, true);
 
       return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [ onRequestClose ]);
+    }, [ modalStateRef, onRequestClose ]);
 
     const { modalSizeTitle } = useText({
       modalSizeTitle: (
