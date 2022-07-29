@@ -455,12 +455,16 @@ const handleCurrentListeningChallengeRequest = async (senderId, data, sendResult
       return;
     }
 
-    let challenge = (1 === challenges.length)
-      ? challenges.pop()
-      : (
+    let challenge = null;
+
+    if (isString(data.solutionTranslation) && (1 === challenges.length)) {
+      challenge = challenges.pop();
+    } else {
+      challenge = (
         sessionCurrentListeningChallenges[senderId]
         && challenges.find(Challenge.isSameListeningChallenge(_, sessionCurrentListeningChallenges[senderId]))
       );
+    }
 
     if (!isObject(challenge)) {
       return;
