@@ -11,4 +11,4 @@ jobs:
       env:
         FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
     - name: Run ESLint
-      run: eslint src
+      run: yarn lint

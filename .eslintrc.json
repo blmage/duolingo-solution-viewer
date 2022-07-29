@@ -25,6 +25,7 @@
         "react"
     ],
     "rules": {
+        "jest/no-deprecated-functions": "off"
     },
     "settings": {
         "jsdoc": {
