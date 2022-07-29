@@ -689,7 +689,9 @@ const SolutionList =
               <span className={getElementClassNames(TITLE_TEXT)}>
                 <Text id="filter">Filter:</Text>
               </span>
+            </h3>
 
+            <div>
               <FilterInput
                 context={context}
                 matchMode={isFilterWordBased ? STRING_MATCH_MODE_WORDS : STRING_MATCH_MODE_GLOBAL}
@@ -700,7 +702,7 @@ const SolutionList =
                 onFocus={onFilterFocus}
                 onBlur={onFilterBlur}
               />
-            </h3>
+            </div>
 
             <div ref={listRef}>
               <h3 className={getElementClassNames(TITLE)}>
@@ -956,7 +958,7 @@ const STYLE_SHEETS = {
     },
     [PAGINATION_WRAPPER]: {
       bottom: '0',
-      paddingTop: '0.1em',
+      padding: '0.1em 0 0 !important',
       position: 'sticky',
     },
   }),

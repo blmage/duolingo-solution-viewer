@@ -182,8 +182,9 @@ const STYLE_SHEETS = {
       position: 'relative',
     },
     [REFERENCE_WRAPPER__PINNED]: {
+      padding: '0 40px 0 0 !important',
       position: 'sticky',
-      top: 0,
+      top: '-1px',
       zIndex: 1,
       // Use an absolute border to preserve margin collapse.
       ':after': {
