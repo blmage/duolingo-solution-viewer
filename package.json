@@ -20,7 +20,7 @@
     "aphrodite": "^2.4.0",
     "dexie": "^3.2.2",
     "diff": "^4.0.2",
-    "duo-toolbox": "git+https://github.com/blmage/duo-toolbox.git#semver:^3.2.0",
+    "duo-toolbox": "git+https://github.com/blmage/duo-toolbox.git#semver:^3.3.0",
     "js-cookie": "^2.2.1",
     "match-sorter": "^5.0.0",
     "moize": "^5.4.7",
