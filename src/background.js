@@ -444,7 +444,7 @@ const handleCurrentListeningChallengeRequest = async (senderId, data, sendResult
     let predicate = () => true;
     const userAnswer = !isString(data.userAnswer) ? '' : normalizeString(data.userAnswer);
 
-    if (isString(data.solutionTranslation)) {
+    if (isString(data.solutionTranslation) && ('' !== data.solutionTranslation)) {
       const solutionTranslation = normalizeString(data.solutionTranslation);
       predicate = solutionTranslation === it.solutionTranslation;
     }
@@ -457,7 +457,11 @@ const handleCurrentListeningChallengeRequest = async (senderId, data, sendResult
 
     let challenge = null;
 
-    if (isString(data.solutionTranslation) && (1 === challenges.length)) {
+    if (
+      isString(data.solutionTranslation)
+      && ('' !== data.solutionTranslation)
+      && (1 === challenges.length)
+    ) {
       challenge = challenges.pop();
     } else {
       challenge = (
