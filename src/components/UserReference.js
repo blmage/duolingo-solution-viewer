@@ -186,18 +186,9 @@ const CLASS_NAMES = {
     [BUTTON]: [
       // Copied from the special letter buttons provided for some languages (such as French).
       // The class responsible for the small and square dimensions is ignored here.
-      '_3iVqs',
-      '_3HHNB',
-      '_2A7uO',
-      '_2gwtT',
-      '_1nlVc',
-      '_2fOC9',
-      't5wFJ',
-      '_3dtSu',
-      '_25Cnc',
-      '_3yAjN',
-      '_3Ev3S',
-      '_1figt',
+      'WOZnx',
+      '_275sd',
+      '_1ZefG',
     ],
     // Found in the "app" stylesheet. Adds the main link color.
     // Use a class located after the one responsible for the color and background of the button.
@@ -240,9 +231,9 @@ const STYLE_SHEETS = {
     [EDIT_FIELD]: {
       marginBottom: '10px',
     },
-    [COMMIT_BUTTON]: {
-      ':after': {
-        borderColor: 'currentColor',
+    [BUTTON]: {
+      ':before': {
+        '--__internal__border-color': 'currentColor',
       },
     },
     [BUTTON_SPACER]: {

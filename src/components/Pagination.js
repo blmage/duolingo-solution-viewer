@@ -168,19 +168,10 @@ const CLASS_NAMES = {
     [ITEM]: [ '_1OCDB' ],
     // Copied from the special letter buttons.
     [BUTTON]: [
+      'WOZnx',
+      '_275sd',
+      '_1ZefG',
       '_3f9XI',
-      '_3iVqs',
-      '_3HHNB',
-      '_2A7uO',
-      '_2gwtT',
-      '_1nlVc',
-      '_2fOC9',
-      't5wFJ',
-      '_3dtSu',
-      '_25Cnc',
-      '_3yAjN',
-      '_3Ev3S',
-      '_1figt',
     ],
   },
   [CONTEXT_FORUM]: {
