@@ -44,7 +44,7 @@
     "eslint-config-preact": "^1.1.4",
     "eslint-plugin-jsdoc": "^37.9.4",
     "eslint-plugin-react": "^7.24.0",
-    "one-liner.macro": "git+https://github.com/blmage/one-liner.macro.git#semver:^3.2.2-patch",
+    "one-liner.macro": "git+https://github.com/blmage/one-liner.macro.git#semver:^3.3.0",
     "rollup": "^2.55.1",
     "rollup-plugin-purified-css": "git+https://github.com/blmage/rollup-plugin-purified-css.git#semver:^1.1.0",
     "rollup-plugin-strict-alias": "^1.0.0",

@@ -2631,7 +2631,7 @@ once@^1.3.0:
   dependencies:
     wrappy "1"
 
-"one-liner.macro@git+https://github.com/blmage/one-liner.macro.git#semver:^3.2.2-patch":
+"one-liner.macro@git+https://github.com/blmage/one-liner.macro.git#semver:^3.3.0":
   version "3.3.0"
   resolved "git+https://github.com/blmage/one-liner.macro.git#87b4fd6b630e670b77f5f77f3a568bb2b3951f6b"
   dependencies:
