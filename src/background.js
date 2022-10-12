@@ -590,18 +590,12 @@ const handleCommentChallengeUserReferenceUpdateRequest = async (data, sendResult
  */
 const handleSessionLoadedEvent = async (senderId, data) => {
   if (isObject(data)) {
-    const baseChallenges = isArray(data.challenges) ? data.challenges : [];
-    const adaptiveChallenges = isArray(data.adaptiveChallenges) ? data.adaptiveChallenges : [];
-
-    const metaData = [
-      data.metadata,
-      baseChallenges[0]?.metadata,
-      adaptiveChallenges[0]?.metadata,
-    ].find(isObject(_)) || {};
+    const metaData = isObject(data.sessionMetaData) ? data.sessionMetaData : {};
+    const challenges = isArray(data.challenges) ? data.challenges : [];
 
     await registerUiChallenges(
       senderId,
-      baseChallenges.concat(adaptiveChallenges),
+      challenges,
       String(metaData.ui_language || metaData.from_language || data.fromLanguage || '').trim(),
       String(metaData.language || metaData.learning_language || data.learningLanguage || '').trim()
     );
