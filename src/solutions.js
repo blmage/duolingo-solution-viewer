@@ -130,6 +130,20 @@ const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
       || (value === 'Où')
       || !value.includes('ù')
     ));
+  } else if ('de' === locale) {
+    // Filter out copies to which an invalid umlaut has been added.
+    // We make use of the fact that all valid words containing an umlaut can be found together with a simplified copy.
+    const umlauts = [ 'ä', 'ö', 'ü' ];
+    const simplified = [ 'ae', 'oe', 'ue' ];
+
+    for (let i = 0; i <= umlauts.length; i++) {
+      if (
+        result.includes(it.includes(umlauts[i]))
+        && !result.includes(it.includes[simplified[i]])
+      ) {
+        result = result.filter(it.includes(umlauts[i]));
+      }
+    }
   }
 
   // Filter out copies containing a "combining dot above" after a lowercase "i".
