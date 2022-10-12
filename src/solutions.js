@@ -138,14 +138,14 @@ const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
   [ filtered, result ] = partition(result, it.includes('i\u0307'));
 
   if ('tr' !== locale) {
-    // Filter out copies containing a lowercase "dotless i" from non-Turkish solutions.
-    result = result.filter(!it.includes('ı'));
+    // Filter out copies containing a "dotless i" or a "dotted I" from non-Turkish solutions.
+    result = result.filter(!it.includes('ı') && !it.includes('I\u0307'));
   }
 
   if (result.length === 0) {
     // Sometimes, valid words w.r.t. variations of "i" are marked as "auto", and only invalid copies remain.
     // Attempt to correct them rather than returning incomplete solutions.
-    result = filtered.map(it.replaceAll('i\u0307', 'i'));
+    result = filtered.map(it.replaceAll('i\u0307', 'i').replaceAll('I\u0307', 'I'));
   }
 
   if (result.length > 1) {
