@@ -1,6 +1,6 @@
 {
   "name": "Duolingo Solution Viewer",
-  "version": "4.10.6",
+  "version": "4.11.0",
   "description": "Provides access to the lists of solutions for Duolingo's translation / listening challenges, and restores the correction of typos.",
   "permissions": [
     "https://*.duolingo.com/"
