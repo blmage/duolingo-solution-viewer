@@ -38,6 +38,7 @@ export const UI_TRANSLATION_CHALLENGE_TYPES = [
 export const UI_LISTENING_CHALLENGE_TYPES = [
   'listen',
   'listenTap',
+  'listenComplete',
 ];
 
 /**

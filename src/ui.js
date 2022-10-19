@@ -948,7 +948,7 @@ const SELECTORS_CHALLENGE_STATEMENT = [
  *
  * @type {string}
  */
-const SELECTOR_CHALLENGE_SOLUTION_TRANSLATION = '._2ez4I > *:last-child > ._1UqAr';
+const SELECTOR_CHALLENGE_SOLUTION_TRANSLATION = '._2ez4I:last-child ._1UqAr';
 
 /**
  * A CSS selector for the different kinds of answer inputs that are not based on the word bank.
