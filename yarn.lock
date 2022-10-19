@@ -1674,9 +1674,9 @@ doctrine@^3.0.0:
   dependencies:
     esutils "^2.0.2"
 
-"duo-toolbox@git+https://github.com/blmage/duo-toolbox.git#semver:^3.3.0":
-  version "3.3.0"
-  resolved "git+https://github.com/blmage/duo-toolbox.git#4461a000e113b8c621af62623e326d920f097f8a"
+"duo-toolbox@git+https://github.com/blmage/duo-toolbox.git#semver:^3.4.0":
+  version "3.4.0"
+  resolved "git+https://github.com/blmage/duo-toolbox.git#942ffd2bbec47d0469e14e1dff81b725428900ac"
 
 electron-to-chromium@^1.4.71:
   version "1.4.71"
