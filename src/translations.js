@@ -243,7 +243,7 @@ const TRANSLATIONS = {
       pin: 'Przypnij',
       unpin: 'Odepnij',
       update: 'Aktualizuj',
-      your_reference: 'Twoje odniesnienie:',
+      your_reference: 'Twoje odniesienie:',
     },
     word_filter: {
       absent: 'Nie ma / nie zawiera',
