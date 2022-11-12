@@ -621,10 +621,10 @@ const renderCompletedChallengeSolutionListModal = opened => (
   (null === completedChallenge)
     ? Promise.reject()
     : renderChallengeSolutionListModal(
-      completedChallenge.challenge,
-      completedChallenge.result,
-      completedChallenge.userAnswer,
-      opened
+    completedChallenge.challenge,
+    completedChallenge.result,
+    completedChallenge.userAnswer,
+    opened
     )
 );
 
@@ -888,7 +888,10 @@ setInterval(() => {
  * @type {string}
  */
 const SELECTOR_TRANSLATION_CHALLENGE_WRAPPER = UI_TRANSLATION_CHALLENGE_TYPES
-  .map(`[data-test^="challenge challenge-${it}"]`)
+  .flatMap([
+    `[data-test="challenge challenge-${it}"]`,
+    `[data-test*="challenge challenge-${it} "]`,
+  ])
   .join(', ');
 
 /**
@@ -897,7 +900,10 @@ const SELECTOR_TRANSLATION_CHALLENGE_WRAPPER = UI_TRANSLATION_CHALLENGE_TYPES
  * @type {string}
  */
 const SELECTOR_LISTENING_CHALLENGE_WRAPPER = UI_LISTENING_CHALLENGE_TYPES
-  .map(`[data-test^="challenge challenge-${it}"]`)
+  .flatMap([
+    `[data-test="challenge challenge-${it}"]`,
+    `[data-test*="challenge challenge-${it} "]`,
+  ])
   .join(', ');
 
 /**

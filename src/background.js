@@ -217,18 +217,18 @@ const getSenderId = sender => {
 };
 
 /**
- * The list of challenges for each practice session running in a tab.
+ * For each practice session running in a tab, the corresponding list of challenges.
  *
  * @type {import('./challenges').Challenge[]}
  */
 const sessionChallenges = [];
 
 /**
- * The current listening challenge for each practice session running in a tab.
+ * For each practice session running in a tab, the last listening challenge that was detected.
  *
  * @type {object<string, Challenge|null>}
  */
-const sessionCurrentListeningChallenges = {};
+const sessionLastListeningChallenges = {};
 
 /**
  * Registers the relation between a forum comment and a forum discussion.
@@ -465,8 +465,8 @@ const handleCurrentListeningChallengeRequest = async (senderId, data, sendResult
       challenge = challenges.pop();
     } else {
       challenge = (
-        sessionCurrentListeningChallenges[senderId]
-        && challenges.find(Challenge.isSameListeningChallenge(_, sessionCurrentListeningChallenges[senderId]))
+        sessionLastListeningChallenges[senderId]
+        && challenges.find(Challenge.isSameListeningChallenge(_, sessionLastListeningChallenges[senderId]))
       );
     }
 
@@ -640,7 +640,7 @@ const handleSoundPlayedEvent = (senderId, data) => {
       );
 
       if (isObject(challenge)) {
-        sessionCurrentListeningChallenges[senderId] = challenge;
+        sessionLastListeningChallenges[senderId] = challenge;
       }
     }
   }
