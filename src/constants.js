@@ -27,6 +27,7 @@ export const DEFAULT_LOCALE = 'en';
 export const UI_TRANSLATION_CHALLENGE_TYPES = [
   'name',
   'translate',
+  'partialReverseTranslate',
   'completeReverseTranslation',
 ];
 
