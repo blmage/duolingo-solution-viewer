@@ -172,6 +172,13 @@ The currently supported languages are:
     </tr>
     <tr>
       <td>
+        <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/flags/PL.svg" width="30" />
+        Polish
+      </td>
+      <td><a href="https://github.com/hanyu222">hanyu222</a></td>
+    </tr>
+    <tr>
+      <td>
         <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/flags/PT.svg" width="30" />
         Portuguese
       </td>
