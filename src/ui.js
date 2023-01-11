@@ -507,7 +507,7 @@ const getUserAnswer = () => {
 const handleChallengeResult = async (challenge, result, userAnswer, correctionDiff = null) => {
   await sleep(MINIMUM_LOADING_DELAY);
 
-  if (!challengeFooter) {
+  if (!challengeFooter || !resultWrapper) {
     // We have already passed to the next challenge.
     return true;
   }
