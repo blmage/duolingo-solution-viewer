@@ -20,6 +20,7 @@ the **correction of typos** for listening challenges.
 * [Contributions](#contributions)
     * [Translations](#translations)
     * [Bug reports and feature requests](#bug-reports-and-feature-requests)
+* [License](#license)
 
 ### Download
 
@@ -199,3 +200,9 @@ If you encounter a bug, or if you have a suggestion regarding a new feature, don
 \
 \
 _The country flags on this page were taken from this project: https://yammadev.github.io/flag-icons/ (MIT license)._
+
+### License
+
+MIT, see [LICENSE](LICENSE)
+
+**Duolingo is a registered trademark of Duolingo, Inc. This extension is not affiliated with Duolingo in any way.**
