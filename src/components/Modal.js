@@ -212,6 +212,7 @@ const CLASS_NAMES = {
 const STYLE_SHEETS = {
   [BASE]: StyleSheet.create({
     [OVERLAY]: {
+      position: 'fixed !important',
       transitionDuration: '300ms',
     },
     [WRAPPER]: {
