@@ -985,7 +985,7 @@ const SELECTOR_ANSWER_SELECTED_TOKEN_CONTAINER = '.PcKtj';
  *
  * @type {string}
  */
-const SELECTOR_ANSWER_SELECTED_TOKEN = '[data-test="challenge-tap-token"]';
+const SELECTOR_ANSWER_SELECTED_TOKEN = '[data-test="challenge-tap-token"], [data-test$="-challenge-tap-token"]';
 
 /**
  * A CSS selector for the footer of the current challenge screen, holding the result and action elements.
