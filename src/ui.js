@@ -566,7 +566,7 @@ const handleTranslationChallengeResult = async (result, userAnswer) => {
     }
   }
 
-  let statement = statementWrapper.innerText.trim();
+  let statement = statementWrapper.innerText.trim().replace(/\n/, '');
 
   const isNamingChallenge = UI_NAMING_CHALLENGE_TYPES.some(
     type => challengeWrapper.matches(`[data-test~="challenge-${type}"]`)
