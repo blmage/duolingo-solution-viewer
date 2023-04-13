@@ -1024,16 +1024,20 @@ const SELECTOR_CHALLENGE_ACTION_LINK_LIST = '._3MD8I';
 /**
  * A CSS selector for the report (flag) icon of the challenge screen.
  *
+ * Note: a different icon is used depending on the result of the challenge.
+ *
  * @type {string}
  */
-const SELECTOR_CHALLENGE_REPORT_ICON = '._1NTcn, ._3cRbJ, ._3tFbb, ._1SnxH';
+const SELECTOR_CHALLENGE_REPORT_ICON = '._3tFbb, ._1SnxH, ._3f4n6, ._1Fs3P, ._2P8t_';
 
 /**
  * A CSS selector for the discussion icon of the challenge screen.
  *
+ * Note: a different icon is used depending on the result of the challenge.
+ *
  * @type {string}
  */
-const SELECTOR_CHALLENGE_DISCUSSION_ICON = '._1Gda2, ._1BpR_, ._2oQNn, ._3o1ZL';
+const SELECTOR_CHALLENGE_DISCUSSION_ICON = '._2oQNn, ._3o1ZL, ._2F98U, ._2lHPL';
 
 /**
  * A CSS selector for the close button of original modals on the challenge screen.
