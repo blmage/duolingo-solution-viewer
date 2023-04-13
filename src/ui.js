@@ -472,8 +472,14 @@ let forumCommentData = null;
  * @returns {string} The current user answer.
  */
 const getUserAnswer = () => {
+  let userAnswer = '';
   const blankFillingAnswer = document.querySelector(SELECTOR_BLANK_FILLING_FULL_ANSWER);
-  let userAnswer = String(blankFillingAnswer?.textContent || '').trim();
+
+  if (blankFillingAnswer) {
+    const cleanAnswer = blankFillingAnswer.cloneNode(true);
+    Array.from(cleanAnswer.querySelectorAll(SELECTOR_BLANK_FILLING_ANSWER_EXTRANEOUS_TOKEN)).forEach(it.remove());
+    userAnswer = String(cleanAnswer.textContent).trim();
+  }
 
   if ('' !== userAnswer) {
     // The user answer is enclosed within underscores, seemingly used for spacing.
@@ -972,6 +978,13 @@ const SELECTOR_ANSWER_INPUT = [
  * @type {string}
  */
 const SELECTOR_BLANK_FILLING_FULL_ANSWER = '._2FKqf';
+
+/**
+ * A CSS selector for the extraneous tokens that can be found in answers to fill-in-the-blank challenges.
+ *
+ * @type {string}
+ */
+const SELECTOR_BLANK_FILLING_ANSWER_EXTRANEOUS_TOKEN = '._2FKqf';
 
 /**
  * A CSS selector for the container of the answer tokens selected from the word bank.
