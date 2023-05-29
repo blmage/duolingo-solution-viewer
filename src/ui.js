@@ -479,26 +479,37 @@ const getUserAnswer = () => {
     const cleanAnswer = blankFillingAnswer.cloneNode(true);
     Array.from(cleanAnswer.querySelectorAll(SELECTOR_BLANK_FILLING_ANSWER_EXTRANEOUS_TOKEN)).forEach(it.remove());
     userAnswer = String(cleanAnswer.textContent).trim();
+
+    if ('' !== userAnswer) {
+      // The user answer is enclosed within underscores, seemingly used for spacing.
+      return userAnswer.replace(/_([^_]+)_/g, '$1');
+    }
   }
 
-  if ('' !== userAnswer) {
-    // The user answer is enclosed within underscores, seemingly used for spacing.
-    return userAnswer.replace(/_([^_]+)_/g, '$1');
-  }
-
-  const answerInput = document.querySelector(SELECTOR_ANSWER_INPUT);
-  userAnswer = String(answerInput?.value || '').trim();
+  userAnswer = String(document.querySelector(SELECTOR_ANSWER_INPUT)?.value || '').trim();
 
   if ('' === userAnswer) {
     const tokenContainer = document.querySelector(SELECTOR_ANSWER_SELECTED_TOKEN_CONTAINER)
 
     if (tokenContainer) {
       const tokens = Array.from(tokenContainer.querySelectorAll(SELECTOR_ANSWER_SELECTED_TOKEN));
-      userAnswer = tokens.map(token => token.innerText.trim()).join(' ').normalize().trim();
+      const answerParts = [];
+
+      for (let token of tokens) {
+        // Tokens may include pronunciation hints.
+        if (token.querySelector('rt')) {
+          token = token.cloneNode(true);
+          token.querySelectorAll('rt').forEach(it.remove());
+        }
+
+        answerParts.push(token.innerText.trim());
+      }
+
+      userAnswer = answerParts.join(' ');
     }
   }
 
-  return userAnswer;
+  return userAnswer.normalize().trim();
 };
 
 /**
