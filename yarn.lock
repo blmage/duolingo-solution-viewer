@@ -3293,6 +3293,11 @@ v8-compile-cache@^2.0.3:
   resolved "https://registry.yarnpkg.com/v8-compile-cache/-/v8-compile-cache-2.3.0.tgz#2de19618c66dc247dcfb6f99338035d8245a2cee"
   integrity sha512-l8lCEmLcLYZh4nbunNZvQCJc5pv7+RCwa8q/LdUx8u7lsWvPDKmpodJAJNwkAhJC//dFY48KuIEmjtd4RViDrA==
 
+wanakana@^5.0.2:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/wanakana/-/wanakana-5.1.0.tgz#04a97c0e006d600e8e406bace3519d8e9db94dd0"
+  integrity sha512-QJ5XNTqL5gM1JR2ikESMi+xKx16TIuZDynj6LagqK4YCWnRihtxprzCnVI1SappWI8RuiSAANGoePEV5pptiiQ==
+
 which-boxed-primitive@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/which-boxed-primitive/-/which-boxed-primitive-1.0.2.tgz#13757bc89b209b049fe5d86430e21cf40a89a8e6"
