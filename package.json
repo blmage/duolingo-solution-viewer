@@ -3,7 +3,7 @@
   "description": "A browser extension providing access to the complete lists of accepted solutions for Duolingo's translation challenges.",
   "license": "MIT",
   "author": "blmage",
-  "version": "4.12.4",
+  "version": "4.13.0-beta.1",
   "scripts": {
     "build": "rollup -c --environment production",
     "build-debug": "rollup -c --environment development",
@@ -29,7 +29,8 @@
     "preact-i18n": "^2.1.1-preactx",
     "preact-use": "git+https://github.com/blmage/preact-use.git#semver:^17.4.0",
     "react-tag-autocomplete": "git+https://github.com/blmage/react-tags.git#semver:^6.3.0",
-    "use-callback-ref": "^1.2.5"
+    "use-callback-ref": "^1.2.5",
+    "wanakana": "^5.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.14.8",

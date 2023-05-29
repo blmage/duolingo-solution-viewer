@@ -4,10 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { useStateRef } from 'preact-use';
 import { IntlProvider, Localizer, Text, useText } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
-import { _, _1, _2, it } from 'one-liner.macro';
+import { _, _1, _2, it, lift } from 'one-liner.macro';
 import moize from 'moize';
 import { identity, invertComparison, noop } from 'duo-toolbox/utils/functions';
-import { getFixedElementPositioningParent, scrollElementIntoParentView } from 'duo-toolbox/utils/ui';
+import { discardEvent, getFixedElementPositioningParent, scrollElementIntoParentView } from 'duo-toolbox/utils/ui';
 
 import {
   STRING_MATCH_MODE_GLOBAL,
@@ -95,17 +95,65 @@ const PAGE_SIZES = [ 10, 20, 50, 200, PAGE_SIZE_ALL ];
  */
 const isEqualPageSizes = String(_) === String(_);
 
+const ListFlagFilters =
+  ({
+    context,
+    flagFilterSet,
+    flagFilterMask,
+    onChange,
+  }) => {
+    const toggleFlag = onChange(flagFilterMask ^ _);
+    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
+
+    return (
+      <Fragment>
+        <h3 className={getElementClassNames(TITLE)}>
+          <span className={getElementClassNames(TITLE_TEXT)}>
+            <Text id={flagFilterSet.labelKey}>{flagFilterSet.defaultLabel}</Text>
+          </span>
+        </h3>
+
+        <ul>
+          {flagFilterSet.filters.map(filter => {
+            const key = `flag-filter-${filter.flag}`;
+
+            const onClick = event => {
+              discardEvent(event);
+              toggleFlag(filter.flag);
+            };
+
+            return (
+              <li key={key} className={getElementClassNames(FLAG_FILTER_OPTION)}>
+                <input
+                  key={key}
+                  type="checkbox"
+                  onClick={onClick}
+                  checked={(flagFilterMask & filter.flag) > 0}
+                  className={getElementClassNames(FLAG_FILTER_CHECKBOX)}
+                />
+
+                <label onClick={onClick}>
+                  <Text id={filter.labelKey}>{filter.defaultLabel}</Text>
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+      </Fragment>
+    );
+  };
+
 const ListSortLinks =
   ({
-     context,
-     availableSortTypes,
-     sortType,
-     nextSortType,
-     sortDirection,
-     nextSortDirection,
-     onSortTypeToggle,
-     onSortDirectionToggle,
-   }) => {
+    context,
+    availableSortTypes,
+    sortType,
+    nextSortType,
+    sortDirection,
+    nextSortDirection,
+    onSortTypeToggle,
+    onSortDirectionToggle,
+  }) => {
     const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
 
     const {
@@ -169,12 +217,12 @@ const WORD_ACTION_EXCLUDE = 'exclude';
 
 const SelectedWordActions =
   ({
-     context,
-     bbox,
-     word,
-     matchType = STRING_MATCH_TYPE_EXACT,
-     onAddFilter = noop,
-   }) => {
+    context,
+    bbox,
+    word,
+    matchType = STRING_MATCH_TYPE_EXACT,
+    onAddFilter = noop,
+  }) => {
     const [ isMenuDisplayed, setIsMenuDisplayed ] = useState(true);
 
     const onCloseMenu = () => setIsMenuDisplayed(false);
@@ -226,13 +274,13 @@ const SelectedWordActions =
 
 const ListPagination =
   ({
-     context,
-     solutionCount,
-     page,
-     pageSize,
-     onPageChange,
-     onPageSizeChange,
-   }) => {
+    context,
+    solutionCount,
+    page,
+    pageSize,
+    onPageChange,
+    onPageSizeChange,
+  }) => {
     const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
 
     const getSizeLabel = size => (PAGE_SIZE_ALL !== size)
@@ -337,6 +385,13 @@ const matchSubstring = (string, substring) => {
 };
 
 /**
+ * @param {import('../solutions.js').Solution} solution A solution.
+ * @param {number} mask
+ * @return {boolean}
+ */
+const isSolutionMatchingFlagFilterMask = (solution, mask) => ((solution.flags ?? 0) & mask) > 0;
+
+/**
  * @typedef {Object} MatchResult The result of a match between a solution against a filter.
  * @property {boolean} isMatched Whether the solution matched the filter.
  * @property {number} matches A set of match results corresponding to the positions of the filter in the solution.
@@ -390,10 +445,11 @@ const matchSolutionOnSummary = (solution, filter) => {
  * @param {Function} matchSolution The callback usable to match a solution against a filter.
  * @param {import('../solutions.js').Solution[]} solutions A list of solutions.
  * @param {import('./FilterInput.js').WordFilter[]} filters A list of filters.
+ * @param {number|null} flagFilterMask A mask of the flag filters that should be matched by the solutions.
  * @param {Object} filterCache A cache for the results of filters.
  * @returns {import('../solutions.js').Solution[]} A sub-list of the solutions that matched the given filters.
  */
-const filterSolutions = (matchSolution, solutions, filters, filterCache) => {
+const filterSolutions = (matchSolution, solutions, filters, flagFilterMask, filterCache) => {
   for (const filter of filters) {
     if (!filterCache[filter.word]) {
       filterCache[filter.word] = {};
@@ -401,6 +457,10 @@ const filterSolutions = (matchSolution, solutions, filters, filterCache) => {
   }
 
   return solutions.filter(solution => {
+    if ((null !== flagFilterMask) && !isSolutionMatchingFlagFilterMask(solution, flagFilterMask)) {
+      return false;
+    }
+
     const id = solution.matchingData.id;
 
     for (const filter of filters) {
@@ -436,10 +496,11 @@ const filterSolutions = (matchSolution, solutions, filters, filterCache) => {
  * @type {Function}
  * @param {import('../solutions.js').Solution[]} solutions A list of solutions.
  * @param {import('./FilterInput.js').WordFilter[]} filters A list of filters.
+ * @param {number|null} flagFilterMask A mask of the flag filters that should be matched by the solutions.
  * @param {Object} filterCache A cache for the results of filters.
  * @returns {import('../solutions.js').Solution[]} A sub-list of the solutions that matched the given filters.
  */
-const filterSolutionsUsingWords = filterSolutions(matchSolutionOnWords, _, _, _);
+const filterSolutionsUsingWords = filterSolutions(matchSolutionOnWords, _, _, _, _);
 
 /**
  * Filters a list of solutions based on their summaries.
@@ -447,10 +508,11 @@ const filterSolutionsUsingWords = filterSolutions(matchSolutionOnWords, _, _, _)
  * @type {Function}
  * @param {import('../solutions.js').Solution[]} solutions A list of solutions.
  * @param {import('./FilterInput.js').WordFilter[]} filters A list of filters.
+ * @param {number|null} flagFilterMask A mask of the flag filters that should be matched by the solutions.
  * @param {Object} filterCache A cache for the results of filters.
  * @returns {import('../solutions.js').Solution[]} A sub-list of the solutions that matched the given filters.
  */
-const filterSolutionsUsingSummaries = filterSolutions(matchSolutionOnSummary, _, _, _);
+const filterSolutionsUsingSummaries = filterSolutions(matchSolutionOnSummary, _, _, _, _);
 
 const SolutionList =
   forwardRef(
@@ -464,6 +526,8 @@ const SolutionList =
       },
       listRef
     ) => {
+      const locale = solutions[0]?.locale;
+
       const isScoreAvailable = useMemo(() => {
         return solutions.some('score' in it);
       }, [ solutions ]);
@@ -505,16 +569,38 @@ const SolutionList =
 
       // Filter the solutions.
 
+      const [ flagFilterSet, defaultFlagFilterMask ] = useMemo(() => {
+        const set = Solution.LOCALE_FLAG_FILTER_SETS[locale];
+
+        if (set) {
+          const applicableFilters = set.filters.filter(
+            ({ flag }) => solutions.some(isSolutionMatchingFlagFilterMask(_, flag))
+          );
+
+          if (applicableFilters.length > 1) {
+            const defaultFilters = applicableFilters.filter(it.default);
+
+            return [
+              { ...set, filters: applicableFilters },
+              ((defaultFilters.length > 0) ? defaultFilters : [ applicableFilters[0] ]).reduce(lift(_ | _.flag), 0),
+            ];
+          }
+        }
+
+        return [ null, null ];
+      }, [ locale, solutions ]);
+
       const filterCache = useRef({}).current;
       const [ filters, filtersRef, setFilters ] = useStateRef([]);
+      const [ flagFilterMask, setFlagFilterMask ] = useState(defaultFlagFilterMask);
 
       const filteredSolutions = useMemo(
         () => (
           isFilterWordBased
             ? filterSolutionsUsingWords
             : filterSolutionsUsingSummaries
-        )(sortedSolutions, filters, filterCache),
-        [ sortedSolutions, filters, filterCache, isFilterWordBased ]
+        )(sortedSolutions, filters, flagFilterMask, filterCache),
+        [ sortedSolutions, filters, flagFilterMask, filterCache, isFilterWordBased ]
       );
 
       // Paginate and render the current solutions.
@@ -704,6 +790,14 @@ const SolutionList =
               />
             </div>
 
+            {flagFilterSet && (
+              <ListFlagFilters
+                flagFilterSet={flagFilterSet}
+                flagFilterMask={flagFilterMask}
+                onChange={setFlagFilterMask}
+              />
+            )}
+
             <div ref={listRef}>
               <h3 className={getElementClassNames(TITLE)}>
                 <span className={getElementClassNames(TITLE_TEXT)}>
@@ -762,6 +856,8 @@ export default SolutionList;
 const TITLE = 'title';
 const TITLE_TEXT = 'title_text';
 const TITLE_LINK_WRAPPER = 'title_link_wrapper';
+const FLAG_FILTER_OPTION = 'flag_filter_option'
+const FLAG_FILTER_CHECKBOX = 'flag_filter_checkbox'
 const SORT_LINK = 'sort_link';
 const SORT_TYPE_LABEL = 'sort_type_label';
 const SORT_DIRECTION_LABEL = 'sort_direction_label';
@@ -820,6 +916,16 @@ const STYLE_SHEETS = {
       },
       '@media (max-width: 699px)': {
         marginBottom: '0.5em',
+      },
+    },
+    [FLAG_FILTER_OPTION]: {
+      display: 'flex',
+      margin: '10px 0',
+    },
+    [FLAG_FILTER_CHECKBOX]: {
+      marginRight: '0.325em',
+      ':disabled': {
+        cursor: 'not-allowed',
       },
     },
     [SORT_LINK]: {

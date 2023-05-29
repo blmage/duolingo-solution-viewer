@@ -1,12 +1,14 @@
 import { _, it, lift } from 'one-liner.macro';
 import moize from 'moize';
 import TextDiff from 'diff';
+import * as wanakana from 'wanakana';
 
 import {
   cartesianProduct,
   dedupeAdjacent,
   dedupeAdjacentBy,
   groupBy,
+  identity,
   isArray,
   isObject,
   isString,
@@ -44,6 +46,7 @@ import { compareStrings, getStringWords, getWordBigramMap, normalizeString } fro
  * @property {string} reference The first variation of the solution, usable as a reference and for sorting.
  * @property {Token[]} tokens The tokens for building all the possible variations of the solution.
  * @property {boolean} isComplex Whether the solution contains at least one token with multiple values.
+ * @property {?number} flags A mask of the flags from the locale's flag filters that are matched by the solution.
  * @property {?MatchingData} matchingData A set of calculated data about the solution, usable for similarity matching.
  * @property {?number} score The similarity score of the solution, in case it has been matched against a user answer.
  */
@@ -72,6 +75,73 @@ import { compareStrings, getStringWords, getWordBigramMap, normalizeString } fro
  * @property {number} wordCount The total number of matched words.
  * @property {Map} bigramMap A map from bigrams to their number of occurrences in the matched words.
  */
+
+
+/**
+ * A set of patterns for generating a list of solutions.
+ *
+ * @typedef {object} PatternSet
+ * @property {string} locale The locale of the generated solutions.
+ * @property {number} size The number of solutions that the patterns can generate.
+ * @property {Pattern[]} patterns The patterns that can be used to generate all the solutions.
+ */
+
+/**
+ * A pattern for generating a list of solutions.
+ *
+ * @typedef {object} Pattern
+ * @property {number} size The number of solutions that the pattern can generate.
+ * @property {number} flags A mask of the flags matched by the generated solutions.
+ * @property {string[]} sharedTokens The tokens that are shared by all the generated solutions.
+ * @property {PatternBranchSet[]} branchSets The sets of branches that build up the paths leading to different solutions.
+ */
+
+/**
+ * A set of branches for generating solutions of different shapes.
+ *
+ * @typedef {object} PatternBranchSet
+ * @property {number} branchSize The number of solutions that stem from each branch of the set.
+ * @property {number} tokenPosition The position of the branches tokens relative to the pattern shared tokens.
+ * @property {PatternBranch[]} branches The branches that build up the paths leading to different solutions.
+ */
+
+/**
+ * A branch for generating solutions based on a similar shape, with possible choices at the start and/or end.
+ *
+ * @typedef {object} PatternBranch
+ * @property {string[]} sharedTokens The tokens that are shared by all the solutions based on the branch.
+ * @property {string[]} firstChoice The possible tokens at the start of the branch (if there is a choice first).
+ * @property {string[]} lastChoice The possible tokens at the end of the branch (if there is a choice last).
+ */
+
+export const SOLUTION_FLAG_ORIGINAL = 1 << 0;
+export const SOLUTION_FLAG_HIRAGANA = 1 << 1;
+export const SOLUTION_FLAG_KATAKANA = 1 << 2;
+
+export const LOCALE_FLAG_FILTER_SETS = {
+  'ja': {
+    labelKey: 'syllabary',
+    defaultLabel: 'Syllabary:',
+    filters: [
+      {
+        flag: SOLUTION_FLAG_ORIGINAL,
+        labelKey: 'original',
+        defaultLabel: 'Original',
+        default: true,
+      },
+      {
+        flag: SOLUTION_FLAG_HIRAGANA,
+        labelKey: 'hiragana',
+        defaultLabel: 'Hiragana',
+      },
+      {
+        flag: SOLUTION_FLAG_KATAKANA,
+        labelKey: 'katakana',
+        defaultLabel: 'Katakana',
+      },
+    ],
+  },
+};
 
 /**
  * @type {Function}
@@ -324,6 +394,312 @@ export const fromVertices = (vertices, locale, isWhitespaceDelimited) => {
 };
 
 /**
+ * @param {string[]} translations A list of base translations.
+ * @param {object} metaData The meta data from the corresponding challenge.
+ * @param {string} locale The locale of the translations.
+ * @return {Solution[]} The corresponding set of solutions.
+ */
+export const fromCompactTranslations = (translations, metaData, locale) => {
+  const patternSet = {
+    locale,
+    patterns: [],
+  };
+
+  const hasWhitespaces = hasLocaleWordBasedTokens(locale);
+
+  let preparedTranslations = translations.map({
+    flags: SOLUTION_FLAG_ORIGINAL,
+    sentence: it.normalize('NFC'),
+  });
+
+  if ('ja' === locale) {
+    const syllabaries = {
+      kana: {
+        convert: wanakana.toKatakana,
+        replacements: {},
+        flags: SOLUTION_FLAG_KATAKANA,
+      },
+      hiragana: {
+        convert: wanakana.toHiragana,
+        replacements: {},
+        flags: SOLUTION_FLAG_HIRAGANA,
+      },
+    };
+
+    const converters = [ identity ];
+
+    if (isArray(metaData.token_transliterations)) {
+      for (const replacements of metaData.token_transliterations.flatMap(it?.tokens || [])) {
+        if (
+          isObject(replacements)
+          && isString(replacements.token)
+          && isArray(replacements.transliterations)
+        ) {
+          for (const replacement of replacements.transliterations) {
+            if (syllabaries[replacement?.type]) {
+              syllabaries[replacement.type].replacements[replacements.token] = replacement.text;
+            }
+          }
+        }
+      }
+    }
+
+    for (const { convert, replacements, flags } of Object.values(syllabaries)) {
+      converters.push(({ sentence }) => {
+        const tokens = wanakana.tokenize(
+          sentence.replace(
+            new RegExp(Object.keys(replacements).join('|'), 'giu'),
+            lift(replacements[it] ?? it)
+          ),
+          { compact: true, detailed: true }
+        );
+
+        return {
+          flags,
+          sentence: tokens.map(({ type, value }) => ('ja' === type) ? convert(value) : value).join(''),
+        };
+      });
+    }
+
+    // Preserve original translations over converted ones.
+    const translationGroups = Object.values(
+      groupBy(
+        preparedTranslations.flatMap(original => converters.map(it(original))),
+        it.sentence
+      )
+    );
+
+    preparedTranslations = translationGroups.map(group => ({
+      sentence: group[0].sentence,
+      flags: group.reduce(lift(_ | _.flags), 0),
+    }));
+  }
+
+  const splitTokens = !hasWhitespaces
+    ? [ it ]
+    : it.split(/([^\p{L}\p{N}]+)/u);
+
+  const prepareTokens = splitTokens(_).filter('' !== it);
+
+  for (const { sentence, flags } of preparedTranslations) {
+    let index = 0;
+    const branchSets = [];
+    const sharedTokens = [];
+
+    const choiceSets = sentence.matchAll(
+      !hasWhitespaces
+        ? /\[([^\]]+)\]/ug
+        : /([^\s[]*\[[^[]+\][^\s[]*)+/ug
+    );
+
+    for (const choiceSet of choiceSets) {
+      if (choiceSet.index > index) {
+        const common = sentence.substring(index, choiceSet.index);
+
+        if ('' !== common) {
+          const tokens = prepareTokens(common);
+          sharedTokens.push(...tokens);
+        }
+      }
+
+      let choices;
+
+      if (hasWhitespaces) {
+        // Build all full choices (that may be made up of smaller parts).
+        choices = [ '' ];
+        let subIndex = 0;
+        const subsets = choiceSet[0].matchAll(/\[([^[]+)]/g);
+
+        for (const subset of subsets) {
+          if (subset.index > subIndex) {
+            const common = choiceSet[0].substring(subIndex, subset.index);
+            choices = choices.map(it + common);
+          }
+
+          const subChoices = subset[1].split(/\//);
+          choices = subChoices.flatMap(sub => choices.map(it + sub));
+          subIndex = subset.index + subset[0].length;
+        }
+
+        if (subIndex < choiceSet[0].length) {
+          const [ , common, punctuation ] = choiceSet[0].substring(subIndex).match(/(.*?)([^\p{L}\p{N}]*)$/u);
+          choices = choices.map(it + common);
+
+          if (punctuation.length > 0) {
+            // Avoid adding end punctuation to all choices.
+            choiceSet[0] = choiceSet[0].slice(0, -punctuation.length);
+          }
+        }
+
+        choices.sort(compareStrings(_, _, locale));
+        choices = groupBy(choices.map(prepareTokens), it.length);
+      } else {
+        choices = groupBy(choiceSet[1].split(/\//).map(prepareTokens), it.length);
+      }
+
+      const branches = [];
+
+      // Attempt to reduce the final number of solutions by grouping the choices that share all but 1 or 2 tokens.
+      for (const [ lengthKey, subChoices ] of Object.entries(choices)) {
+        const length = Number(lengthKey);
+
+        if (length > 1) {
+          const choiceKeys = Array.from(subChoices.keys());
+
+          // Keys to choices where only the first token varies.
+          const sameSuffixGroups = Object.values(
+            groupBy(choiceKeys, it => subChoices[it].slice(1).join(''))
+          ).filter(it => it.length > 1);
+
+          // Keys to choices where only the last token varies.
+          const samePrefixGroups = Object.values(
+            groupBy(choiceKeys, it => subChoices[it].slice(0, -1).join(''))
+          ).filter(it => it.length > 1);
+
+          const handledChoiceKeys = new Set();
+
+          /**
+           * Attempt to group choices that share the same infix,
+           * and with which every combination of prefix and suffix is represented.
+           *
+           * This is useful for cases like: "[diesen Karton/den Karton/diesen Kasten/den Kasten]"
+           * that can be further optimized to: "[diesen/den] [Karton/Kasten]"
+           * instead of just: "[diesen/den] Karton" + "[diesen/den] Kasten".
+           */
+          if (hasWhitespaces && (length >= 3)) {
+            const sameInfixGroups = Object.values(
+              groupBy(choiceKeys, it => subChoices[it].slice(1, -1).join(''))
+            ).filter(it => it.length > 1);
+
+            for (const sameInfixGroup of sameInfixGroups) {
+              const sameInfixSameSuffixGroups = Object.values(
+                groupBy(sameInfixGroup, it => subChoices[it].slice(1).join(''))
+              ).filter(it => it.length > 1);
+
+              const sameSuffixPrefixes = sameInfixSameSuffixGroups.map(
+                it.map(subChoices[it][1].match(/\s/) && subChoices[it][0]).filter(Boolean)
+              );
+
+              const sameAffixesGroups = Object.values(
+                groupBy(Array.from(sameSuffixPrefixes.keys()), sameSuffixPrefixes[it].join('/'))
+              ).filter(it.length > 1);
+
+              for (const keys of sameAffixesGroups) {
+                branches.push({
+                  sharedTokens: subChoices[sameSuffixGroups[keys[0]][0]].slice(1, -1),
+                  firstChoice: sameSuffixGroups[keys[0]].map(subChoices[it][0]),
+                  lastChoice: keys.map(subChoices[sameSuffixGroups[it][0]].at(-1)),
+                });
+
+                keys.flatMap(sameSuffixGroups[it]).forEach(handledChoiceKeys.add(_));
+              }
+            }
+          }
+
+          // We prioritize grouping on suffixes over grouping on prefixes. This is an arbitrary choice,
+          // there is no further optimization to be done w.r.t. to the resulting number of solutions.
+          for (let keys of sameSuffixGroups) {
+            keys = keys.filter(!handledChoiceKeys.has(_));
+
+            if (keys.length > 1) {
+              const choiceTokens = keys.map(subChoices[it][0]).sort(compareStrings(_, _, locale));
+
+              branches.push({
+                sharedTokens: subChoices[keys[0]].slice(1),
+                firstChoice: choiceTokens,
+                lastChoice: [],
+              });
+
+              keys.forEach(handledChoiceKeys.add(_));
+            }
+          }
+
+          for (let keys of samePrefixGroups) {
+            keys = keys.filter(!handledChoiceKeys.has(_));
+
+            if (keys.length > 1) {
+              const choiceTokens = keys.map(subChoices[it].at(-1)).sort(compareStrings(_, _, locale));
+
+              branches.push({
+                sharedTokens: subChoices[keys[0]].slice(0, -1),
+                firstChoice: [],
+                lastChoice: choiceTokens,
+              });
+
+              keys.forEach(handledChoiceKeys.add(_));
+            }
+          }
+
+          for (const key of choiceKeys) {
+            if (!handledChoiceKeys.has(key)) {
+              branches.push({
+                sharedTokens: subChoices[key],
+                firstChoice: [],
+                lastChoice: [],
+              });
+            }
+          }
+        } else {
+          branches.push({
+            sharedTokens: [],
+            firstChoice: subChoices.flat(),
+            lastChoice: [],
+          });
+        }
+      }
+
+      branchSets.push({
+        branches,
+        tokenPosition: sharedTokens.length,
+      });
+
+      index = choiceSet.index + choiceSet[0].length;
+    }
+
+    if (index < sentence.length) {
+      const common = sentence.substring(index);
+      const tokens = prepareTokens(common);
+      sharedTokens.push(...tokens);
+    }
+
+    let size = 1;
+
+    for (let i = branchSets.length - 1; i >= 0; i--) {
+      branchSets[i].branchSize = size;
+      size = branchSets[i].branches.length * size;
+
+      for (const branch of branchSets[i].branches) {
+        if (1 === branch.firstChoice.length) {
+          branch.sharedTokens.unshift(branch.firstChoice.pop());
+        }
+
+        if (1 === branch.lastChoice.length) {
+          branch.sharedTokens.push(branch.lastChoice.pop());
+        }
+      }
+    }
+
+    patternSet.patterns.push({
+      flags,
+      size,
+      branchSets,
+      sharedTokens,
+    });
+  }
+
+  patternSet.size = patternSet.patterns.reduce(lift(_ + _.size), 0);
+
+  // Generating solutions one by one seems to actually be quite efficient.
+  const solutions = [];
+
+  for (let i = 0; i < patternSet.size; i++) {
+    solutions.push(getPatternSetSolution(patternSet, i));
+  }
+
+  return solutions;
+};
+
+/**
  * @param {string[]} sentences A list of sentences.
  * @param {string} locale The locale of the sentences.
  * @returns {Solution[]} The corresponding set of solutions.
@@ -368,6 +744,82 @@ export const fromWordBankTokens = (wordTokens, locale) => {
   }
 
   return [];
+};
+
+/**
+ * @param {Pattern} pattern A pattern for generating solutions.
+ * @param {number} solutionIx The index of the solution to generate.
+ * @param {string} locale The locale of the solutions generated by the pattern.
+ * @returns {Solution}
+ */
+const getPatternSolution = (pattern, solutionIx, locale) => {
+  const tokens = [];
+  let position = 0;
+  let reference = '';
+  let isComplex = false;
+
+  for (const branchSet of pattern.branchSets) {
+    for (let i = position; i < branchSet.tokenPosition; i++) {
+      tokens.push([ pattern.sharedTokens[i] ]);
+      reference += pattern.sharedTokens[i];
+    }
+
+    const branch = branchSet.branches[Math.floor(solutionIx / branchSet.branchSize)];
+
+    if (branch.firstChoice.length > 0) {
+      isComplex = true;
+      tokens.push(branch.firstChoice);
+      reference += branch.firstChoice[0];
+    }
+
+    if (branch.sharedTokens.length > 0) {
+      tokens.push(...branch.sharedTokens.map([ it ]));
+      reference += branch.sharedTokens.join('');
+    }
+
+    if (branch.lastChoice.length > 0) {
+      isComplex = true;
+      tokens.push(branch.lastChoice);
+      reference += branch.lastChoice[0];
+    }
+
+    position = branchSet.tokenPosition;
+    solutionIx = solutionIx % branchSet.branchSize;
+  }
+
+  for (let i = position; i < pattern.sharedTokens.length; i++) {
+    tokens.push([ pattern.sharedTokens[i] ]);
+    reference += pattern.sharedTokens[i];
+  }
+
+  return {
+    locale,
+    reference,
+    tokens,
+    isComplex,
+    flags: pattern.flags,
+  };
+};
+
+/**
+ * @param {PatternSet} patternSet A set of patterns for generating solutions.
+ * @param {number} solutionIx The index of the solution to generate.
+ * @returns {Solution|null}
+ */
+export const getPatternSetSolution = (patternSet, solutionIx) => {
+  for (const pattern of patternSet.patterns) {
+    if (solutionIx >= pattern.size) {
+      solutionIx -= pattern.size;
+    } else {
+      return getPatternSolution(
+        pattern,
+        solutionIx,
+        patternSet.locale
+      );
+    }
+  }
+
+  return null;
 };
 
 /**

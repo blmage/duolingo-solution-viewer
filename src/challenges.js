@@ -191,6 +191,12 @@ const getUiChallengeSolutions = challenge => {
   }
 
   if (
+    (locale === 'ja')
+    && isArray(challenge.compactTranslations)
+    && (challenge.compactTranslations.length > 0)
+  ) {
+    return Solution.fromCompactTranslations(challenge.compactTranslations, metaData, locale);
+  } else if (
     isObject(grader)
     && isArray(grader.vertices)
     && (grader.vertices.length > 0)
