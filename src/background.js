@@ -483,28 +483,32 @@ const handleCurrentListeningChallengeRequest = async (senderId, data, sendResult
       const locale = Challenge.getSolutionsLocale(challenge);
       const matchingOptions = challenge.matchingData.matchingOptions;
 
-      if (challenge.solutions.some('score' in it)) {
-        const bestScore = maxOf(challenge.solutions, it.score);
+      // The Japanese solution graph is not reliable enough
+      // (we should apply token transliterations to all solutions before checking for differences).
+      if (locale !== 'ja') {
+        if (challenge.solutions.some('score' in it)) {
+          const bestScore = maxOf(challenge.solutions, it.score);
 
-        variations = challenge.solutions
-          .filter(bestScore === it.score)
-          .flatMap(Solution.getBestMatchingVariationsForAnswer(_, userAnswer, matchingOptions))
-      } else {
-        variations = challenge.solutions.flatMap(Solution.getAllVariations(_));
-      }
+          variations = challenge.solutions
+            .filter(bestScore === it.score)
+            .flatMap(Solution.getBestMatchingVariationsForAnswer(_, userAnswer, matchingOptions))
+        } else {
+          variations = challenge.solutions.flatMap(Solution.getAllVariations(_));
+        }
 
-      const correctionDiffs = variations.map(Solution.getVariationDiffWithAnswer(_, userAnswer, locale));
+        const correctionDiffs = variations.map(Solution.getVariationDiffWithAnswer(_, userAnswer, locale));
 
-      // Do not display a correction if any variation is equivalent to the answer (regardless of the scores).
-      if (correctionDiffs.every(isArray(_))) {
-        // Use the correction with the least ..
-        const bestScore = minOf(correctionDiffs, it.length);
+        // Do not display a correction if any variation is equivalent to the answer (regardless of the scores).
+        if (correctionDiffs.every(isArray(_))) {
+          // Use the correction with the least ..
+          const bestScore = minOf(correctionDiffs, it.length);
 
-        // .. and shortest differences.
-        result.correctionDiff = minBy(
-          correctionDiffs.filter(bestScore === it.length),
-          sumOf(_, !it.ignorable && (it.added || it.removed) && it.value.length || 0)
-        );
+          // .. and shortest differences.
+          result.correctionDiff = minBy(
+            correctionDiffs.filter(bestScore === it.length),
+            sumOf(_, !it.ignorable && (it.added || it.removed) && it.value.length || 0)
+          );
+        }
       }
     }
 
