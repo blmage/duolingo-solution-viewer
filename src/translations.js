@@ -324,6 +324,70 @@ const TRANSLATIONS = {
       present: 'Présent',
     },
   },
+  ua: {
+    challenge: {
+      statement: 'Умова:',
+    },
+    closest_solution: {
+      title: 'Найближчий варіант:',
+    },
+    corrected_answer: {
+      title: 'Виправлена відповідь:',
+    },
+    modal: {
+      close: 'Закрити',
+      fit_to_content: 'Вписати до вмісту',
+      maximize: 'Розгорнути',
+      minimize: 'Згорнути',
+    },
+    pagination: {
+      go_to_first: 'Перейти на першу сторінку',
+      go_to_last: 'Перейти на останню сторінку',
+      go_to_page: 'Перейти на сторінку {{page}}',
+      go_to_next: 'Перейти на наступну сторінку',
+      go_to_previous: 'Перейти на попередню сторінку',
+    },
+    solution_link: {
+      label: 'Рішення ({{count}})',
+    },
+    solution_list: {
+      all: 'всі',
+      alphabetical_sort: 'Сортування за алфавітом',
+      correct_solutions: 'Правильні рішення:',
+      filter: 'Фільтр:',
+      no_matching_solution: 'Відповідні рішення відсутні.',
+      per_page: 'на сторінці:',
+      similarity_sort: 'Сортування за схожістю',
+      sort_ascending: 'Сортувати за зростанням',
+      sort_alphabetically: 'Сортувати за алфавітом',
+      sort_by_similarity: 'Сортувати за схожістю',
+      sort_descending: 'Сортувати за спаданням',
+      view_list_with_word: 'Перегляд рішень зі словом "{{word}}"',
+      view_list_without_word: 'Перегляд рішень без слова "{{word}}"',
+    },
+    user_reference: {
+      cancel: 'Скасувати',
+      none: 'Поки що немає',
+      pin: 'Закріпити',
+      unpin: 'Відкріпити',
+      update: 'Оновити',
+      your_reference: 'Ваша посилання:',
+    },
+    word_filter: {
+      absent: 'Відсутнє',
+      add_filter: 'Додати фільтр',
+      anywhere_in_solution: 'Будь-де в рішенні',
+      anywhere_in_word: 'Будь-де в слові',
+      at_solution_end: 'На кінці рішення',
+      at_solution_start: 'На початку рішення',
+      at_word_end: 'На кінці слова',
+      at_word_start: 'На початку слова',
+      click_to_remove_filter: 'Клікніть, щоб видалити фільтр',
+      exact_solution: 'Точне рішення',
+      exact_word: 'Точне слово',
+      present: 'Присутнє',
+    }
+  },
 };
 
 /**

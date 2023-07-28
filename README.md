@@ -185,6 +185,13 @@ The currently supported languages are:
       </td>
       <td><a href="https://github.com/MarlonPassos-git">Marlon Passos</a></td>
     </tr>
+    <tr>
+      <td>
+        <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/flags/UA.svg" width="30" />
+        Ukrainian
+      </td>
+      <td><a href="https://github.com/unickq">unickq</a></td>
+    </tr>
   </tbody>
 </table>
 
