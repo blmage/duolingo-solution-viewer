@@ -324,7 +324,7 @@ const TRANSLATIONS = {
       present: 'Présent',
     },
   },
-  ua: {
+  uk: {
     challenge: {
       statement: 'Умова:',
     },
