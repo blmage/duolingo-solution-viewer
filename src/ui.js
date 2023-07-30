@@ -636,10 +636,10 @@ const renderCompletedChallengeSolutionListModal = opened => (
   (null === completedChallenge)
     ? Promise.reject()
     : renderChallengeSolutionListModal(
-    completedChallenge.challenge,
-    completedChallenge.result,
-    completedChallenge.userAnswer,
-    opened
+      completedChallenge.challenge,
+      completedChallenge.result,
+      completedChallenge.userAnswer,
+      opened
     )
 );
 
@@ -1033,20 +1033,39 @@ const SELECTOR_CHALLENGE_ACTION_LINK_LIST = '._3MD8I';
 /**
  * A CSS selector for the report (flag) icon of the challenge screen.
  *
- * Note: a different icon is used depending on the result of the challenge.
+ * Note: a different icon is used depending on the result of the challenge, and whether the dark mode is enabled.
  *
  * @type {string}
  */
-const SELECTOR_CHALLENGE_REPORT_ICON = '._3tFbb, ._1SnxH, ._3f4n6, ._1Fs3P, ._2P8t_';
+const SELECTOR_CHALLENGE_REPORT_ICON = [
+  '._3tFbb',
+  '._1SnxH',
+  '._3f4n6',
+  '._1Fs3P',
+  '._2P8t_',
+  '._12_iP',
+  '._1Fs3P',
+  '.Qgof6',
+  '.anjNO',
+].join(', ');
 
 /**
  * A CSS selector for the discussion icon of the challenge screen.
  *
- * Note: a different icon is used depending on the result of the challenge.
+ * Note: a different icon is used depending on the result of the challenge, and whether the dark mode is enabled.
  *
  * @type {string}
  */
-const SELECTOR_CHALLENGE_DISCUSSION_ICON = '._2oQNn, ._3o1ZL, ._2F98U, ._2lHPL';
+const SELECTOR_CHALLENGE_DISCUSSION_ICON = [
+  '._2oQNn',
+  '._3o1ZL',
+  '._2F98U',
+  '._2lHPL',
+  '._24Fws',
+  '._3-dGa',
+  '._1Ry-z',
+  '._391Cs',
+].join(', ');
 
 /**
  * A CSS selector for the close button of original modals on the challenge screen.
