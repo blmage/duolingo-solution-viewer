@@ -1,5 +1,3 @@
-import 'core-js/features/array/flat-map';
-import 'core-js/features/string/match-all';
 import { _, it } from 'one-liner.macro';
 import Dexie from 'dexie';
 import { onActionRequest, onUiEvent } from 'duo-toolbox/extension/ipc';

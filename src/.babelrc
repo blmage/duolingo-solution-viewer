@@ -5,10 +5,10 @@
       {
         "modules": false,
         "targets": {
-          "chrome": "64",
+          "chrome": "73",
           "edge": "79",
           "firefox": "78",
-          "opera": "51"
+          "opera": "60"
         }
       }
     ]
