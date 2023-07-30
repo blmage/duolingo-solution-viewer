@@ -1,7 +1,19 @@
 import { _, it } from 'one-liner.macro';
 import Dexie from 'dexie';
 import { onActionRequest, onUiEvent } from 'duo-toolbox/extension/ipc';
-import { isArray, isNumber, isObject, isString, maxOf, minBy, minOf, sumOf } from 'duo-toolbox/utils/functions';
+
+import {
+  isArray,
+  isEmptyObject,
+  isNumber,
+  isObject,
+  isString,
+  maxOf,
+  minBy,
+  minOf,
+  sumOf,
+} from 'duo-toolbox/utils/functions';
+
 import { RESULT_CORRECT } from 'duo-toolbox/duo/challenges';
 import { normalizeString } from './strings';
 
@@ -377,10 +389,17 @@ const findSessionChallengesOfType = (sessionId, challengeType, predicate) => {
  * @param {object[]} uiChallenges A set of raw challenge data from the UI.
  * @param {string} fromLanguage The language the user speaks.
  * @param {string} toLanguage The language the user learns.
+ * @param {boolean} [replace=true] Whether to replace the current challenges of the session.
  * @returns {Promise<void>} A promise for the result of the action.
  */
-const registerUiChallenges = async (sessionId, uiChallenges, fromLanguage, toLanguage) => {
-  sessionChallenges[sessionId] = Challenge.parseUiChallenges(uiChallenges, fromLanguage, toLanguage);
+const registerUiChallenges = async (sessionId, uiChallenges, fromLanguage, toLanguage, replace = true) => {
+  const parsedChallenges = Challenge.parseUiChallenges(uiChallenges, fromLanguage, toLanguage);
+
+  if (replace) {
+    sessionChallenges[sessionId] = parsedChallenges;
+  } else {
+    sessionChallenges[sessionId] = (sessionChallenges[sessionId] || []).concat(parsedChallenges)
+  }
 
   await registerDiscussionChallenges(
     sessionChallenges[sessionId].filter(Challenge.isOfType(_, CHALLENGE_TYPE_TRANSLATION))
@@ -599,7 +618,10 @@ const handleSessionLoadedEvent = async (senderId, data) => {
       senderId,
       challenges,
       String(metaData.ui_language || metaData.from_language || data.fromLanguage || '').trim(),
-      String(metaData.language || metaData.learning_language || data.learningLanguage || '').trim()
+      String(metaData.language || metaData.learning_language || data.learningLanguage || '').trim(),
+      // If no metadata is available, assume that the new challenges belong to the current session.
+      // This is the case for placement tests, for example, for which challenges are loaded one by one.
+      !isEmptyObject(metaData)
     );
   }
 };
