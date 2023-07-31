@@ -476,10 +476,11 @@ const getUserAnswer = () => {
   if (blankFillingAnswer) {
     const cleanAnswer = blankFillingAnswer.cloneNode(true);
     Array.from(cleanAnswer.querySelectorAll(SELECTOR_BLANK_FILLING_ANSWER_EXTRANEOUS_TOKEN)).forEach(it.remove());
+    Array.from(cleanAnswer.querySelectorAll(SELECTOR_ANSWER_INPUT)).forEach(input => input.replaceWith(input.value));
     userAnswer = String(cleanAnswer.textContent).trim();
 
     if ('' !== userAnswer) {
-      // The user answer is enclosed within underscores, seemingly used for spacing.
+      // The user answer may be enclosed within underscores, seemingly used for spacing.
       return userAnswer.replace(/_([^_]+)_/g, '$1');
     }
   }
@@ -993,7 +994,7 @@ const SELECTOR_BLANK_FILLING_FULL_ANSWER = '._2FKqf';
  *
  * @type {string}
  */
-const SELECTOR_BLANK_FILLING_ANSWER_EXTRANEOUS_TOKEN = '._2FKqf';
+const SELECTOR_BLANK_FILLING_ANSWER_EXTRANEOUS_TOKEN = '._2FKq, .caPDQ';
 
 /**
  * A CSS selector for the container of the answer tokens selected from the word bank.
