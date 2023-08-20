@@ -177,7 +177,7 @@ const CLASS_NAMES = {
   [BASE]: {
     // Copied from the "Report" modal overlay.
     // The class name responsible for the opacity must only be used below.
-    [OVERLAY]: [ '_8_UHb', 'xtPuL', '_1tTsl', '_36g-h', 'eMCPA' ],
+    [OVERLAY]: [ '_8_UHb', 'xtPuL', '_1tTsl', '_36g-h', 'eMCPA', '_3JZ7B' ],
     // Copied from the global wrapper of the "Report" modal content.
     // The class name responsible for the opacity is also used below.
     [WRAPPER]: [ '_1hEOp', '_13Rl7', '_3lUbm', 'xtPuL' ],
