@@ -45,7 +45,6 @@ import Dropdown from './Dropdown';
 /**
  * A convenience map from the first and last characters of a query to the corresponding match type,
  * for each match mode.
- *
  * @type {object}
  */
 const MATCH_TYPE_MAP = {
@@ -77,7 +76,7 @@ const MATCH_TYPE_MAP = {
 /**
  * @type {Function}
  * @param {string} matchMode A match mode.
- * @returns {Object[]} A list of filter settings.
+ * @returns {object[]} A list of filter settings.
  */
 const getFilterSettings = matchMode => {
   const modeLabel = (STRING_MATCH_MODE_GLOBAL === matchMode) ? _ : _;

@@ -20,7 +20,6 @@ export function normalizeString(string, removeExtraSpaces = true, removeDiacriti
 
 /**
  * Compares two strings using a sensible set of collation rules.
- *
  * @param {string} x A string.
  * @param {string} y Another string.
  * @param {string} locale The locale to use for the comparison.

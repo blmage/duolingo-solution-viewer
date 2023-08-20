@@ -69,7 +69,6 @@ library.add(
  * A minimum loading delay for the action requests sent to the background script.
  *
  * This is an attempt at avoiding flashes of contents and providing a consistent feedback to the user.
- *
  * @type {number}
  */
 const MINIMUM_LOADING_DELAY = 250;
@@ -85,8 +84,7 @@ const getUiLocale = () => (
 
 /**
  * The UI elements used to wrap the different components rendered by the extension.
- *
- * @type {object.<string, Element>}
+ * @type {{[key: string]: Element}}
  */
 const componentWrappers = {};
 
@@ -193,21 +191,18 @@ const renderChallengeSolutionLoader = (result) => {
 
 /**
  * Whether a solution list modal is currently being toggled off / on.
- *
  * @type {boolean}
  */
 let isSolutionListModalToggling = false;
 
 /**
  * Whether a solution list modal is currently displayed.
- *
  * @type {boolean}
  */
 let isSolutionListModalDisplayed = false;
 
 /**
  * The element in which are displayed the solutions of the challenge corresponding to the current forum discussion.
- *
  * @type {Element}
  */
 let forumCommentChallengeWrapper = null;
@@ -315,6 +310,8 @@ const renderChallengeSolutionListModal = (challenge, result, userAnswer, opened)
   } catch (error) {
     logError(error, 'Could not render the solution list modal: ');
   }
+
+  return;
 };
 
 /**
@@ -419,49 +416,42 @@ const renderForumCommentChallenge = (commentId, challenge, userReference = '') =
 
 /**
  * The last seen document location.
- *
  * @type {string|null}
  */
 let documentLocation = null;
 
 /**
  * The last seen footer element on a challenge screen.
- *
  * @type {Element|null}
  */
 let challengeFooter = null;
 
 /**
  * The last seen wrapper element for a challenge result.
- *
  * @type {Element|null}
  */
 let resultWrapper = null;
 
 /**
  * The last completed challenge.
- *
  * @type {object|null}
  */
 let completedChallenge = null;
 
 /**
  * The last seen wrapping element of an original post in a forum discussion.
- *
  * @type {Element|null}
  */
 let forumOpWrapper = null;
 
 /**
  * The ID of the forum comment that is currently being displayed, if any.
- *
  * @type {number|null}
  */
 let forumCommentId = null;
 
 /**
  * Some data about the challenge discussed by the forum comment that is currently being displayed.
- *
  * @type {object|null}
  */
 let forumCommentData = null;
@@ -646,7 +636,6 @@ const renderCompletedChallengeSolutionListModal = opened => (
 
 /**
  * A RegExp for the URLs of forum comments.
- *
  * @type {RegExp}
  */
 const FORUM_COMMENT_URL_REGEXP = /forum\.duolingo\.com\/comment\/(?<comment_id>[\d]+)/;
@@ -703,7 +692,6 @@ const isAnyModalDisplayed = () => !!document.querySelector(SELECTOR_VISIBLE_MODA
 
 /**
  * Simulates a click on a footer button from the original UI.
- *
  * @param {string} iconSelector A CSS selector for the icon of the button.
  * @returns {void}
  */
@@ -714,7 +702,6 @@ const clickOriginalUiFooterButton = iconSelector => {
 
 /**
  * A mutation observer for the footer of the challenge screen, detecting and handling challenge results.
- *
  * @type {MutationObserver}
  */
 const challengeFooterMutationObserver = new MutationObserver(() => {
@@ -756,14 +743,12 @@ const challengeFooterMutationObserver = new MutationObserver(() => {
 
 /**
  * A promise for if and when the hotkeys mutex will have been acquired, when a request is pending.
- *
  * @type {Promise|null}
  */
 let hotkeysMutexPromise = null;
 
 /**
  * A callback usable to release the hotkeys mutex, once it has been acquired.
- *
  * @type {Function|null}
  */
 let hotkeysMutexReleaseCallback = null;
@@ -773,7 +758,6 @@ let hotkeysMutexReleaseCallback = null;
  *
  * If the mutex is requested with a higher priority by another extension,
  * it will only be released if no modal is currently displayed.
- *
  * @returns {Promise<void>} A promise for if and when the hotkeys mutex has been acquired.
  */
 const acquireHotkeysMutex = () => {
@@ -809,7 +793,6 @@ const acquireHotkeysMutex = () => {
 
 /**
  * Releases the hotkeys mutex, if it had been previously acquired.
- *
  * @returns {void}
  */
 const releaseHotkeysMutex = () => {
@@ -900,7 +883,6 @@ setInterval(() => {
 
 /**
  * A CSS selector for the wrapper of the current translation challenge.
- *
  * @type {string}
  */
 const SELECTOR_TRANSLATION_CHALLENGE_WRAPPER = UI_TRANSLATION_CHALLENGE_TYPES
@@ -912,7 +894,6 @@ const SELECTOR_TRANSLATION_CHALLENGE_WRAPPER = UI_TRANSLATION_CHALLENGE_TYPES
 
 /**
  * A CSS selector for the wrapper of the current listening challenge.
- *
  * @type {string}
  */
 const SELECTOR_LISTENING_CHALLENGE_WRAPPER = UI_LISTENING_CHALLENGE_TYPES
@@ -925,28 +906,24 @@ const SELECTOR_LISTENING_CHALLENGE_WRAPPER = UI_LISTENING_CHALLENGE_TYPES
 /**
  * A CSS selector for the result wrapper of the current challenge screen.
  * It is currently the previous sibling of the wrapper of the "Continue" button.
- *
  * @type {string}
  */
 const SELECTOR_RESULT_WRAPPER = '._1tuLI';
 
 /**
  * The class name which is applied to the result wrapper when the user has given a correct answer.
- *
  * @type {string}
  */
 const CLASS_NAME_CORRECT_RESULT_WRAPPER = '_3e9O1';
 
 /**
  * A CSS selector for the words in the current challenge statement.
- *
  * @type {string}
  */
 const SELECTOR_CHALLENGE_STATEMENT_HINT_TOKEN = '[data-test="hint-token"]';
 
 /**
  * A CSS selector for the hints added to words in the current challenge statement.
- *
  * @type {string}
  */
 const SELECTOR_CHALLENGE_STATEMENT_HINT_POPOVER = '[data-test="hint-popover"]'; // eslint-disable-line no-unused-vars
@@ -954,7 +931,6 @@ const SELECTOR_CHALLENGE_STATEMENT_HINT_POPOVER = '[data-test="hint-popover"]'; 
 /**
  * Some of the possible CSS selectors for the statement of the current challenge (holding the sentence to translate),
  * ordered by priority.
- *
  * @type {string[]}
  */
 const SELECTORS_CHALLENGE_STATEMENT = [
@@ -967,14 +943,12 @@ const SELECTORS_CHALLENGE_STATEMENT = [
 /**
  * A CSS selector for the translated solution of the current challenge.
  * In case it might help, the ClosestSolution component targets the same value.
- *
  * @type {string}
  */
 const SELECTOR_CHALLENGE_SOLUTION_TRANSLATION = '._2ez4I:last-child ._1UqAr';
 
 /**
  * A CSS selector for the different kinds of answer inputs that are not based on the word bank.
- *
  * @type {string}
  */
 const SELECTOR_ANSWER_INPUT = [
@@ -984,49 +958,42 @@ const SELECTOR_ANSWER_INPUT = [
 
 /**
  * A CSS selector for the container of the full answer for fill-in-the-blank challenges.
- *
  * @type {string}
  */
 const SELECTOR_BLANK_FILLING_FULL_ANSWER = '._2FKqf';
 
 /**
  * A CSS selector for the extraneous tokens that can be found in answers to fill-in-the-blank challenges.
- *
  * @type {string}
  */
 const SELECTOR_BLANK_FILLING_ANSWER_EXTRANEOUS_TOKEN = '._2FKq, .caPDQ';
 
 /**
  * A CSS selector for the container of the answer tokens selected from the word bank.
- *
  * @type {string}
  */
 const SELECTOR_ANSWER_SELECTED_TOKEN_CONTAINER = '.PcKtj';
 
 /**
  * A CSS selector for a answer token selected from the word bank.
- *
  * @type {string}
  */
 const SELECTOR_ANSWER_SELECTED_TOKEN = '[data-test="challenge-tap-token"], [data-test$="-challenge-tap-token"]';
 
 /**
  * A CSS selector for the footer of the current challenge screen, holding the result and action elements.
- *
  * @type {string}
  */
 const SELECTOR_CHALLENGE_FOOTER = '._2Fc1K';
 
 /**
  * A CSS selector for the solution wrapper of the current challenge screen, holding the answer key to the challenge.
- *
  * @type {string}
  */
 const SELECTOR_CHALLENGE_SOLUTION_WRAPPER = '._2ez4I';
 
 /**
  * A CSS selector for the list of action links of the current challenge screen.
- *
  * @type {string}
  */
 const SELECTOR_CHALLENGE_ACTION_LINK_LIST = '._3MD8I';
@@ -1035,7 +1002,6 @@ const SELECTOR_CHALLENGE_ACTION_LINK_LIST = '._3MD8I';
  * A CSS selector for the report (flag) icon of the challenge screen.
  *
  * Note: a different icon is used depending on the result of the challenge, and whether the dark mode is enabled.
- *
  * @type {string}
  */
 const SELECTOR_CHALLENGE_REPORT_ICON = [
@@ -1054,7 +1020,6 @@ const SELECTOR_CHALLENGE_REPORT_ICON = [
  * A CSS selector for the discussion icon of the challenge screen.
  *
  * Note: a different icon is used depending on the result of the challenge, and whether the dark mode is enabled.
- *
  * @type {string}
  */
 const SELECTOR_CHALLENGE_DISCUSSION_ICON = [
@@ -1070,7 +1035,6 @@ const SELECTOR_CHALLENGE_DISCUSSION_ICON = [
 
 /**
  * A CSS selector for the close button of original modals on the challenge screen.
- *
  * @type {string}
  */
 const SELECTOR_CHALLENGE_MODAL_CLOSE_BUTTON = '#overlays *[data-test="close-button"]';
@@ -1078,28 +1042,24 @@ const SELECTOR_CHALLENGE_MODAL_CLOSE_BUTTON = '#overlays *[data-test="close-butt
 /**
  * A CSS selector for the fixed page header used in the forum. We use the class names with the most styles.
  * Note that the fixed header is different on desktop and mobile.
- *
  * @type {string}
  */
 const SELECTOR_FORUM_FIXED_PAGE_HEADER = '._2i8Km, ._13Hyj';
 
 /**
  * A CSS selector for the wrapper of the original post in a forum discussion.
- *
  * @type {string}
  */
 const SELECTOR_FORUM_OP_WRAPPER = '._3eQwU';
 
 /**
  * A CSS selector for the list of actions related to the original post in a forum discussion.
- *
  * @type {string}
  */
 const SELECTOR_FORUM_OP_ACTION_LINK_LIST = '._3Rqyw';
 
 /**
  * A CSS selector for a modal overlay that is visible.
- *
  * @type {string}
  */
 const SELECTOR_VISIBLE_MODAL_OVERLAY = '._1tTsl:not(._1edTR)';

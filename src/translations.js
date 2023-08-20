@@ -1,6 +1,5 @@
 /**
  * The full set of translations.
- *
  * @type {object}
  */
 const TRANSLATIONS = {

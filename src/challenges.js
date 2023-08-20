@@ -17,7 +17,6 @@ import * as Solution from './solutions';
 
 /**
  * A practice challenge.
- *
  * @typedef {object} Challenge
  * @property {number} type The type(s) of the challenge.
  * @property {string} statement The sentence to translate / recognize.
@@ -42,7 +41,6 @@ import * as Solution from './solutions';
 
 /**
  * A set of data about a challenge, usable for filtering or matching the corresponding solutions.
- *
  * @typedef {object} MatchingData
  * @property {MatchingOptions} options A set of matching options.
  * @property {string} locale The locale of the solutions.
@@ -111,7 +109,6 @@ export const getStatementLocale = challenge => (
 
 /**
  * Adds matching data to a challenge and the corresponding solutions.
- *
  * @param {Challenge} challenge The challenge.
  * @returns {void}
  */
@@ -148,7 +145,6 @@ export const addMatchingData = challenge => {
  * Matches a user answer against each solution of a challenge, and updates their similarity scores.
  *
  * If it has not been done yet, also adds matching data to the challenge and the corresponding solutions.
- *
  * @param {Challenge} challenge A challenge.
  * @param {string} userAnswer A user answer.
  * @returns {void}

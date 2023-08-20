@@ -8,21 +8,18 @@ import { EXTENSION_PREFIX, IMAGE_CDN_DEFAULT_BASE_URL } from '../constants';
 /**
  * The key under which to store the class names and styles of an element that are always applicable,
  * no matter what the current state / context of the corresponding component is.
- *
  * @type {symbol}
  */
 export const BASE = Symbol('base');
 
 /**
  * The key under which to store the class names and styles of an element that are applicable when on a challenge page.
- *
  * @type {symbol}
  */
 export const CONTEXT_CHALLENGE = Symbol('challenge');
 
 /**
  * The key under which to store the class names and styles of an element that are applicable when on a forum page.
- *
  * @type {symbol}
  */
 export const CONTEXT_FORUM = Symbol('forum');
@@ -44,7 +41,6 @@ export const withContext = (component, context) => withForcedProps(component, { 
 /**
  * A variant of the "useLocalStorage" hook from the "react-use" package,
  * which prepends the extension prefix to the storage keys.
- *
  * @type {Function}
  * @param {string} key The base storage key.
  * @param {*} initialValue The initial state value.
@@ -57,7 +53,6 @@ export const useLocalStorage = (key, initialValue, options) => {
 
 /**
  * A hook for circularly iterating over an array and storing the current value in the local storage.
- *
  * @param {string} key The base storage key.
  * @param {Array} stateSet The different state values.
  * @param {*} initialValue The initial state value.
@@ -88,7 +83,6 @@ export const useLocalStorageList = (key, stateSet, initialValue) => {
 
 /**
  * A hook for globally throttling a callback. The delay is never reset when dependencies change.
- *
  * @param {Function} callback The callback to throttle.
  * @param {number} delay The delay during which any subsequent call will be ignored (in milliseconds).
  * @param {Array} args The arguments to the callback.
@@ -122,7 +116,6 @@ export const usePortalContainer = () => useRawPortalContainer()[0];
 /**
  * A hook for getting all the class names applicable to an element,
  * based on the current state / context of the component that embeds it.
- *
  * @param {object} classNames Some nested maps from state and element keys to class names.
  * @param {object} styleSheets Some nested maps from state and element keys to style sheets.
  * @param {(string|symbol)[]} stateKeys A list of keys describing the current state / context of the component.
@@ -162,7 +155,6 @@ export const useStyles = (classNames, styleSheets = {}, stateKeys = []) => {
 
 /**
  * A CSS selector for menu icons.
- *
  * @type {string}
  */
 const MENU_ICON_SELECTOR = 'img._1TuHK';

@@ -337,7 +337,7 @@ const matchSubstring = (string, substring) => {
 };
 
 /**
- * @typedef {Object} MatchResult The result of a match between a solution against a filter.
+ * @typedef {object} MatchResult The result of a match between a solution against a filter.
  * @property {boolean} isMatched Whether the solution matched the filter.
  * @property {number} matches A set of match results corresponding to the positions of the filter in the solution.
  * @property {boolean} isPartial Whether the results may still be refined.
@@ -390,7 +390,7 @@ const matchSolutionOnSummary = (solution, filter) => {
  * @param {Function} matchSolution The callback usable to match a solution against a filter.
  * @param {import('../solutions.js').Solution[]} solutions A list of solutions.
  * @param {import('./FilterInput.js').WordFilter[]} filters A list of filters.
- * @param {Object} filterCache A cache for the results of filters.
+ * @param {object} filterCache A cache for the results of filters.
  * @returns {import('../solutions.js').Solution[]} A sub-list of the solutions that matched the given filters.
  */
 const filterSolutions = (matchSolution, solutions, filters, filterCache) => {
@@ -432,22 +432,20 @@ const filterSolutions = (matchSolution, solutions, filters, filterCache) => {
 
 /**
  * Filters a list of solutions based on the words they contain.
- *
  * @type {Function}
  * @param {import('../solutions.js').Solution[]} solutions A list of solutions.
  * @param {import('./FilterInput.js').WordFilter[]} filters A list of filters.
- * @param {Object} filterCache A cache for the results of filters.
+ * @param {object} filterCache A cache for the results of filters.
  * @returns {import('../solutions.js').Solution[]} A sub-list of the solutions that matched the given filters.
  */
 const filterSolutionsUsingWords = filterSolutions(matchSolutionOnWords, _, _, _);
 
 /**
  * Filters a list of solutions based on their summaries.
- *
  * @type {Function}
  * @param {import('../solutions.js').Solution[]} solutions A list of solutions.
  * @param {import('./FilterInput.js').WordFilter[]} filters A list of filters.
- * @param {Object} filterCache A cache for the results of filters.
+ * @param {object} filterCache A cache for the results of filters.
  * @returns {import('../solutions.js').Solution[]} A sub-list of the solutions that matched the given filters.
  */
 const filterSolutionsUsingSummaries = filterSolutions(matchSolutionOnSummary, _, _, _);

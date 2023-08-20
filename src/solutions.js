@@ -20,7 +20,6 @@ import { compareStrings, getStringWords, getWordBigramMap, normalizeString } fro
 
 /**
  * A single vertex of a solution graph.
- *
  * @typedef {object} Vertex
  * @property {?number} to The index of the next vertex, if any.
  * @property {string} lenient The reference value of the vertex.
@@ -32,13 +31,11 @@ import { compareStrings, getStringWords, getWordBigramMap, normalizeString } fro
 /**
  * A single part of a solution.
  * A token can hold multiple values, in which case each of them represents a possible choice.
- *
  * @typedef {string[]} Token
  */
 
 /**
  * A possible solution to a challenge.
- *
  * @typedef {object} Solution
  * @property {string} locale The language in which the solution is written.
  * @property {string} reference The first variation of the solution, usable as a reference and for sorting.
@@ -50,7 +47,6 @@ import { compareStrings, getStringWords, getWordBigramMap, normalizeString } fro
 
 /**
  * A set of calculated data about a solution, usable for any kind of similarity matching.
- *
  * @typedef {object} MatchingData
  * @property {number} id A unique ID for the solution.
  * @property {?(string[][][])} tokens
@@ -66,7 +62,6 @@ import { compareStrings, getStringWords, getWordBigramMap, normalizeString } fro
 
 /**
  * A set of statistics about one or more words, usable for similarity matching using the Sørensen-Dice coefficient.
- *
  * @typedef {object} WordStats
  * @property {number} charCount The total number of characters across the matched words.
  * @property {number} wordCount The total number of matched words.
@@ -83,7 +78,6 @@ export const hasLocaleWordBasedTokens = ![ 'ja', 'zh', 'zs' ].includes(_);
 /**
  * A memoized version of {@see compareStrings}, used to efficiently compare words or small strings,
  * which are a sweet spot for memoization.
- *
  * @type {Function}
  * @param {string} x A token string.
  * @param {string} y Another token string.
@@ -212,7 +206,7 @@ const parseTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
 const EMPTY_TOKEN = { size: 0 };
 
 /**
- * @param {object.<number, Vertex[]>[]} groupedVertices
+ * @param {{[key: number]: Vertex[]}[]} groupedVertices
  * A flattened list of groups of vertices taken from a solution graph,
  * arranged by the indices of the corresponding next groups of vertices.
  * @param {number} startIndex The index where to start building partial solutions.
@@ -372,7 +366,6 @@ export const fromWordBankTokens = (wordTokens, locale) => {
 
 /**
  * The (unique) key under which to consolidate reader-friendly strings on a solution.
- *
  * @type {symbol}
  */
 const KEY_SUMMARY = Symbol('summary');
@@ -479,7 +472,6 @@ const getTokenMatchableWordsWithoutDiacritics = moize(
 
 /**
  * A memoized version of {@see getStringMatchableWords}, used to efficiently extract words from small strings.
- *
  * @param {string} token A token.
  * @param {string} locale The locale of the token.
  * @param {import('./challenges.js').MatchingOptions} matchingOptions A set of matching options.
@@ -493,7 +485,6 @@ const getTokenMatchableWords = (token, locale, matchingOptions) => (
 
 /**
  * Adds matching data to a solution based on the words it contains.
- *
  * @param {Solution} solution A solution.
  * @param {number} id A unique ID to assign to the solution.
  * @param {import('./challenges.js').MatchingOptions} matchingOptions A set of matching options.
@@ -522,7 +513,6 @@ export const addWordsMatchingData = (solution, id, matchingOptions) => {
 
 /**
  * Adds matching data to a solution based on its reader-friendly summary.
- *
  * @param {Solution} solution A solution.
  * @param {number} id A unique ID to assign to the solution.
  * @param {import('./challenges.js').MatchingOptions} matchingOptions A set of matching options.
@@ -551,7 +541,6 @@ const EMPTY_WORD_STATS = {
 
 /**
  * The (unique) key under which to consolidate word statistics on a solution.
- *
  * @type {symbol}
  */
 const KEY_WORD_STATS = Symbol('word_stats');
@@ -748,7 +737,7 @@ export const getBestMatchingVariationsForAnswer = (solution, answer, matchingOpt
  */
 
 /**
- * @type {Object}
+ * @type {object}
  */
 const DIFF_IGNORABLE_VARIANTS = {
   ru: {

@@ -37,7 +37,6 @@ const MODAL_SIZES = {
 
 /**
  * The path of the close icon on the image CDN.
- *
  * @type {string}
  */
 const CLOSE_ICON_CDN_PATH = 'images/x.svg';

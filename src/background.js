@@ -62,7 +62,6 @@ const INDEX_CHALLENGE_PRIORITY = getCompoundIndex([ FIELD_LAST_ACCESS_AT, FIELD_
 
 /**
  * An arbitrary maximum (serialized) size for storable challenges.
- *
  * @type {number}
  */
 const MAX_CHALLENGE_SIZE = 1024 * 1024;
@@ -228,21 +227,18 @@ const getSenderId = sender => {
 
 /**
  * For each practice session running in a tab, the corresponding list of challenges.
- *
  * @type {import('./challenges').Challenge[]}
  */
 const sessionChallenges = [];
 
 /**
  * For each practice session running in a tab, the last listening challenge that was detected.
- *
- * @type {object<string, Challenge|null>}
+ * @type {{[key: string]: Challenge|null}}
  */
 const sessionLastListeningChallenges = {};
 
 /**
  * Registers the relation between a forum comment and a forum discussion.
- *
  * @type {Function}
  * @param {number} commentId The ID of a forum comment.
  * @param {string} discussionId The ID of a forum discussion.
@@ -259,7 +255,7 @@ const registerCommentDiscussion = async (commentId, discussionId, locale) => {
 
 /**
  * @param {number} commentId The ID of a forum comment.
- * @returns {Promise<Object>}
+ * @returns {Promise<object>}
  * A promise for the challenge which is discussed by the given forum comment,
  * and the last user reference that it was associated to.
  */
@@ -297,7 +293,6 @@ const getCommentChallenge = async commentId => {
 
 /**
  * Registers the relation between a challenge and the corresponding forum discussion.
- *
  * @param {import('./challenges').Challenge} challenge A challenge.
  * @returns {Promise<void>} A promise for the result of the action.
  */
@@ -325,7 +320,6 @@ const registerDiscussionChallenge = async challenge => {
 
 /**
  * Registers the relations between some challenges and the corresponding forum discussions.
- *
  * @param {import('./challenges').Challenge[]} challenges A set of challenges.
  * @returns {Promise<void>} A promise for the result of the actions.
  */
@@ -333,7 +327,6 @@ const registerDiscussionChallenges = async challenges => Promise.all(challenges.
 
 /**
  * Registers a new user reference for a challenge.
- *
  * @param {import('./challenges').Challenge} challenge A challenge.
  * @param {string} reference A user reference.
  * @returns {Promise<void>} A promise for the result of the action.
@@ -384,12 +377,11 @@ const findSessionChallengesOfType = (sessionId, challengeType, predicate) => {
 
 /**
  * Parses and registers the challenges of a new practice session that are relevant to the extension.
- *
  * @param {string} sessionId A session ID.
  * @param {object[]} uiChallenges A set of raw challenge data from the UI.
  * @param {string} fromLanguage The language the user speaks.
  * @param {string} toLanguage The language the user learns.
- * @param {boolean} [replace=true] Whether to replace the current challenges of the session.
+ * @param {boolean} [replace] Whether to replace the current challenges of the session.
  * @returns {Promise<void>} A promise for the result of the action.
  */
 const registerUiChallenges = async (sessionId, uiChallenges, fromLanguage, toLanguage, replace = true) => {
@@ -604,7 +596,6 @@ const handleCommentChallengeUserReferenceUpdateRequest = async (data, sendResult
 
 /**
  * Parses and registers challenge data when a practice session is loaded.
- *
  * @param {string} senderId The ID of the sender of the event notification.
  * @param {object} data The event payload.
  * @returns {Promise<void>} A promise for the result of the event handling.
@@ -628,7 +619,6 @@ const handleSessionLoadedEvent = async (senderId, data) => {
 
 /**
  * Registers the relation between forum comments and forum discussions upon loading the latter.
- *
  * @param {object} data The event payload.
  * @returns {Promise<void>} A promise for the result of the event handling.
  */
@@ -648,7 +638,6 @@ const handleDiscussionLoadedEvent = async (data) => {
 
 /**
  * Registers the current listening challenge when a corresponding TTS media is played.
- *
  * @param {string} senderId The ID of the sender of the event notification.
  * @param {object} data The event payload.
  */

@@ -41,21 +41,18 @@ export const UI_EVENT_TYPE_SESSION_LOADED = 'session_loaded';
 
 /**
  * The type of the event occurring when a forum discussion has been loaded.
- *
  * @type {string}
  */
 export const UI_EVENT_TYPE_DISCUSSION_LOADED = 'discussion_loaded';
 
 /**
  * The type of the event occurring when a sound is played.
- *
  * @type {string}
  */
 export const UI_EVENT_TYPE_SOUND_PLAYED = 'sound_played';
 
 /**
  * The types of the different events that can occur on the UI and are meaningful to the extension.
- *
  * @type {string[]}
  */
 export const UI_EVENT_TYPES = [
