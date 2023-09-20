@@ -192,6 +192,13 @@ The currently supported languages are:
       </td>
       <td><a href="https://github.com/unickq">unickq</a></td>
     </tr>
+    <tr>
+      <td>
+        <img src="https://github.com/blmage/duolingo-solution-viewer/blob/assets/flags/RU.svg" width="30" />
+        Russian
+      </td>
+      <td><a href="https://github.com/ruvn-1fgas">Rustam Rasimovich</a></td>
+    </tr>
   </tbody>
 </table>
 
