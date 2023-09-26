@@ -25,7 +25,6 @@ import * as Solution from '../solutions';
 import {
   BASE,
   CONTEXT_CHALLENGE,
-  CONTEXT_FORUM,
   useLocalStorage,
   useLocalStorageList,
   useStyles,
@@ -787,15 +786,6 @@ const CLASS_NAMES = {
     [PAGE_SIZE_SELECT_WRAPPER]: [ '_2__FI' ],
     [PAGE_SIZE_SELECT]: [ '_2__FI' ],
   },
-  [CONTEXT_FORUM]: {
-    // Copied from the (heading) wrapper of the "Translation:" subtitle and the translation.
-    [TITLE_TEXT]: [ '_2qRu2' ],
-    // Copied from the "Reply" links. Only the class name which adds the color is used here.
-    [SINGLE_SORT_TYPE_LABEL]: [ 'uFNEM' ],
-    [SOLUTION]: [ '_2qRu2' ],
-    // Found in the "ltr" stylesheet. Adds the main link color (unwanted styles are reset below).
-    [PAGE_SIZE_SELECT_WRAPPER]: [ '_1bO3u' ],
-  },
 };
 
 const STYLE_SHEETS = {
@@ -958,27 +948,6 @@ const STYLE_SHEETS = {
       bottom: '0',
       padding: '0.1em 0 0 !important',
       position: 'sticky',
-    },
-  }),
-  [CONTEXT_FORUM]: StyleSheet.create({
-    [TITLE_LINK_WRAPPER]: {
-      '@media (max-width: 699px)': {
-        marginBottom: '0.5em',
-      },
-    },
-    [TITLE_TEXT]: {
-      padding: 0,
-      textTransform: 'none',
-    },
-    [EMPTY_LIST]: {
-      paddingBottom: '1em',
-    },
-    [SORT_TYPE_LABEL]: {
-      marginRight: '0.5em',
-      textTransform: 'none',
-    },
-    [PAGE_SIZE_SELECT]: {
-      color: 'inherit',
     },
   }),
 };

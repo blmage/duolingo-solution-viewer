@@ -14,36 +14,18 @@ export const ACTION_TYPE_GET_CURRENT_LISTENING_CHALLENGE = 'get_current_listenin
 export const ACTION_TYPE_UPDATE_CURRENT_CHALLENGE_USER_REFERENCE = 'update_current_challenge_user_reference';
 
 /**
- * @type {string}
- */
-export const ACTION_TYPE_GET_COMMENT_CHALLENGE = 'get_comment_challenge';
-
-/**
- * @type {string}
- */
-export const ACTION_TYPE_UPDATE_COMMENT_CHALLENGE_USER_REFERENCE = 'update_comment_challenge_user_reference';
-
-/**
  * @type {string[]}
  */
 export const ACTION_TYPES = [
   ACTION_TYPE_GET_CURRENT_TRANSLATION_CHALLENGE,
   ACTION_TYPE_GET_CURRENT_LISTENING_CHALLENGE,
   ACTION_TYPE_UPDATE_CURRENT_CHALLENGE_USER_REFERENCE,
-  ACTION_TYPE_GET_COMMENT_CHALLENGE,
-  ACTION_TYPE_UPDATE_COMMENT_CHALLENGE_USER_REFERENCE,
 ];
 
 /**
  * @type {string}
  */
 export const UI_EVENT_TYPE_SESSION_LOADED = 'session_loaded';
-
-/**
- * The type of the event occurring when a forum discussion has been loaded.
- * @type {string}
- */
-export const UI_EVENT_TYPE_DISCUSSION_LOADED = 'discussion_loaded';
 
 /**
  * The type of the event occurring when a sound is played.
@@ -57,6 +39,5 @@ export const UI_EVENT_TYPE_SOUND_PLAYED = 'sound_played';
  */
 export const UI_EVENT_TYPES = [
   UI_EVENT_TYPE_SESSION_LOADED,
-  UI_EVENT_TYPE_DISCUSSION_LOADED,
   UI_EVENT_TYPE_SOUND_PLAYED,
 ];

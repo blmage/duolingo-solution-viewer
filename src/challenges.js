@@ -23,8 +23,6 @@ import * as Solution from './solutions';
  * @property {import('./solutions.js').Solution[]} solutions The accepted translations.
  * @property {string} fromLanguage The language the user speaks.
  * @property {string} toLanguage The language the user learns.
- * @property {string} discussionId The ID of the forum discussion about the challenge.
- * @property {?number} commentId The ID of the first forum comment about the challenge.
  * @property {?MatchingData} matchingData A base set of data usable for filtering / matching the solutions.
  *
  * The following properties are only available for listening challenges:

@@ -2,36 +2,9 @@ import { h, Fragment } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { IntlProvider, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
-import moize from 'moize';
 import { noop } from 'duo-toolbox/utils/functions';
 import { discardEvent } from 'duo-toolbox/utils/ui';
-import { BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, useStyles } from './index';
-
-const FORUM_FOLLOW_BUTTON_SELECTOR = '._13Bfz button';
-const FORUM_NEW_POST_BUTTONS_SELECTOR = '._1KvMS textarea + div button';
-
-/**
- * @type {Function}
- * @returns {string|null} When in the context of a forum discussion, the inline styles applied to the follow button.
- */
-const getForumFollowButtonInlineStyles = moize(() => String(
-  document.querySelector(FORUM_FOLLOW_BUTTON_SELECTOR)?.getAttribute('style') || ''
-));
-
-/**
- * @type {Function}
- * @returns {object|null} When in the context of a forum discussion, the inline styles applied to the new post buttons.
- */
-const getForumNewPostButtonsInlineStyles = moize(() => {
-  const postButtons = Array.from(document.querySelectorAll(FORUM_NEW_POST_BUTTONS_SELECTOR));
-
-  return (2 !== postButtons.length)
-    ? null
-    : {
-      [COMMIT_BUTTON]: String(postButtons[0].getAttribute('style') || ''),
-      [ROLLBACK_BUTTON]: String(postButtons[1].getAttribute('style') || ''),
-    };
-});
+import { BASE, CONTEXT_CHALLENGE, useStyles } from './index';
 
 const UserReference =
   ({
@@ -92,21 +65,6 @@ const UserReference =
 
     let buttonInlineStyles = {};
     let additionalButtonClass = null;
-
-    if (CONTEXT_FORUM === context) {
-      buttonInlineStyles = getForumNewPostButtonsInlineStyles();
-
-      if (null === buttonInlineStyles) {
-        const inlineStyles = getForumFollowButtonInlineStyles();
-
-        buttonInlineStyles = {
-          [COMMIT_BUTTON]: inlineStyles,
-          [ROLLBACK_BUTTON]: inlineStyles,
-        };
-
-        additionalButtonClass = FALLBACK_BUTTON;
-      }
-    }
 
     const valueKeys = [
       VALUE,
@@ -170,7 +128,6 @@ const EDIT_FIELD = 'edit_field';
 const BUTTON = 'button';
 const COMMIT_BUTTON = 'commit_button';
 const ROLLBACK_BUTTON = 'rollback_button';
-const FALLBACK_BUTTON = 'fallback_button';
 const BUTTON_SPACER = 'button_spacer';
 
 const CLASS_NAMES = {
@@ -193,24 +150,6 @@ const CLASS_NAMES = {
     // Found in the "app" stylesheet. Adds the main link color.
     // Use a class located after the one responsible for the color and background of the button.
     [COMMIT_BUTTON]: [ '_2__FI' ],
-  },
-  [CONTEXT_FORUM]: {
-    // Copied from the (heading) wrapper of the "Translation:" subtitle and the translation value.
-    [WRAPPER]: [ '_2qRu2' ],
-    // Copied from the "Translation:" subtitle.
-    [TITLE]: [ '_1gXMJ' ],
-    // Copied from the post text field.
-    [EDIT_FIELD]: [ '_1Ch3x', '_2yvtl', 'gFN2J' ],
-    // The class names applied to both post buttons.
-    [BUTTON]: [ '_2NzLI', 'QHkFc' ],
-    // The class names specific to the "Post" button.
-    [COMMIT_BUTTON]: [ '_1qPrY', '_2pnz9' ],
-    // The class names specific to the "Cancel" button.
-    [ROLLBACK_BUTTON]: [ '_3kaGF', '_1O1Bz' ],
-    // One of the class name from the "Cancel" button which adds 3D-like border widths.
-    [FALLBACK_BUTTON]: [ '_1O1Bz' ],
-    // Copied from the (spacing) wrapper of the "Cancel" button.
-    [BUTTON_SPACER]: [ '_3cCqs' ],
   },
 };
 

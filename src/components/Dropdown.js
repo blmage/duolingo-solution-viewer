@@ -8,7 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { it } from 'one-liner.macro';
 import { noop } from 'duo-toolbox/utils/functions';
 import { discardEvent, getAncestorsWithScrollOverflow } from 'duo-toolbox/utils/ui';
-import { BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, usePortalContainer, useStyles } from './index';
+import { BASE, CONTEXT_CHALLENGE, usePortalContainer, useStyles } from './index';
 
 export const Item =
   ({
@@ -135,14 +135,6 @@ const CLASS_NAMES = {
     [ARROW_ICON]: [ '_3p5e9' ],
     [ITEMS]: [ '_1KUxv' ],
     [ITEM_WRAPPER]: [ '_3kz3Z', '_3jIW4' ],
-  },
-  [CONTEXT_FORUM]: {
-    [WRAPPER]: [ '_32PCq', 'MAAV-', 'dkZje' ],
-    [ARROW]: [ '_7UVIL' ],
-    [ARROW_ICON]: [ 'QNCcj' ],
-    [ITEMS]: [ '_1UtJe' ],
-    // The class corresponding to the item text is also added here to get the correct color.
-    [ITEM_WRAPPER]: [ '_3_pNV', 'H_C0j', '_2Iddf' ],
   },
 };
 

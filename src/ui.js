@@ -9,19 +9,16 @@ import { faKey, faThumbtack } from '@fortawesome/pro-regular-svg-icons';
 import { faArrowFromLeft, faArrowToRight } from '@fortawesome/pro-solid-svg-icons';
 import { sendActionRequestToContentScript } from 'duo-toolbox/extension/ipc';
 import { MUTEX_HOTKEYS, PRIORITY_HIGH, requestMutex } from 'duo-toolbox/extension/ui';
-import { isArray, isObject, maxBy, noop, runPromiseForEffects, sleep } from 'duo-toolbox/utils/functions';
+import { isArray, isObject, maxBy, noop, sleep } from 'duo-toolbox/utils/functions';
 import { logError } from 'duo-toolbox/utils/logging';
 
 import {
   getUniqueElementId,
   isAnyInputFocused,
   querySelectors,
-  scrollElementIntoParentView,
-  toggleElementDisplay,
 } from 'duo-toolbox/utils/ui';
 
 import { RESULT_CORRECT, RESULT_INCORRECT } from 'duo-toolbox/duo/challenges';
-import { onUiLoaded } from 'duo-toolbox/duo/events';
 
 import {
   DEFAULT_LOCALE,
@@ -33,17 +30,15 @@ import {
 } from './constants';
 
 import {
-  ACTION_TYPE_GET_COMMENT_CHALLENGE,
   ACTION_TYPE_GET_CURRENT_LISTENING_CHALLENGE,
   ACTION_TYPE_GET_CURRENT_TRANSLATION_CHALLENGE,
-  ACTION_TYPE_UPDATE_COMMENT_CHALLENGE_USER_REFERENCE,
   ACTION_TYPE_UPDATE_CURRENT_CHALLENGE_USER_REFERENCE,
 } from './ipc';
 
 import { getTranslations } from './translations';
 import * as Challenge from './challenges';
 import * as Solution from './solutions';
-import { CONTEXT_CHALLENGE, CONTEXT_FORUM } from './components';
+import { CONTEXT_CHALLENGE } from './components';
 import ChallengeSolutions from './components/ChallengeSolutions';
 import ClosestSolution from './components/ClosestSolution';
 import CorrectedAnswer from './components/CorrectedAnswer';
@@ -111,11 +106,6 @@ const getComponentWrapper = (component, parentElement, styles = {}) => {
 
   return componentWrappers[component.name];
 };
-
-/**
- * @returns {number} The height of the fixed forum page header, if any.
- */
-const getForumTopScrollOffset = () => document.querySelector(SELECTOR_FORUM_FIXED_PAGE_HEADER)?.clientHeight;
 
 /**
  * @param {import('./solutions.js').Solution} closestSolution A solution that comes closest to a user answer.
@@ -200,12 +190,6 @@ let isSolutionListModalToggling = false;
  * @type {boolean}
  */
 let isSolutionListModalDisplayed = false;
-
-/**
- * The element in which are displayed the solutions of the challenge corresponding to the current forum discussion.
- * @type {Element}
- */
-let forumCommentChallengeWrapper = null;
 
 /**
  * @param {import('./background.js').Challenge} challenge A challenge.
@@ -344,83 +328,6 @@ const renderChallengeSolutionLink = (challenge, result, userAnswer) => {
 };
 
 /**
- * @param {number} commentId The ID of a forum comment.
- * @param {import('./background.js').Challenge} challenge A challenge.
- * @param {string} userReference The reference answer from the user.
- * @returns {void}
- */
-const renderForumCommentChallenge = (commentId, challenge, userReference = '') => {
-  try {
-    if (forumOpWrapper?.isConnected) {
-      const actionLinkList = document.querySelector(SELECTOR_FORUM_OP_ACTION_LINK_LIST);
-
-      if (actionLinkList) {
-        forumCommentChallengeWrapper = getComponentWrapper(ChallengeSolutions, forumOpWrapper);
-
-        if (0 === forumCommentChallengeWrapper.childNodes.length) {
-          // Hide the challenge on the initial rendering.
-          toggleElementDisplay(forumCommentChallengeWrapper, false);
-        }
-
-        const updateUserReference = async newReference => {
-          try {
-            await sleep(MINIMUM_LOADING_DELAY);
-
-            const data = await sendActionRequestToContentScript(ACTION_TYPE_UPDATE_COMMENT_CHALLENGE_USER_REFERENCE, {
-              commentId,
-              userReference: newReference,
-            });
-
-            if (isObject(data?.challenge) && (commentId === forumCommentId)) {
-              forumCommentData = data;
-              return data.challenge.solutions || [];
-            }
-          } catch (error) {
-            error && logError(error, 'Could not update the user reference: ');
-          }
-        }
-
-        render(
-          <IntlProvider definition={getTranslations(getUiLocale() || challenge.fromLanguage)}>
-            <ChallengeSolutions
-              key={`forum-challenge-${commentId}`}
-              context={CONTEXT_FORUM}
-              solutions={challenge.solutions}
-              matchingData={challenge.matchingData}
-              userReference={userReference}
-              onUserReferenceUpdate={updateUserReference}
-              scrollOffsetGetter={getForumTopScrollOffset}
-            />
-          </IntlProvider>,
-          forumCommentChallengeWrapper
-        );
-
-        render(
-          <IntlProvider definition={getTranslations(getUiLocale())}>
-            <SolutionLink
-              context={CONTEXT_FORUM}
-              solutions={challenge.solutions}
-              onClick={() => toggleElementDisplay(forumCommentChallengeWrapper)}
-            />
-          </IntlProvider>,
-          getComponentWrapper(SolutionLink, actionLinkList)
-        );
-      } else {
-        throw new Error('Could not find the action link list element.');
-      }
-    }
-  } catch (error) {
-    logError(error, 'Could not render the solution list: ');
-  }
-};
-
-/**
- * The last seen document location.
- * @type {string|null}
- */
-let documentLocation = null;
-
-/**
  * The last seen footer element on a challenge screen.
  * @type {Element|null}
  */
@@ -437,24 +344,6 @@ let resultWrapper = null;
  * @type {object|null}
  */
 let completedChallenge = null;
-
-/**
- * The last seen wrapping element of an original post in a forum discussion.
- * @type {Element|null}
- */
-let forumOpWrapper = null;
-
-/**
- * The ID of the forum comment that is currently being displayed, if any.
- * @type {number|null}
- */
-let forumCommentId = null;
-
-/**
- * Some data about the challenge discussed by the forum comment that is currently being displayed.
- * @type {object|null}
- */
-let forumCommentData = null;
 
 /**
  * @returns {string} The current user answer.
@@ -635,57 +524,6 @@ const renderCompletedChallengeSolutionListModal = opened => (
 );
 
 /**
- * A RegExp for the URLs of forum comments.
- * @type {RegExp}
- */
-const FORUM_COMMENT_URL_REGEXP = /forum\.duolingo\.com\/comment\/(?<comment_id>[\d]+)/;
-
-/**
- * @param {string} location The new location of the document.
- * @returns {void}
- */
-const handleDocumentLocationChange = location => {
-  forumCommentId = null;
-  forumCommentData = null;
-  forumCommentChallengeWrapper = null;
-  const matches = location.match(FORUM_COMMENT_URL_REGEXP);
-
-  if (isArray(matches)) {
-    const commentId = Number(matches[1]);
-
-    if (commentId > 0) {
-      forumCommentId = commentId;
-
-      onUiLoaded(() => runPromiseForEffects(
-        Promise.race(
-          [ 0, 1, 3, 6 ].map(async delay => {
-            await sleep(delay * 1000);
-
-            if (null !== forumCommentData) {
-              return;
-            }
-
-            await sendActionRequestToContentScript(ACTION_TYPE_GET_COMMENT_CHALLENGE, commentId)
-              .then(data => {
-                if (isObject(data?.challenge) && (forumCommentId === data.commentId)) {
-                  forumCommentData = data;
-
-                  renderForumCommentChallenge(
-                    data.commentId,
-                    data.challenge,
-                    data.userReference
-                  );
-                }
-              })
-              .catch(error => error && logError(error, 'Could not handle the forum comment:'))
-          })
-        )
-      ));
-    }
-  }
-};
-
-/**
  * @returns {boolean} Whether a modal is currently displayed.
  */
 const isAnyModalDisplayed = () => !!document.querySelector(SELECTOR_VISIBLE_MODAL_OVERLAY);
@@ -814,16 +652,6 @@ document.addEventListener('keydown', event => {
       callback = () => (
         renderCompletedChallengeSolutionListModal(true)
           .catch(() => {
-            if (forumCommentChallengeWrapper) {
-              toggleElementDisplay(forumCommentChallengeWrapper, true);
-
-              scrollElementIntoParentView(
-                forumCommentChallengeWrapper,
-                getForumTopScrollOffset() + 10,
-                'smooth'
-              );
-            }
-
             releaseHotkeysMutex();
           })
       );
@@ -845,13 +673,8 @@ document.addEventListener('keydown', event => {
   }
 });
 
-// Detects and handles relevant changes to the document location or to the UI.
+// Detects and handles relevant changes to the UI.
 setInterval(() => {
-  if (document.location.href !== documentLocation) {
-    documentLocation = document.location.href;
-    handleDocumentLocationChange(documentLocation);
-  }
-
   const newChallengeFooter = document.querySelector(SELECTOR_CHALLENGE_FOOTER);
 
   if (newChallengeFooter) {
@@ -862,22 +685,6 @@ setInterval(() => {
     }
   } else {
     completedChallenge = null;
-  }
-
-  const newForumOpWrapper = document.querySelector(SELECTOR_FORUM_OP_WRAPPER);
-
-  if (newForumOpWrapper) {
-    if (newForumOpWrapper !== forumOpWrapper) {
-      forumOpWrapper = newForumOpWrapper;
-
-      if (forumCommentData) {
-        onUiLoaded(() => renderForumCommentChallenge(
-          forumCommentData.commentId,
-          forumCommentData.challenge,
-          forumCommentData.userReference
-        ));
-      }
-    }
   }
 }, 50);
 
@@ -1038,25 +845,6 @@ const SELECTOR_CHALLENGE_DISCUSSION_ICON = [
  * @type {string}
  */
 const SELECTOR_CHALLENGE_MODAL_CLOSE_BUTTON = '#overlays *[data-test="close-button"]';
-
-/**
- * A CSS selector for the fixed page header used in the forum. We use the class names with the most styles.
- * Note that the fixed header is different on desktop and mobile.
- * @type {string}
- */
-const SELECTOR_FORUM_FIXED_PAGE_HEADER = '._2i8Km, ._13Hyj';
-
-/**
- * A CSS selector for the wrapper of the original post in a forum discussion.
- * @type {string}
- */
-const SELECTOR_FORUM_OP_WRAPPER = '._3eQwU';
-
-/**
- * A CSS selector for the list of actions related to the original post in a forum discussion.
- * @type {string}
- */
-const SELECTOR_FORUM_OP_ACTION_LINK_LIST = '._3Rqyw';
 
 /**
  * A CSS selector for a modal overlay that is visible.

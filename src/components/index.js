@@ -19,12 +19,6 @@ export const BASE = Symbol('base');
 export const CONTEXT_CHALLENGE = Symbol('challenge');
 
 /**
- * The key under which to store the class names and styles of an element that are applicable when on a forum page.
- * @type {symbol}
- */
-export const CONTEXT_FORUM = Symbol('forum');
-
-/**
  * @param {Function} component A functional component.
  * @param {object} forcedProps A set of props to be forced on the component.
  * @returns {Function} The same functional component with the given props forced.

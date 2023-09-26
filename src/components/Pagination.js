@@ -6,7 +6,7 @@ import { StyleSheet } from 'aphrodite';
 import Paginator from 'paginator';
 import { isNumber, noop } from 'duo-toolbox/utils/functions';
 import { isAnyInputFocused } from 'duo-toolbox/utils/ui';
-import { BASE, CONTEXT_CHALLENGE, CONTEXT_FORUM, useStyles, useThrottledCallback } from './index';
+import { BASE, CONTEXT_CHALLENGE, useStyles, useThrottledCallback } from './index';
 
 const Pagination =
   ({
@@ -174,11 +174,6 @@ const CLASS_NAMES = {
       '_3f9XI',
     ],
   },
-  [CONTEXT_FORUM]: {
-    // Copied from the "Follow discussion" button.
-    // Only the class names responsible for the padding and 3D-like border widths are used here.
-    [ENABLED_BUTTON]: [ '_1O1Bz', '_2NzLI' ],
-  },
 };
 
 const STYLE_SHEETS = {
@@ -194,48 +189,5 @@ const STYLE_SHEETS = {
         display: 'none',
       },
     },
-  }),
-  [CONTEXT_FORUM]: StyleSheet.create({
-    [WRAPPER]: {
-      alignItems: 'center',
-      display: 'flex',
-      justifyContent: 'center',
-      marginTop: '1em',
-    },
-    [BUTTON]: {
-      background: 'transparent',
-      borderRadius: '12px',
-      color: 'currentColor',
-      display: 'flex',
-      height: '32px',
-      justifyContent: 'center',
-      lineHeight: '26px',
-      margin: '0 2px',
-      opacity: '0.5',
-      overflow: 'hidden',
-      position: 'relative',
-      width: '32px',
-    },
-    [DISABLED_BUTTON]: {
-      border: 0,
-    },
-    [ENABLED_BUTTON]: {
-      ':hover': {
-        ':before': {
-          background: 'currentColor',
-          bottom: 0,
-          content: '""',
-          display: 'block',
-          // This seems to have almost the same effect as the original brightness filter, which does not work here.
-          filter: 'invert(1)',
-          left: 0,
-          opacity: '0.3',
-          position: 'absolute',
-          right: 0,
-          top: 0,
-          zIndex: '-1',
-        },
-      },
-    }
   }),
 };

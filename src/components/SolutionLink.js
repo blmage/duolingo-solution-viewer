@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { discardEvent } from 'duo-toolbox/utils/ui';
 import { RESULT_CORRECT, RESULT_INCORRECT, RESULT_NONE } from 'duo-toolbox/duo/challenges';
 import * as Solution from '../solutions';
-import { CONTEXT_CHALLENGE, CONTEXT_FORUM, useStyles } from './index';
+import { CONTEXT_CHALLENGE, useStyles } from './index';
 import Loader from './Loader';
 
 const SolutionLink =
@@ -75,12 +75,6 @@ const CLASS_NAMES = {
     // Copied from the "Report" and "Discuss" titles.
     [TITLE]: [ '_28V9T', '_3yAjN' ]
   },
-  [CONTEXT_FORUM]: {
-    // Copied from the direct wrapper of the "Give Lingot" link.
-    [BUTTON]: [ '_5j_V-' ],
-    // Copied from the "Reply" link.
-    [TITLE]: [ 'uFNEM', 'tCqcy' ],
-  },
   [RESULT_CORRECT]: {
     // Copied from the wrapper of the "Report" and "Discuss" icons and links when the result is correct.
     // Adds the "correct" color.
@@ -101,14 +95,6 @@ const STYLE_SHEETS = {
   [CONTEXT_CHALLENGE]: StyleSheet.create({
     [BUTTON]: {
       height: '100%',
-    },
-  }),
-  [CONTEXT_FORUM]: StyleSheet.create({
-    [BUTTON]: {
-      cursor: 'pointer',
-      float: 'right',
-      marginRight: '20px',
-      userSelect: 'none',
     },
   }),
 };
