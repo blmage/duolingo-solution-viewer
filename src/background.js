@@ -1,17 +1,6 @@
-import { _, it } from 'one-liner.macro';
+import { _, it, lift } from 'one-liner.macro';
 import { onActionRequest, onUiEvent } from 'duo-toolbox/extension/ipc';
-
-import {
-  isArray,
-  isEmptyObject,
-  isObject,
-  isString,
-  maxOf,
-  minBy,
-  minOf,
-  sumOf,
-} from 'duo-toolbox/utils/functions';
-
+import { dedupeBy, isArray, isObject, isString, maxOf, minBy, minOf, sumOf } from 'duo-toolbox/utils/functions';
 import { RESULT_CORRECT } from 'duo-toolbox/duo/challenges';
 import { normalizeString } from './strings';
 
@@ -19,9 +8,11 @@ import {
   CHALLENGE_TYPE_LISTENING,
   CHALLENGE_TYPE_NAMING,
   CHALLENGE_TYPE_TRANSLATION,
+  SOLUTION_LIST_TYPE_COMPACT,
 } from './constants';
 
 import {
+  ACTION_TYPE_GET_CHALLENGE_BY_KEY,
   ACTION_TYPE_GET_CURRENT_LISTENING_CHALLENGE,
   ACTION_TYPE_GET_CURRENT_TRANSLATION_CHALLENGE,
   ACTION_TYPE_UPDATE_CURRENT_CHALLENGE_USER_REFERENCE,
@@ -39,8 +30,15 @@ import * as Solution from './solutions';
 const getSenderId = sender => {
   const senderTabId = String(sender.tab?.id || 'global');
   const senderFrameId = String(sender.frameId || 'main');
+
   return `${senderTabId}-${senderFrameId}`;
 };
+
+/**
+ * For each practice session running in a tab, the maximum number of challenges to keep in memory.
+ * @type {number}
+ */
+const MAX_REMEMBERED_SESSION_CHALLENGES = 200;
 
 /**
  * For each practice session running in a tab, the corresponding list of challenges.
@@ -53,6 +51,18 @@ const sessionChallenges = [];
  * @type {{[key: string]: Challenge|null}}
  */
 const sessionLastListeningChallenges = {};
+
+/**
+ * The global maximum number of parsed solution lists to keep in memory.
+ * @type {number}
+ */
+const PARSED_COMPLEX_SOLUTION_LIST_CACHE_SIZE = 20;
+
+/**
+ * A global cache for parsed solution lists.
+ * @type {Array}
+ */
+const parsedComplexSolutionListCache = [];
 
 /**
  * @param {string} sessionId A session ID.
@@ -90,17 +100,52 @@ const findSessionChallengesOfType = (sessionId, challengeType, predicate) => {
  * @param {object[]} uiChallenges A set of raw challenge data from the UI.
  * @param {string} fromLanguage The language the user speaks.
  * @param {string} toLanguage The language the user learns.
- * @param {boolean} [replace] Whether to replace the current challenges of the session.
  * @returns {Promise<void>} A promise for the result of the action.
  */
-const registerUiChallenges = async (sessionId, uiChallenges, fromLanguage, toLanguage, replace = true) => {
+const registerUiChallenges = async (sessionId, uiChallenges, fromLanguage, toLanguage) => {
   const parsedChallenges = Challenge.parseUiChallenges(uiChallenges, fromLanguage, toLanguage);
 
-  if (replace) {
-    sessionChallenges[sessionId] = parsedChallenges;
-  } else {
-    sessionChallenges[sessionId] = (sessionChallenges[sessionId] || []).concat(parsedChallenges)
+  sessionChallenges[sessionId] = dedupeBy(
+    (sessionChallenges[sessionId] || [])
+      .concat(parsedChallenges)
+      .splice(-MAX_REMEMBERED_SESSION_CHALLENGES),
+    () => 1, // LRU behavior.
+    lift(Challenge.getUniqueKey(_))
+  );
+};
+
+/**
+ * @param {Challenge} challenge A challenge.
+ * @param {string} type The preferred type of solutions to be returned.
+ * @returns {import('./challenges.js').SolutionList}
+ * A list of parsed solutions for the given challenge.
+ * If the requested type is not available, the returned list may be of any type.
+ */
+const getChallengeParsedSolutionList = (challenge, type) => {
+  // If the solution list of the challenge is already parsed, return it.
+  // Otherwise, parse it if needed and cache it.
+  if (challenge.solutions.parsed) {
+    return challenge.solutions;
   }
+
+  const key = Challenge.getUniqueKey(challenge);
+  const cached = parsedComplexSolutionListCache.find((it.key === key) && (it.type === type));
+
+  if (cached) {
+    return cached.list;
+  }
+
+  const list = Challenge.getParsedSolutionList(challenge, type);
+  list.otherTypes = Challenge.getAvailableSolutionListTypes(challenge).filter(it !== list.type);
+
+  parsedComplexSolutionListCache.splice(
+    0,
+    Math.max(0, parsedComplexSolutionListCache.length + 1 - PARSED_COMPLEX_SOLUTION_LIST_CACHE_SIZE)
+  );
+
+  parsedComplexSolutionListCache.push({ key, type, list });
+
+  return list;
 };
 
 /**
@@ -136,9 +181,14 @@ const handleCurrentTranslationChallengeRequest = async (senderId, data, sendResu
       return;
     }
 
-    Challenge.addSimilarityScores(challenge, userAnswer);
+    const solutions = getChallengeParsedSolutionList(
+      challenge,
+      data.listType || SOLUTION_LIST_TYPE_COMPACT
+    );
 
-    sendResult(challenge);
+    Challenge.addSimilarityScoresToSolutionList(solutions, userAnswer);
+
+    sendResult({ ...challenge, solutions });
   }
 };
 
@@ -184,26 +234,33 @@ const handleCurrentListeningChallengeRequest = async (senderId, data, sendResult
       return;
     }
 
-    Challenge.addSimilarityScores(challenge, userAnswer);
+    const solutions = getChallengeParsedSolutionList(
+      challenge,
+      data.listType || SOLUTION_LIST_TYPE_COMPACT
+    );
 
-    const result = { challenge };
+    Challenge.addSimilarityScoresToSolutionList(solutions, userAnswer);
+
+    const result = {
+      challenge: { ...challenges, solutions },
+    };
 
     if (('' !== userAnswer) && (RESULT_CORRECT === data.result)) {
       let variations;
       const locale = Challenge.getSolutionsLocale(challenge);
-      const matchingOptions = challenge.matchingData.matchingOptions;
+      const matchingOptions = solutions.matchingData.matchingOptions;
 
       // The Japanese solution graph is not reliable enough
       // (we should apply token transliterations to all solutions before checking for differences).
       if (locale !== 'ja') {
-        if (challenge.solutions.some('score' in it)) {
-          const bestScore = maxOf(challenge.solutions, it.score);
+        if (solutions.list.some('score' in it)) {
+          const bestScore = maxOf(solutions.list, it.score);
 
-          variations = challenge.solutions
+          variations = solutions.list
             .filter(bestScore === it.score)
             .flatMap(Solution.getBestMatchingVariationsForAnswer(_, userAnswer, matchingOptions))
         } else {
-          variations = challenge.solutions.flatMap(Solution.getAllVariations(_));
+          variations = solutions.list.flatMap(Solution.getAllVariations(_));
         }
 
         const correctionDiffs = variations.map(Solution.getVariationDiffWithAnswer(_, userAnswer, locale));
@@ -237,7 +294,6 @@ const handleCurrentChallengeUserReferenceUpdateRequest = async (senderId, data, 
     isObject(data)
     && isString(data.key)
     && isString(data.userReference)
-    && ('' !== data.userReference.trim())
   ) {
     const userReference = data.userReference.trim();
 
@@ -248,8 +304,20 @@ const handleCurrentChallengeUserReferenceUpdateRequest = async (senderId, data, 
     );
 
     if (isObject(challenge)) {
-      Challenge.addSimilarityScores(challenge, userReference);
-      sendResult({ challenge, userReference });
+      const solutions = getChallengeParsedSolutionList(
+        challenge,
+        data.listType || SOLUTION_LIST_TYPE_COMPACT
+      );
+
+      Challenge.addSimilarityScoresToSolutionList(solutions, userReference);
+
+      sendResult({
+        challenge: {
+          ...challenge,
+          solutions,
+        },
+        userReference,
+      });
     }
   }
 };
@@ -269,10 +337,7 @@ const handleSessionLoadedEvent = async (senderId, data) => {
       senderId,
       challenges,
       String(metaData.ui_language || metaData.from_language || data.fromLanguage || '').trim(),
-      String(metaData.language || metaData.learning_language || data.learningLanguage || '').trim(),
-      // If no metadata is available, assume that the new challenges belong to the current session.
-      // This is the case for placement tests, for example, for which challenges are loaded one by one.
-      !isEmptyObject(metaData)
+      String(metaData.language || metaData.learning_language || data.learningLanguage || '').trim()
     );
   }
 };
@@ -308,6 +373,7 @@ onActionRequest(async (action, data, sender, sendResult) => {
     case ACTION_TYPE_GET_CURRENT_LISTENING_CHALLENGE:
       await handleCurrentListeningChallengeRequest(getSenderId(sender), data, sendResult);
       break;
+    case ACTION_TYPE_GET_CHALLENGE_BY_KEY:
     case ACTION_TYPE_UPDATE_CURRENT_CHALLENGE_USER_REFERENCE:
       await handleCurrentChallengeUserReferenceUpdateRequest(getSenderId(sender), data, sendResult);
       break;

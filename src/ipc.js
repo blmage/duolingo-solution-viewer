@@ -1,6 +1,11 @@
 /**
  * @type {string}
  */
+export const ACTION_TYPE_GET_CHALLENGE_BY_KEY = 'get_challenge_by_key';
+
+/**
+ * @type {string}
+ */
 export const ACTION_TYPE_GET_CURRENT_TRANSLATION_CHALLENGE = 'get_current_translation_challenge';
 
 /**
@@ -17,6 +22,7 @@ export const ACTION_TYPE_UPDATE_CURRENT_CHALLENGE_USER_REFERENCE = 'update_curre
  * @type {string[]}
  */
 export const ACTION_TYPES = [
+  ACTION_TYPE_GET_CHALLENGE_BY_KEY,
   ACTION_TYPE_GET_CURRENT_TRANSLATION_CHALLENGE,
   ACTION_TYPE_GET_CURRENT_LISTENING_CHALLENGE,
   ACTION_TYPE_UPDATE_CURRENT_CHALLENGE_USER_REFERENCE,

@@ -1,55 +1,33 @@
 import { h, Fragment } from 'preact';
-import { useCallback, useRef, useState } from 'preact/hooks';
+import { useCallback, useRef } from 'preact/hooks';
 import { IntlProvider, Localizer, Text } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { isArray, noop  } from 'duo-toolbox/utils/functions';
+import { noop } from 'duo-toolbox/utils/functions';
 import { scrollElementIntoParentView  } from 'duo-toolbox/utils/ui';
 import { BASE, CONTEXT_CHALLENGE, useLocalStorage, useStyles } from './index';
-import Loader from './Loader';
 import SolutionList from './SolutionList';
 import UserReference from './UserReference';
+import { SOLUTION_LIST_TYPE_COMPACT } from '../constants';
 
 const ChallengeSolutions =
   ({
      context = CONTEXT_CHALLENGE,
      statement = '',
-     solutions = [],
-     matchingData = {},
+     solutions: {
+         type = SOLUTION_LIST_TYPE_COMPACT,
+         otherTypes = [],
+         list: solutions = [],
+         matchingData = {},
+     } = {},
      userReference = '',
+     isLoading = false,
+     onListTypeChange = noop,
      onUserReferenceUpdate = noop,
      isUserReferenceEditable = true,
      scrollOffsetGetter = (() => 0),
    }) => {
-    const [ isLoading, setIsLoading ] = useState(false);
-    const [ currentSolutions, setCurrentSolutions ] = useState(solutions);
-    const [ currentUserReference, setCurrentUserReference ] = useState(userReference);
     const [ isUserReferencePinned, setIsUserReferencedPinned ] = useLocalStorage('user_reference_pinned', false);
-
-    // Updates the user reference and waits for a new list of solutions.
-    const updateUserReference = useCallback(newReference => {
-      setIsLoading(true);
-      setCurrentUserReference(newReference);
-
-      Promise.resolve(onUserReferenceUpdate(newReference))
-        .then(solutions => {
-          if (isArray(solutions)) {
-            setCurrentSolutions(solutions)
-          } else {
-            setCurrentUserReference(currentUserReference);
-          }
-        }).catch(() => (
-          setCurrentUserReference(currentUserReference)
-        )).then(() => {
-          setIsLoading(false);
-        });
-    }, [
-      onUserReferenceUpdate,
-      setIsLoading,
-      setCurrentSolutions,
-      currentUserReference,
-      setCurrentUserReference,
-    ]);
 
     const listWrapper = useRef();
     const referenceWrapper = useRef();
@@ -67,12 +45,11 @@ const ChallengeSolutions =
     }, [ // eslint-disable-line react-hooks/exhaustive-deps
       listWrapper,
       fullScrollOffsetGetter,
-      currentSolutions,
     ]);
 
     const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
 
-    if (0 === currentSolutions.length) {
+    if (0 === solutions.length) {
       return null;
     }
 
@@ -96,8 +73,8 @@ const ChallengeSolutions =
         >
           <UserReference
             context={context}
-            reference={currentUserReference}
-            onUpdate={updateUserReference}
+            reference={userReference}
+            onUpdate={onUserReferenceUpdate}
             isEditable={isUserReferenceEditable && !isLoading}
           />
           {(CONTEXT_CHALLENGE === context)
@@ -126,22 +103,20 @@ const ChallengeSolutions =
           )}
         </div>
 
-        <div>
-          {isLoading
-            ? (
-              <div className={getElementClassNames(LOADER)}>
-                <Loader />
-              </div>
-            ) : (
-              <SolutionList
-                ref={listWrapper}
-                context={context}
-                solutions={currentSolutions}
-                matchingData={matchingData}
-                onPageChange={onSolutionListChange}
-                scrollOffsetGetter={fullScrollOffsetGetter}
-              />
-            )}
+        <div className={getElementClassNames(SOLUTION_LIST_WRAPPER)}>
+          <SolutionList
+            ref={listWrapper}
+            context={context}
+            type={type}
+            otherTypes={otherTypes}
+            solutions={solutions}
+            matchingData={matchingData}
+            onTypeChange={onListTypeChange}
+            onPageChange={onSolutionListChange}
+            scrollOffsetGetter={fullScrollOffsetGetter}
+          />
+
+          {isLoading && <div className={getElementClassNames(LOADER)} />}
         </div>
       </IntlProvider>
     );
@@ -155,6 +130,7 @@ const REFERENCE_WRAPPER__PINNED = 'reference_wrapper__pinned';
 const PIN_BUTTON = 'pin_button';
 const PIN_BUTTON__PINNED = 'pin_button__pinned';
 const PIN_BUTTON_ICON = 'pin_button_icon';
+const SOLUTION_LIST_WRAPPER = 'solution_list_wrapper';
 
 const CLASS_NAMES = {
   [CONTEXT_CHALLENGE]: {
@@ -172,20 +148,31 @@ const CLASS_NAMES = {
 const STYLE_SHEETS = {
   [BASE]: StyleSheet.create({
     [LOADER]: {
-      padding: '0 0 18px',
-      textAlign: 'center',
+      background: 'currentColor',
+      borderRadius: '5px',
+      bottom: '0',
+      left: '0',
+      opacity: '0.15',
+      position: 'absolute',
+      right: '0',
+      top: '-5px',
+      zIndex: '1',
     },
+    [SOLUTION_LIST_WRAPPER]: {
+      position: 'relative',
+    }
   }),
   [CONTEXT_CHALLENGE]: StyleSheet.create({
     [REFERENCE_WRAPPER]: {
       paddingRight: '40px',
       position: 'relative',
+      zIndex: '2',
     },
     [REFERENCE_WRAPPER__PINNED]: {
       padding: '0 40px 0 0 !important',
       position: 'sticky',
       top: '-1px',
-      zIndex: 1,
+      zIndex: '2',
       // Use an absolute border to preserve margin collapse.
       ':after': {
         background: 'inherit',

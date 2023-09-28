@@ -25,7 +25,11 @@
         "react"
     ],
     "rules": {
-        "jest/no-deprecated-functions": "off"
+        "jest/expect-expect": "off",
+        "jest/no-deprecated-functions": "off",
+        "jest/no-disabled-tests": "off",
+        "jest/no-export": "off",
+        "jest/valid-title": "off"
     },
     "settings": {
         "jsdoc": {

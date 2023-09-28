@@ -504,7 +504,7 @@ const STYLE_SHEETS = {
   }),
   [CONTEXT_CHALLENGE]: StyleSheet.create({
     [WRAPPER]: {
-      margin: '10px 0',
+      margin: '10px 0  20px',
     },
   }),
 };

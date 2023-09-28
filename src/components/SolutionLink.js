@@ -11,7 +11,7 @@ import Loader from './Loader';
 const SolutionLink =
   ({
      context = CONTEXT_CHALLENGE,
-     solutions = [],
+     solutions: { list: solutions = [] } = {},
      result = RESULT_NONE,
      isLoading = false,
      onClick = discardEvent,

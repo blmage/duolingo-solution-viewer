@@ -4,12 +4,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { useStateRef } from 'preact-use';
 import { IntlProvider, Localizer, Text, useText } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
-import { _, _1, _2, it } from 'one-liner.macro';
+import { _, _1, _2, it, lift } from 'one-liner.macro';
 import moize from 'moize';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { identity, invertComparison, noop } from 'duo-toolbox/utils/functions';
-import { getFixedElementPositioningParent, scrollElementIntoParentView } from 'duo-toolbox/utils/ui';
+import { discardEvent, getFixedElementPositioningParent, scrollElementIntoParentView } from 'duo-toolbox/utils/ui';
 
 import {
+  SOLUTION_LIST_TYPE_COMPACT,
+  SOLUTION_LIST_TYPE_EXPANDED,
   STRING_MATCH_MODE_GLOBAL,
   STRING_MATCH_MODE_WORDS,
   STRING_MATCH_TYPE_ANYWHERE,
@@ -94,11 +97,119 @@ const PAGE_SIZES = [ 10, 20, 50, 200, PAGE_SIZE_ALL ];
  */
 const isEqualPageSizes = String(_) === String(_);
 
+const ListFlagFilters =
+  ({
+     context,
+     flagFilterSet,
+     flagFilterMask,
+     onChange,
+   }) => {
+    const toggleFlag = onChange(flagFilterMask ^ _);
+    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
+
+    return (
+      <Fragment>
+        <h3 className={getElementClassNames(TITLE)}>
+          <span className={getElementClassNames(TITLE_TEXT)}>
+            <Text id={flagFilterSet.labelKey}>{flagFilterSet.defaultLabel}</Text>
+          </span>
+        </h3>
+
+        <ul>
+          {flagFilterSet.filters.map(filter => {
+            const key = `flag-filter-${filter.flag}`;
+
+            const onClick = event => {
+              discardEvent(event);
+              toggleFlag(filter.flag);
+            };
+
+            return (
+              <li key={key} className={getElementClassNames(FLAG_FILTER_OPTION)}>
+                <input
+                  key={key}
+                  type="checkbox"
+                  onClick={onClick}
+                  checked={(flagFilterMask & filter.flag) > 0}
+                  className={getElementClassNames(FLAG_FILTER_CHECKBOX)}
+                />
+
+                <label onClick={onClick}>
+                  <Text id={filter.labelKey}>{filter.defaultLabel}</Text>
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+      </Fragment>
+    );
+  };
+
+const LIST_TYPES = [
+  {
+    type: SOLUTION_LIST_TYPE_COMPACT,
+    icon: [ 'fas', 'file-user' ],
+    titleKey: 'compact_list_description',
+    defaultTitle: 'View the list of solutions as written by the course contributors. Less exhaustive, but more readable.',
+  },
+  {
+    type: SOLUTION_LIST_TYPE_EXPANDED,
+    icon: [ 'fas', 'file-plus' ],
+    titleKey: 'expanded_list_description',
+    defaultTitle: 'View the expanded list of solutions, including all automatically generated variants. More exhaustive, but less readable.',
+  },
+];
+
+const ListTypeLinks =
+  ({
+     context,
+     currentType,
+     availableTypes,
+     onChange,
+   }) => {
+    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
+
+    const typeTitles = useText(Object.fromEntries(
+      LIST_TYPES.map([
+        it.type,
+        <Text key={it.titleKey} id={it.titleKey}>{it.defaultTitle}</Text>,
+      ])
+    ));
+
+    return (
+      <div className={getElementClassNames(TYPE_LINK_WRAPPER)}>
+        {LIST_TYPES.filter(availableTypes.includes(_.type)).map(({ type, icon }) => {
+          const title = typeTitles[type];
+          const isActive = (type === currentType);
+
+          const onClick = event => {
+            discardEvent(event);
+            !isActive && onChange(type);
+          };
+
+          return (
+            <div
+              key={type}
+              title={title}
+              onClick={onClick}
+              className={getElementClassNames([ TYPE_LINK, isActive && ACTIVE_TYPE_LINK ])}
+            >
+              <FontAwesomeIcon
+                icon={icon}
+                className={getElementClassNames(TYPE_LINK_ICON)}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
 const ListSortLinks =
   ({
      context,
      availableSortTypes,
-     sortType,
+     currentSortType,
      nextSortType,
      sortDirection,
      nextSortDirection,
@@ -113,8 +224,8 @@ const ListSortLinks =
       nextSortDirectionTitle,
     } = useText({
       sortTypeLabel: (
-        <Text id={SORT_TYPES[sortType].labelId}>
-          {SORT_TYPES[sortType].defaultLabel}
+        <Text id={SORT_TYPES[currentSortType].labelId}>
+          {SORT_TYPES[currentSortType].defaultLabel}
         </Text>
       ),
       nextSortTypeTitle: (
@@ -336,6 +447,13 @@ const matchSubstring = (string, substring) => {
 };
 
 /**
+ * @param {import('../solutions.js').Solution} solution A solution.
+ * @param {number} mask A mask for testing flag filters.
+ * @returns {boolean} Whether the given solution matches any of the flags tested by the given mask.
+ */
+const isSolutionMatchingFlagFilterMask = (solution, mask) => ((solution.flags ?? 0) & mask) > 0;
+
+/**
  * @typedef {object} MatchResult The result of a match between a solution against a filter.
  * @property {boolean} isMatched Whether the solution matched the filter.
  * @property {number} matches A set of match results corresponding to the positions of the filter in the solution.
@@ -389,10 +507,11 @@ const matchSolutionOnSummary = (solution, filter) => {
  * @param {Function} matchSolution The callback usable to match a solution against a filter.
  * @param {import('../solutions.js').Solution[]} solutions A list of solutions.
  * @param {import('./FilterInput.js').WordFilter[]} filters A list of filters.
+ * @param {number|null} flagFilterMask A mask of the flag filters that should be matched by the solutions.
  * @param {object} filterCache A cache for the results of filters.
  * @returns {import('../solutions.js').Solution[]} A sub-list of the solutions that matched the given filters.
  */
-const filterSolutions = (matchSolution, solutions, filters, filterCache) => {
+const filterSolutions = (matchSolution, solutions, filters, flagFilterMask, filterCache) => {
   for (const filter of filters) {
     if (!filterCache[filter.word]) {
       filterCache[filter.word] = {};
@@ -400,6 +519,10 @@ const filterSolutions = (matchSolution, solutions, filters, filterCache) => {
   }
 
   return solutions.filter(solution => {
+    if ((null !== flagFilterMask) && !isSolutionMatchingFlagFilterMask(solution, flagFilterMask)) {
+      return false;
+    }
+
     const id = solution.matchingData.id;
 
     for (const filter of filters) {
@@ -437,7 +560,7 @@ const filterSolutions = (matchSolution, solutions, filters, filterCache) => {
  * @param {object} filterCache A cache for the results of filters.
  * @returns {import('../solutions.js').Solution[]} A sub-list of the solutions that matched the given filters.
  */
-const filterSolutionsUsingWords = filterSolutions(matchSolutionOnWords, _, _, _);
+const filterSolutionsUsingWords = filterSolutions(matchSolutionOnWords, _, _, _, _);
 
 /**
  * Filters a list of solutions based on their summaries.
@@ -447,20 +570,25 @@ const filterSolutionsUsingWords = filterSolutions(matchSolutionOnWords, _, _, _)
  * @param {object} filterCache A cache for the results of filters.
  * @returns {import('../solutions.js').Solution[]} A sub-list of the solutions that matched the given filters.
  */
-const filterSolutionsUsingSummaries = filterSolutions(matchSolutionOnSummary, _, _, _);
+const filterSolutionsUsingSummaries = filterSolutions(matchSolutionOnSummary, _, _, _, _);
 
 const SolutionList =
   forwardRef(
     (
       {
         context = CONTEXT_CHALLENGE,
+        type = SOLUTION_LIST_TYPE_COMPACT,
+        otherTypes = [],
         solutions = [],
         matchingData = {},
+        onTypeChange = noop,
         onPageChange = noop,
         scrollOffsetGetter = (() => 0),
       },
       listRef
     ) => {
+      const locale = solutions[0]?.locale;
+
       const isScoreAvailable = useMemo(() => {
         return solutions.some('score' in it);
       }, [ solutions ]);
@@ -502,16 +630,38 @@ const SolutionList =
 
       // Filter the solutions.
 
+      const [ flagFilterSet, defaultFlagFilterMask ] = useMemo(() => {
+        const set = Solution.LOCALE_FLAG_FILTER_SETS[locale];
+
+        if (set) {
+          const applicableFilters = set.filters.filter(
+            ({ flag }) => solutions.some(isSolutionMatchingFlagFilterMask(_, flag))
+          );
+
+          if (applicableFilters.length > 1) {
+            const defaultFilters = applicableFilters.filter(it.default);
+
+            return [
+              { ...set, filters: applicableFilters },
+              ((defaultFilters.length > 0) ? defaultFilters : [ applicableFilters[0] ]).reduce(lift(_ | _.flag), 0),
+            ];
+          }
+        }
+
+        return [ null, null ];
+      }, [ locale, solutions ]);
+
       const filterCache = useRef({}).current;
       const [ filters, filtersRef, setFilters ] = useStateRef([]);
+      const [ flagFilterMask, setFlagFilterMask ] = useState(defaultFlagFilterMask);
 
       const filteredSolutions = useMemo(
         () => (
           isFilterWordBased
             ? filterSolutionsUsingWords
             : filterSolutionsUsingSummaries
-        )(sortedSolutions, filters, filterCache),
-        [ sortedSolutions, filters, filterCache, isFilterWordBased ]
+        )(sortedSolutions, filters, flagFilterMask, filterCache),
+        [ sortedSolutions, filters, flagFilterMask, filterCache, isFilterWordBased ]
       );
 
       // Paginate and render the current solutions.
@@ -523,6 +673,34 @@ const SolutionList =
       const page = (PAGE_SIZE_ALL === pageSize)
         ? 1
         : Math.min(rawPage, Math.ceil(filteredSolutions.length / pageSize));
+
+      const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
+
+      const solutionItems = useMemo(() => {
+        const baseItemKey = `${type}-${page}-${pageSize}`;
+        const renderTokenSeparator = lift(<span className={getElementClassNames(SOLUTION_TOKEN_SEPARATOR)}>{_}</span>);
+
+        const renderSolutionItem = (solution, index) => (
+          <li key={`${baseItemKey}-${index}`} className={getElementClassNames(SOLUTION)}>
+            {Solution.getReaderFriendlySummaryTokens(
+              solution,
+              {
+                choiceLeftDelimiter: renderTokenSeparator('['),
+                choiceSeparator: renderTokenSeparator(' / '),
+                choiceRightDelimiter: renderTokenSeparator(']'),
+              }
+            )}
+          </li>
+        );
+
+        const pageSolutions = (PAGE_SIZE_ALL === pageSize)
+          ? filteredSolutions
+          : filteredSolutions.slice((page - 1) * pageSize, page * pageSize);
+
+        return pageSolutions.map(renderSolutionItem);
+      }, [ type, page, pageSize, filteredSolutions, getElementClassNames ]);
+
+      // Event handling.
 
       const setPage = useCallback(page => {
         setRawPage(page);
@@ -551,22 +729,6 @@ const SolutionList =
 
         shouldTriggerPageChange.current = true;
       }, [ page, pageSize, filteredSolutions.length, setRawPageSize ]);
-
-      const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
-
-      const solutionItems = useMemo(() => {
-        const renderSolutionItem = solution => (
-          <li className={getElementClassNames(SOLUTION)}>
-            {Solution.getReaderFriendlySummary(solution)}
-          </li>
-        );
-
-        const pageSolutions = (PAGE_SIZE_ALL === pageSize)
-          ? filteredSolutions
-          : filteredSolutions.slice((page - 1) * pageSize, page * pageSize);
-
-        return pageSolutions.map(renderSolutionItem);
-      }, [ page, pageSize, filteredSolutions, getElementClassNames ]);
 
       // Triggers the "page change" callback asynchronously,
       // to make sure it is run only when the changes have been applied to the UI.
@@ -599,9 +761,8 @@ const SolutionList =
 
             if (
               selection.anchorNode
-              && (selection.anchorNode === selection.focusNode)
               && listRef.current.contains(selection.anchorNode)
-              && (selection.anchorNode.parentNode.nodeName === 'LI')
+              && selection.anchorNode.parentElement.closest('li')
             ) {
               // We are only interested in single-word selections.
               const words = Solution.getStringMatchableWords(
@@ -611,12 +772,27 @@ const SolutionList =
               );
 
               if (1 === words.length) {
-                const selectedText = !isFilterWordBased
-                  ? selection.toString()
-                  : getWordAt(
-                    selection.anchorNode.wholeText,
-                    Math.floor((selection.anchorOffset + selection.focusOffset) / 2)
-                  );
+                let selectedText = '';
+
+                if (!isFilterWordBased) {
+                  selectedText = selection.toString();
+                } else {
+                  let textNode = selection.anchorNode;
+
+                  while (textNode) {
+                    const isFocusNode = selection.focusNode.isSameNode(textNode);
+
+                    if (!isFocusNode || selection.anchorNode.isSameNode(textNode)) {
+                      selectedText += textNode.textContent;
+                    } else {
+                      selectedText += textNode.textContent.substring(0, selection.focusOffset);
+                    }
+
+                    textNode = !isFocusNode && textNode.nextSibling;
+                  }
+
+                  selectedText = getWordAt(selectedText, selection.anchorOffset);
+                }
 
                 const [ word = '' ] = Solution.getStringMatchableWords(
                   selectedText,
@@ -701,6 +877,14 @@ const SolutionList =
               />
             </div>
 
+            {flagFilterSet && (
+              <ListFlagFilters
+                flagFilterSet={flagFilterSet}
+                flagFilterMask={flagFilterMask}
+                onChange={setFlagFilterMask}
+              />
+            )}
+
             <div ref={listRef}>
               <h3 className={getElementClassNames(TITLE)}>
                 <span className={getElementClassNames(TITLE_TEXT)}>
@@ -710,12 +894,19 @@ const SolutionList =
                 <ListSortLinks
                   context={context}
                   availableSortTypes={sortTypes}
-                  sortType={sortType}
+                  currentSortType={sortType}
                   nextSortType={nextSortType}
                   sortDirection={sortDirection}
                   nextSortDirection={nextSortDirection}
                   onSortTypeToggle={() => setNextSortType()}
                   onSortDirectionToggle={() => setNextSortDirection()}
+                />
+
+                <ListTypeLinks
+                  context={context}
+                  currentType={type}
+                  availableTypes={[ type, ...otherTypes ]}
+                  onChange={onTypeChange}
                 />
               </h3>
 
@@ -759,12 +950,19 @@ export default SolutionList;
 const TITLE = 'title';
 const TITLE_TEXT = 'title_text';
 const TITLE_LINK_WRAPPER = 'title_link_wrapper';
+const FLAG_FILTER_OPTION = 'flag_filter_option'
+const FLAG_FILTER_CHECKBOX = 'flag_filter_checkbox'
+const TYPE_LINK_WRAPPER = 'type_link_wrapper';
+const TYPE_LINK = 'type_link';
+const ACTIVE_TYPE_LINK = 'active_type_link';
+const TYPE_LINK_ICON = 'type_link_icon';
 const SORT_LINK = 'sort_link';
 const SORT_TYPE_LABEL = 'sort_type_label';
 const SORT_DIRECTION_LABEL = 'sort_direction_label';
 const SINGLE_SORT_TYPE_LABEL = 'single_sort_type_label';
 const EMPTY_LIST = 'empty_list';
 const SOLUTION = 'solution';
+const SOLUTION_TOKEN_SEPARATOR = 'solution_token_separator';
 const SELECTED_WORD_ACTIONS = 'selected_word_actions';
 const PAGINATION_WRAPPER = 'pagination';
 const PAGINATION_FOOTER = 'pagination_footer';
@@ -780,6 +978,11 @@ const CLASS_NAMES = {
   [CONTEXT_CHALLENGE]: {
     // Found in the "app" stylesheet. Adds the main link color.
     [SORT_LINK]: [ '_2__FI' ],
+    // Copied from the closing button of the "Report" modal. Unwanted styles are reset below.
+    [TYPE_LINK]: [ 'FrL-W' ],
+    [ACTIVE_TYPE_LINK]: [ '_2__FI' ],
+    // Found by searching for the "notification" result color (applied when using the "Can't listen now" button).
+    [SOLUTION_TOKEN_SEPARATOR]: [ '_2QmYK' ],
     // Found in the "app" stylesheet. Adds the page background color.
     [PAGINATION_WRAPPER]: [ '_3lUbm' ],
     [PAGE_SIZE_LINK]: [ '_2__FI' ],
@@ -797,9 +1000,9 @@ const STYLE_SHEETS = {
       justifyContent: 'space-between',
     },
     [TITLE_TEXT]: {
-      marginRight: '1em',
+      marginRight: '1rem',
       '@media (max-width: 699px)': {
-        marginBottom: '0.5em',
+        marginBottom: '0.5rem',
       },
     },
     [TITLE_LINK_WRAPPER]: {
@@ -809,6 +1012,33 @@ const STYLE_SHEETS = {
       '@media (max-width: 699px)': {
         marginBottom: '0.5em',
       },
+    },
+    [FLAG_FILTER_OPTION]: {
+      display: 'flex',
+      margin: '10px 0',
+    },
+    [FLAG_FILTER_CHECKBOX]: {
+      marginRight: '0.325em',
+      ':disabled': {
+        cursor: 'not-allowed',
+      },
+    },
+    [TYPE_LINK_WRAPPER]: {
+      display: 'flex',
+      gap: '0.5rem',
+      justifyContent: 'space-between',
+      marginLeft: '0.5rem',
+    },
+    [TYPE_LINK]: {
+      height: '2.25rem',
+      position: 'static',
+      transform: 'none',
+      width: '2.25rem',
+      zIndex: '0',
+    },
+    [ACTIVE_TYPE_LINK]: {
+      borderColor: 'currentColor',
+      cursor: 'default',
     },
     [SORT_LINK]: {
       cursor: 'pointer',

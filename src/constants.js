@@ -126,6 +126,18 @@ export const STRING_MATCH_MODE_GLOBAL = 'global';
 export const STRING_MATCH_MODE_WORDS = 'words';
 
 /**
+ * A list of solutions, not including those automatically expanded.
+ * @type {string}
+ */
+export const SOLUTION_LIST_TYPE_COMPACT = 'compact';
+
+/**
+ * A list of solutions, including those automatically expanded.
+ * @type {string}
+ */
+export const SOLUTION_LIST_TYPE_EXPANDED = 'expanded';
+
+/**
  * The URL of the image CDN as was last seen, usable as a fallback.
  * @type {string}
  */

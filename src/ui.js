@@ -4,20 +4,14 @@ import { it } from 'one-liner.macro';
 import Cookies from 'js-cookie';
 import { config as faConfig, library } from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css'
-import { faCheck, faEquals, faTimes, faQuestion } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faEquals, faQuestion, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { faKey, faThumbtack } from '@fortawesome/pro-regular-svg-icons';
-import { faArrowFromLeft, faArrowToRight } from '@fortawesome/pro-solid-svg-icons';
+import { faArrowFromLeft, faArrowToRight, faFileUser, faFilePlus } from '@fortawesome/pro-solid-svg-icons';
 import { sendActionRequestToContentScript } from 'duo-toolbox/extension/ipc';
 import { MUTEX_HOTKEYS, PRIORITY_HIGH, requestMutex } from 'duo-toolbox/extension/ui';
 import { isArray, isObject, maxBy, noop, sleep } from 'duo-toolbox/utils/functions';
 import { logError } from 'duo-toolbox/utils/logging';
-
-import {
-  getUniqueElementId,
-  isAnyInputFocused,
-  querySelectors,
-} from 'duo-toolbox/utils/ui';
-
+import { getUniqueElementId, isAnyInputFocused, querySelectors } from 'duo-toolbox/utils/ui';
 import { RESULT_CORRECT, RESULT_INCORRECT } from 'duo-toolbox/duo/challenges';
 
 import {
@@ -30,6 +24,7 @@ import {
 } from './constants';
 
 import {
+  ACTION_TYPE_GET_CHALLENGE_BY_KEY,
   ACTION_TYPE_GET_CURRENT_LISTENING_CHALLENGE,
   ACTION_TYPE_GET_CURRENT_TRANSLATION_CHALLENGE,
   ACTION_TYPE_UPDATE_CURRENT_CHALLENGE_USER_REFERENCE,
@@ -54,6 +49,8 @@ library.add(
   faArrowToRight,
   faCheck,
   faEquals,
+  faFilePlus,
+  faFileUser,
   faKey,
   faQuestion,
   faThumbtack,
@@ -67,6 +64,12 @@ library.add(
  * @type {number}
  */
 const MINIMUM_LOADING_DELAY = 250;
+
+/**
+ * The key under which the current type of solution lists to be used should be stored in the local storage.
+ * @type {string}
+ */
+const STORAGE_KEY_SOLUTION_LIST_TYPE = `${EXTENSION_PREFIX}solution_list_type`;
 
 /**
  * @returns {string} The current locale used by the UI.
@@ -192,6 +195,12 @@ let isSolutionListModalToggling = false;
 let isSolutionListModalDisplayed = false;
 
 /**
+ * Whether a solution list modal is currently being refreshed.
+ * @type {boolean}
+ */
+let isSolutionListModalRefreshing = false;
+
+/**
  * @param {import('./background.js').Challenge} challenge A challenge.
  * @param {string} result The result of the challenge.
  * @param {string} userAnswer The answer given by the user.
@@ -209,35 +218,11 @@ const renderChallengeSolutionListModal = (challenge, result, userAnswer, opened)
       return Promise.resolve();
     }
 
-    const currentResultWrapper = resultWrapper;
-
-    const updateUserReference = async userReference => {
-      try {
-        renderChallengeSolutionLoader(result);
-
-        await sleep(MINIMUM_LOADING_DELAY);
-
-        const data = await sendActionRequestToContentScript(ACTION_TYPE_UPDATE_CURRENT_CHALLENGE_USER_REFERENCE, {
-          userReference,
-          key: Challenge.getUniqueKey(challenge),
-        });
-
-        if (isObject(data?.challenge) && (currentResultWrapper === resultWrapper)) {
-          renderChallengeSolutionLink(data.challenge, result, data.userReference || userReference);
-
-          if (isObject(completedChallenge)) {
-            completedChallenge.userAnswer = data.userReference || userReference;
-          }
-
-          return data.challenge.solutions || [];
-        }
-      } catch (error) {
-        renderChallengeSolutionLink(challenge, result, userAnswer);
-        error && logError(error, 'Could not update the user answer: ');
-      }
-    };
-
     isSolutionListModalToggling = true;
+    isSolutionListModalRefreshing = false;
+    let currentChallenge = challenge;
+    let currentUserAnswer = userAnswer;
+    const currentResultWrapper = resultWrapper;
 
     return new Promise(resolve => {
       const uiModalCloseButton = document.querySelector(SELECTOR_CHALLENGE_MODAL_CLOSE_BUTTON);
@@ -250,6 +235,65 @@ const renderChallengeSolutionListModal = (challenge, result, userAnswer, opened)
 
       resolve();
     }).finally(() => new Promise((resolve, reject) => {
+      const refreshSolutionsViaAction = async (actionType, payload) => {
+        const refreshOpenedModal = () => {
+          if (isSolutionListModalDisplayed && !isSolutionListModalToggling) {
+            toggleModal(true);
+          }
+        };
+
+        try {
+          isSolutionListModalRefreshing = true;
+          renderChallengeSolutionLoader(result);
+          refreshOpenedModal();
+
+          await sleep(MINIMUM_LOADING_DELAY);
+
+          const data = await sendActionRequestToContentScript(actionType, {
+            ...payload,
+            key: Challenge.getUniqueKey(challenge),
+          });
+
+          isSolutionListModalRefreshing = false;
+
+          if (isObject(data?.challenge) && (currentResultWrapper === resultWrapper)) {
+            currentChallenge = data.challenge;
+            currentUserAnswer = data.userReference || completedChallenge.userAnswer || userAnswer;
+
+            if (isObject(completedChallenge)) {
+              completedChallenge.challenge = currentChallenge;
+              completedChallenge.userAnswer = currentUserAnswer;
+            }
+
+            renderChallengeSolutionLink(data.challenge, result, currentUserAnswer);
+            refreshOpenedModal();
+          }
+        } catch (error) {
+          isSolutionListModalRefreshing = false;
+          renderChallengeSolutionLink(challenge, result, userAnswer);
+          refreshOpenedModal();
+          error && logError(error, 'Could not refresh the solutions: ');
+        }
+      };
+
+      const changeListType = async listType => {
+        try {
+          localStorage.setItem(STORAGE_KEY_SOLUTION_LIST_TYPE, listType);
+        } catch (error) {
+          // Do nothing.
+        }
+
+        return refreshSolutionsViaAction(
+          ACTION_TYPE_GET_CHALLENGE_BY_KEY,
+          { listType, userReference: currentUserAnswer }
+        );
+      };
+
+      const updateUserReference = async userReference => refreshSolutionsViaAction(
+        ACTION_TYPE_UPDATE_CURRENT_CHALLENGE_USER_REFERENCE,
+        { userReference }
+      );
+
       const onRequestClose = () => {
         if (isSolutionListModalDisplayed) {
           isSolutionListModalToggling = true;
@@ -273,6 +317,7 @@ const renderChallengeSolutionListModal = (challenge, result, userAnswer, opened)
       const toggleModal = opened => render(
         <IntlProvider definition={getTranslations(getUiLocale())}>
           <Modal
+            key="dsv-solutions-modal"
             opened={opened}
             onRequestClose={onRequestClose}
             onAfterOpen={onAfterOpen}
@@ -280,8 +325,10 @@ const renderChallengeSolutionListModal = (challenge, result, userAnswer, opened)
           >
             <ChallengeSolutions
               context={CONTEXT_CHALLENGE}
-              {...challenge}
-              userReference={userAnswer}
+              {...currentChallenge}
+              userReference={currentUserAnswer}
+              isLoading={isSolutionListModalRefreshing}
+              onListTypeChange={changeListType}
               onUserReferenceUpdate={updateUserReference}
             />
           </Modal>
@@ -412,10 +459,10 @@ const handleChallengeResult = async (challenge, result, userAnswer, correctionDi
   if (userAnswer) {
     if (RESULT_INCORRECT === result) {
       if (
-        (challenge.solutions.length > 1)
-        && challenge.solutions.some('score' in it)
+        (challenge.solutions.list.length > 1)
+        && challenge.solutions.list.some('score' in it)
       ) {
-        renderChallengeClosestSolution(maxBy(challenge.solutions, it.score), result);
+        renderChallengeClosestSolution(maxBy(challenge.solutions.list, it.score), result);
       }
     } else if (isArray(correctionDiff)) {
       renderChallengeCorrectedAnswer(correctionDiff, result);
@@ -455,7 +502,7 @@ const handleTranslationChallengeResult = async (result, userAnswer) => {
     }
   }
 
-  let statement = statementWrapper.innerText.trim().replace(/\n/, '');
+  let statement = statementWrapper.innerText.trim().replace(/\n/g, '');
 
   const isNamingChallenge = UI_NAMING_CHALLENGE_TYPES.some(
     type => challengeWrapper.matches(`[data-test~="challenge-${type}"]`)
@@ -467,9 +514,12 @@ const handleTranslationChallengeResult = async (result, userAnswer) => {
     named && (statement = named);
   }
 
+  const listType = localStorage.getItem(STORAGE_KEY_SOLUTION_LIST_TYPE);
+
   return sendActionRequestToContentScript(
     ACTION_TYPE_GET_CURRENT_TRANSLATION_CHALLENGE,
     {
+      listType,
       result,
       statement,
       userAnswer,
@@ -491,11 +541,13 @@ const handleListeningChallengeResult = async (result, userAnswer) => {
     return false;
   }
 
+  const listType = localStorage.getItem(STORAGE_KEY_SOLUTION_LIST_TYPE);
   const solutionTranslationWrapper = document.querySelector(SELECTOR_CHALLENGE_SOLUTION_TRANSLATION);
 
   return sendActionRequestToContentScript(
     ACTION_TYPE_GET_CURRENT_LISTENING_CHALLENGE,
     {
+      listType,
       result,
       userAnswer,
       solutionTranslation: !solutionTranslationWrapper
@@ -773,7 +825,7 @@ const SELECTOR_BLANK_FILLING_FULL_ANSWER = '._2FKqf';
  * A CSS selector for the extraneous tokens that can be found in answers to fill-in-the-blank challenges.
  * @type {string}
  */
-const SELECTOR_BLANK_FILLING_ANSWER_EXTRANEOUS_TOKEN = '._2FKq, .caPDQ';
+const SELECTOR_BLANK_FILLING_ANSWER_EXTRANEOUS_TOKEN = '._2FKq, .caPDQ, ._2aMo5';
 
 /**
  * A CSS selector for the container of the answer tokens selected from the word bank.
