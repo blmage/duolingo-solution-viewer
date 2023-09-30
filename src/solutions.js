@@ -110,6 +110,7 @@ export const SOLUTION_FLAG_HIRAGANA = 1 << 1;
 export const SOLUTION_FLAG_KATAKANA = 1 << 2;
 
 export const LOCALE_FLAG_FILTER_SETS = {
+  /*
   ja: {
     labelKey: 'syllabary',
     defaultLabel: 'Syllabary:',
@@ -132,6 +133,7 @@ export const LOCALE_FLAG_FILTER_SETS = {
       },
     ],
   },
+   */
 };
 
 /**
@@ -590,7 +592,7 @@ export const fromCompactTranslations = (translations, metadata, locale) => {
   });
 
   if ('ja' === locale) {
-    preparedTranslations = applySyllabariesToJapaneseSentences(preparedTranslations, metadata);
+    // preparedTranslations = applySyllabariesToJapaneseSentences(preparedTranslations, metadata); // todo
   }
 
   const splitTokens = !hasWhitespaces
@@ -850,7 +852,7 @@ export const fromSentences = (sentences, metadata, locale) => {
     .filter('' !== it)
     .map(normalizeString);
 
-  if ('ja' === locale) {
+  if (false && ('ja' === locale)) { // todo
     preparedSentences = applySyllabariesToJapaneseSentences(preparedSentences, metadata);
   } else {
     preparedSentences = preparedSentences.map({ sentence: it });
