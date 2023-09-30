@@ -700,7 +700,7 @@ const SolutionList =
         return pageSolutions.map(renderSolutionItem);
       }, [ type, page, pageSize, filteredSolutions, getElementClassNames ]);
 
-      // Event handling.
+      // Handle events.
 
       const setPage = useCallback(page => {
         setRawPage(page);
@@ -754,16 +754,13 @@ const SolutionList =
       const [ selectedWord, setSelectedWord ] = useState(null);
 
       useEffect(() => {
-        // Detect when the left button is released to only propose suggestions when a selection has been committed.
+        // Detect when the left button is released to only propose suggestions when a selection has been "committed".
         const onMouseUp = event => {
           if (listRef.current && (event.button === 0)) {
             const selection = document.getSelection();
+            const parentItem = selection.anchorNode?.parentElement?.closest('li');
 
-            if (
-              selection.anchorNode
-              && listRef.current.contains(selection.anchorNode)
-              && selection.anchorNode.parentElement.closest('li')
-            ) {
+            if (parentItem && selection.focusNode && listRef.current.contains(parentItem)) {
               // We are only interested in single-word selections.
               const words = Solution.getStringMatchableWords(
                 selection.toString().trim(),
@@ -777,21 +774,47 @@ const SolutionList =
                 if (!isFilterWordBased) {
                   selectedText = selection.toString();
                 } else {
-                  let textNode = selection.anchorNode;
+                  let node = selection.anchorNode;
+                  let firstNode = node;
+                  let lastNode = selection.focusNode;
 
-                  while (textNode) {
-                    const isFocusNode = selection.focusNode.isSameNode(textNode);
+                  const range = document.createRange();
+                  range.setStart(firstNode, selection.anchorOffset);
+                  range.setEnd(lastNode, selection.focusOffset);
 
-                    if (!isFocusNode || selection.anchorNode.isSameNode(textNode)) {
-                      selectedText += textNode.textContent;
-                    } else {
-                      selectedText += textNode.textContent.substring(0, selection.focusOffset);
+                  let [ nextNode, startOffset, endOffset, concat ] = !range.collapsed
+                    ? [
+                      lift(_.nextSibling),
+                      selection.anchorOffset,
+                      selection.focusOffset,
+                      lift(_ + _),
+                    ] : [
+                      lift(_.previousSibling),
+                      selection.focusOffset,
+                      selection.anchorOffset,
+                      lift(_2 + _1),
+                    ];
+
+                  while (node && !node.isSameNode(parentItem)) {
+                    const isLastNode = lastNode.isSameNode(node) || node.contains(lastNode);
+                    selectedText = concat(selectedText, node.textContent);
+
+                    if (!isLastNode || range.collapsed) {
+                      endOffset += node.textContent.length;
                     }
 
-                    textNode = !isFocusNode && textNode.nextSibling;
+                    if (!isLastNode) {
+                      node = nextNode(node) || nextNode(node.parentNode);
+                    } else {
+                      node = null;
+                    }
                   }
 
-                  selectedText = getWordAt(selectedText, selection.anchorOffset);
+                  const wordAt = selectedText
+                    .substring(startOffset, Math.max(endOffset, startOffset + 1))
+                    .match(/[\p{L}\p{N}]/u);
+
+                  selectedText = wordAt ? getWordAt(selectedText, startOffset + wordAt.index) : '';
                 }
 
                 const [ word = '' ] = Solution.getStringMatchableWords(
