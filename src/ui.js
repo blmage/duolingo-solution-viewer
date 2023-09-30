@@ -493,12 +493,14 @@ const handleTranslationChallengeResult = async (result, userAnswer) => {
   }
 
   if (statementWrapper.matches(SELECTOR_CHALLENGE_STATEMENT_HINT_TOKEN)) {
-    statementWrapper = statementWrapper.parentNode;
+    const hintedWrapper = statementWrapper.parentElement.closest('ruby');
 
-    if (statementWrapper.tagName.toLowerCase() === 'rb') {
+    if (hintedWrapper) {
       // Pronunciation hints are present in the statement.
-      statementWrapper = statementWrapper.parentNode.cloneNode(true);
+      statementWrapper = hintedWrapper.cloneNode(true);
       Array.from(statementWrapper.getElementsByTagName('rt')).forEach(it.remove());
+    } else {
+      statementWrapper = statementWrapper.parentNode;
     }
   }
 
