@@ -19,7 +19,7 @@ export function normalizeString(string, removeExtraSpaces = true, removeDiacriti
 }
 
 /**
- * Compares two strings using a sensible set of collation rules.
+ * Compares two strings using a sensible set of collation rules, and taking case into account.
  * @param {string} x A string.
  * @param {string} y Another string.
  * @param {string} locale The locale to use for the comparison.
@@ -29,8 +29,26 @@ export function compareStrings(x, y, locale) {
   return x.localeCompare(y, locale, {
     ignorePunctuation: true,
     numeric: true,
+    sensitivity: 'variant',
+    usage: 'sort',
+    caseFirst: 'upper',
+  });
+}
+
+/**
+ * Compares two strings using a sensible set of collation rules, and ignoring case.
+ * @param {string} x A string.
+ * @param {string} y Another string.
+ * @param {string} locale The locale to use for the comparison.
+ * @returns {number} -1 if x comes before y, 1 if x comes after y, and 0 if both strings are equal.
+ */
+export function compareStringsCi(x, y, locale) {
+  return x.localeCompare(y, locale, {
+    ignorePunctuation: true,
+    numeric: true,
     sensitivity: 'accent',
     usage: 'sort',
+    caseFirst: 'upper',
   });
 }
 

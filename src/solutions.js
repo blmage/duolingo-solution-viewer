@@ -8,6 +8,7 @@ import {
   dedupeAdjacent,
   dedupeAdjacentBy,
   groupBy,
+  hasObjectProperty,
   identity,
   isArray,
   isObject,
@@ -18,7 +19,7 @@ import {
   sumOf,
 } from 'duo-toolbox/utils/functions';
 
-import { compareStrings, getStringWords, getWordBigramMap, normalizeString } from './strings';
+import { compareStrings, compareStringsCi, getStringWords, getWordBigramMap, normalizeString } from './strings';
 
 /**
  * A single vertex of a solution graph.
@@ -141,24 +142,84 @@ export const LOCALE_FLAG_FILTER_SETS = {
 export const hasLocaleWordBasedTokens = ![ 'ja', 'zh', 'zs' ].includes(_);
 
 /**
- * A memoized version of {@see compareStrings}, used to efficiently compare words or small strings,
- * which are a sweet spot for memoization.
+ * @param {Function} fn A function over strings.
+ * @param {boolean} isSingleArity Whether the function takes a single string argument.
+ * @returns {Function} A memoized version of the given function.
+ */
+const memoizeStringFunction = (fn, isSingleArity = false) => {
+  let cache = {};
+  let memoized;
+
+  if (isSingleArity) {
+    memoized = x => {
+      if (!hasObjectProperty(cache, x)) {
+        cache[x] = fn(x);
+      } else {
+        console.log('hit');
+      }
+
+      return cache[x];
+    };
+  } else {
+    memoized = (...args) => {
+      const key = args.join('\x1f');
+
+      if (!hasObjectProperty(cache, key)) {
+        cache[key] = fn(...args);
+      } else {
+        console.log('hit');
+      }
+
+      return cache[key];
+    };
+  }
+
+  memoized.clearCache = () => {
+    cache = {};
+  };
+
+  return memoized;
+};
+
+/**
+ * A memoized version of {@see compareStrings}, used to efficiently compare words or small strings.
  * @type {Function}
  * @param {string} x A token string.
  * @param {string} y Another token string.
  * @param {string} locale The locale to use for the comparison.
- * @returns {number}
- * A negative value if x comes before y,
- * a positive value if x comes before y,
- * and 0 if both strings are equivalent.
+ * @returns {number} -1 if x comes before y, 1 if x comes after y, and 0 if both strings are equal.
  */
-const compareTokenStrings = moize(compareStrings);
+const compareTokenStrings = memoizeStringFunction(compareStrings);
 
 /**
- * @param {Vertex[]} vertices A list of vertices taken from a solution graph, and corresponding to a single token.
+ * A memoized version of {@see compareStringsCi}, used to efficiently compare words or small strings.
+ * @type {Function}
+ * @param {string} x A token string.
+ * @param {string} y Another token string.
+ * @param {string} locale The locale to use for the comparison.
+ * @returns {number} -1 if x comes before y, 1 if x comes after y, and 0 if both strings are equal.
+ */
+const compareTokenStringsCi = memoizeStringFunction(compareStringsCi);
+
+/**
+ * @type {Function}
+ * @param {string} x A string from a token.
+ * @param {string} locale The locale of the string.
+ * @returns {string} A simplified version of the given string.
+ */
+const simplifyTokenString = memoizeStringFunction((x, locale) => (
+  x.toLocaleLowerCase(locale)
+    .normalize('NFD')
+    .replace(/\p{M}/u, '')
+    .replace(/[^\p{L}\p{N}]/u, '')
+    .normalize('NFC')
+), true);
+
+/**
+ * @param {string[]} vertices A list of vertices taken from a solution graph, and corresponding to a single token.
  * @param {string} locale The locale of the vertices.
  * @param {boolean} isWhitespaceDelimited Whether tokens are whitespace-delimited.
- * @returns {Vertex[]} The given list, from which duplicate / invalid / irrelevant vertices have been excluded.
+ * @returns {string[]} The given list, from which duplicate / invalid / irrelevant vertices have been excluded.
  */
 const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
   let result = vertices;
@@ -223,7 +284,7 @@ const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
 
   if (result.length > 1) {
     // Filter out exact copies.
-    result = dedupeAdjacent(result.sort(compareTokenStrings(_, _, locale)));
+    result = dedupeAdjacent(result.sort(compareTokenStringsCi(_, _, locale)));
   }
 
   if (result.length > 1) {
@@ -231,41 +292,63 @@ const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
     // For example: "lhotel" instead of "l'hôtel".
     result = dedupeAdjacentBy(
       result,
-      (left, right, simplified) => (
-        (right === simplified)
-          ? -1
-          : (left === simplified) ? 1 : 0
-      ),
-      it.normalize('NFD')
-        .replace(/\p{M}/u, '')
-        .replace(/[^\p{L}\p{N}]/u, '')
+      (left, right, simplified) => {
+        // If any version contains accents and not the other, keep the accented one only.
+        const isLeftSimplified = compareTokenStringsCi(left, simplified, locale) === 0
+        const isRightSimplified = compareTokenStringsCi(right, simplified, locale) === 0;
+
+        if (isLeftSimplified) {
+          if (!isRightSimplified) {
+            return 1;
+          }
+        } else if (isRightSimplified) {
+          return -1;
+        }
+
+        // If any version is longer than the other, keep it, assuming that the more punctuation the better.
+        if (left.length > right.length) {
+          return -1;
+        } else if (right.length > left.length) {
+          return 1;
+        }
+
+        // If only case differs, keep the upper-cased version.
+        if (compareTokenStringsCi(left, right, locale) === 0) {
+          const caseResult = compareTokenStrings(left, right, locale);
+
+          if (caseResult !== 0) {
+            return caseResult;
+          }
+        }
+
+        // If only punctuation differ, arbitrarily keep the first version. Otherwise, keep both.
+        return isLeftSimplified ? -1 : 0;
+      },
+      simplifyTokenString(_, locale)
     );
   }
 
+  // Move punctuation outside the choices if it is common to all of them.
+  if (result.length > 1) {
+    let punctuation = result[0].match(/([^\p{L}\p{N}]+)$/u);
+
+    if (punctuation) {
+      for (let i = 1; i < result.length; i++) {
+        if (!result[i].endsWith(punctuation[1])) {
+          punctuation = null;
+          break;
+        }
+      }
+    }
+
+    if (punctuation) {
+      // Do not filter out empty tokens here, as they signify that other choices are optional.
+      result = result.map(it.slice(0, -punctuation[1].length));
+      result.suffix = punctuation[1];
+    }
+  }
+
   return result;
-};
-
-/**
- * @param {Vertex[]} vertices A list of vertices taken from a solution graph, and corresponding to a single token.
- * @param {string} locale The locale to use for comparing token values.
- * @param {boolean} isWhitespaceDelimited Whether tokens are whitespace-delimited.
- * @returns {{ token: Token, solutionBase: { isComplex: boolean, reference: string }}}
- * The parsed token, and the corresponding solution data.
- */
-const parseTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
-  let token = cleanTokenVertices(
-    vertices.map(vertex => String(vertex.orig || vertex.lenient || '')),
-    locale,
-    isWhitespaceDelimited
-  );
-
-  return {
-    token,
-    solutionBase: {
-      reference: token[0] || '',
-      isComplex: token.length > 1,
-    },
-  };
 };
 
 const EMPTY_TOKEN = { size: 0 };
@@ -292,7 +375,33 @@ const fromGroupedVertices = (groupedVertices, startIndex, locale, isWhitespaceDe
 
   for (const key of Object.keys(groupedVertices[startIndex])) {
     const nextIndex = Number(key);
-    const vertices = groupedVertices[startIndex][nextIndex];
+    const token = groupedVertices[startIndex][nextIndex];
+    let appendNextTokens;
+
+    if (token.length === 0) {
+      appendNextTokens = identity;
+    } else if (!token.suffix) {
+      appendNextTokens = lift({
+        token,
+        next: it,
+        size: it.size + 1,
+      });
+    } else {
+      appendNextTokens = lift({
+        token,
+        next: {
+          token: [ token.suffix ],
+          next: it,
+          size: it.size + 1,
+        },
+        size: it.size + 2,
+      });
+    }
+
+    const solutionBase = {
+      reference: token[0] || '',
+      isComplex: token.length > 1,
+    };
 
     const subSolutions = fromGroupedVertices(
       groupedVertices,
@@ -301,31 +410,19 @@ const fromGroupedVertices = (groupedVertices, startIndex, locale, isWhitespaceDe
       isWhitespaceDelimited
     );
 
-    const { token, solutionBase } = parseTokenVertices(vertices, locale, isWhitespaceDelimited);
-
     if (subSolutions.length > 0) {
       for (const subSolution of subSolutions) {
         solutions.push({
           locale,
           reference: solutionBase.reference + subSolution.reference,
           isComplex: solutionBase.isComplex || subSolution.isComplex,
-          tokens: (0 === token.length)
-            ? subSolution.tokens
-            : {
-              token,
-              next: subSolution.tokens,
-              size: subSolution.tokens.size + 1,
-            },
+          tokens: appendNextTokens(subSolution.tokens),
         });
       }
     } else if (nextIndex === groupedVertices.length - 1) {
       // The last token is always empty, and shared by all the solutions.
       solutionBase.locale = locale;
-
-      solutionBase.tokens = (0 === token.length)
-        ? EMPTY_TOKEN
-        : { token, next: EMPTY_TOKEN, size: 1 };
-
+      solutionBase.tokens = appendNextTokens(EMPTY_TOKEN);
       solutions.push(solutionBase);
     }
   }
@@ -349,8 +446,24 @@ const isRelevantVertex = !it.auto && ('typo' !== it.type);
  * @returns {Solution[]} The corresponding set of solutions.
  */
 export const fromVertices = (vertices, locale, isWhitespaceDelimited) => {
+  const vertexGroups = vertices.map(groupBy(_.filter(isRelevantVertex(_)), it.to));
+
+  for (let i = 0; i < vertexGroups.length; ++i) {
+    const cleanedGroups = {};
+
+    for (const [ to, vertices ] of Object.entries(vertexGroups[i])) {
+      cleanedGroups[to] = cleanTokenVertices(
+        vertices.map(vertex => String(vertex.orig || vertex.lenient || '')),
+        locale,
+        isWhitespaceDelimited
+      );
+    }
+
+    vertexGroups[i] = cleanedGroups;
+  }
+
   let solutions = fromGroupedVertices(
-    vertices.map(groupBy(_.filter(isRelevantVertex(_)), it.to)),
+    vertexGroups,
     0,
     locale,
     isWhitespaceDelimited
@@ -378,6 +491,11 @@ export const fromVertices = (vertices, locale, isWhitespaceDelimited) => {
         ? similar
         : (similar.some(it.isComplex) ? similar.filter(it.isComplex) : similar.slice(-1))
     });
+
+  // The token comparison cache could get quite big, so let's clear it.
+  // We can safely preserve the simplifier cache, though.
+  compareTokenStrings.clearCache();
+  compareTokenStringsCi.clearCache();
 
   return solutions;
 };
@@ -536,7 +654,7 @@ export const fromCompactTranslations = (translations, metadata, locale) => {
           }
         }
 
-        choices.sort(compareStrings(_, _, locale));
+        choices.sort(compareStringsCi(_, _, locale));
         choices = groupBy(choices.map(prepareTokens), it.length);
       } else {
         choices = groupBy(choiceSet[1].split(/\//).map(prepareTokens), it.length);
@@ -609,7 +727,7 @@ export const fromCompactTranslations = (translations, metadata, locale) => {
             keys = keys.filter(!handledChoiceKeys.has(_));
 
             if (keys.length > 1) {
-              const choiceTokens = keys.map(subChoices[it][0]).sort(compareStrings(_, _, locale));
+              const choiceTokens = keys.map(subChoices[it][0]).sort(compareStringsCi(_, _, locale));
 
               branches.push({
                 sharedTokens: subChoices[keys[0]].slice(1),
@@ -625,7 +743,7 @@ export const fromCompactTranslations = (translations, metadata, locale) => {
             keys = keys.filter(!handledChoiceKeys.has(_));
 
             if (keys.length > 1) {
-              const choiceTokens = keys.map(subChoices[it].at(-1)).sort(compareStrings(_, _, locale));
+              const choiceTokens = keys.map(subChoices[it].at(-1)).sort(compareStringsCi(_, _, locale));
 
               branches.push({
                 sharedTokens: subChoices[keys[0]].slice(0, -1),
@@ -903,8 +1021,8 @@ export const getCollapsedTokens = solution => {
       if (token.length > 1) {
         collapsedTokens.push(token);
       } else if (
-          (collapsedTokens.length === 0)
-          || isArray(collapsedTokens[collapsedTokens.length - 1])
+        (collapsedTokens.length === 0)
+        || isArray(collapsedTokens[collapsedTokens.length - 1])
       ) {
         collapsedTokens.push(token[0]);
       } else {
@@ -974,7 +1092,7 @@ export const getI18nCounts = solutions => {
  * - 0 if both solutions have equivalent references.
  */
 export function compareByReference(x, y) {
-  let result = compareStrings(x.reference, y.reference, x.locale);
+  let result = compareStringsCi(x.reference, y.reference, x.locale);
 
   if (0 === result) {
     result = y.isComplex - x.isComplex;
