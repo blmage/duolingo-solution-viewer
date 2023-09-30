@@ -156,8 +156,6 @@ const memoizeStringFunction = (fn, isSingleArity = false) => {
     memoized = x => {
       if (!hasObjectProperty(cache, x)) {
         cache[x] = fn(x);
-      } else {
-        console.log('hit');
       }
 
       return cache[x];
@@ -168,8 +166,6 @@ const memoizeStringFunction = (fn, isSingleArity = false) => {
 
       if (!hasObjectProperty(cache, key)) {
         cache[key] = fn(...args);
-      } else {
-        console.log('hit');
       }
 
       return cache[key];
