@@ -56,7 +56,7 @@ const sessionLastListeningChallenges = {};
  * The global maximum number of parsed solution lists to keep in memory.
  * @type {number}
  */
-const PARSED_COMPLEX_SOLUTION_LIST_CACHE_SIZE = 20;
+const PARSED_COMPLEX_SOLUTION_LIST_CACHE_SIZE = 4;
 
 /**
  * A global cache for parsed solution lists.
