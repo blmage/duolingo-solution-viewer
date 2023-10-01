@@ -189,8 +189,8 @@ const ListTypeLinks =
 
           const buttonClassNames = getElementClassNames([
             TYPE_LINK,
-            isActive && ACTIVE_TYPE_LINK,
             isDisabled && DISABLED_TYPE_LINK,
+            isActive ? ACTIVE_TYPE_LINK : INACTIVE_TYPE_LINK,
           ]);
 
           const onClick = event => {
@@ -990,6 +990,7 @@ const FLAG_FILTER_CHECKBOX = 'flag_filter_checkbox'
 const TYPE_LINK_WRAPPER = 'type_link_wrapper';
 const TYPE_LINK = 'type_link';
 const ACTIVE_TYPE_LINK = 'active_type_link';
+const INACTIVE_TYPE_LINK = 'inactive_type_link';
 const DISABLED_TYPE_LINK = 'disabled_type_link';
 const TYPE_LINK_ICON = 'type_link_icon';
 const SORT_LINK = 'sort_link';
@@ -1017,6 +1018,8 @@ const CLASS_NAMES = {
     // Copied from the closing button of the "Report" modal. Unwanted styles are reset below.
     [TYPE_LINK]: [ 'FrL-W' ],
     [ACTIVE_TYPE_LINK]: [ '_2__FI' ],
+    // Found in the "app" stylesheet. Adds a light gray color.
+    [INACTIVE_TYPE_LINK]: [ '_3cbXv' ],
     // Copied from the special letter buttons. Only the main class is used here.
     [DISABLED_TYPE_LINK]: [ 'WOZnx' ],
     // Found by searching for the "notification" result color (applied when using the "Can't listen now" button).
