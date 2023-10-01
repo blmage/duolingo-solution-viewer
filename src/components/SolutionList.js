@@ -169,6 +169,10 @@ const ListTypeLinks =
    }) => {
     const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
 
+    const { unavailablePrefix } = useText({
+      unavailablePrefix: <Text key="unavailable">Unavailable</Text>
+    });
+
     const typeTitles = useText(Object.fromEntries(
       LIST_TYPES.map([
         it.type,
@@ -178,9 +182,16 @@ const ListTypeLinks =
 
     return (
       <div className={getElementClassNames(TYPE_LINK_WRAPPER)}>
-        {LIST_TYPES.filter(availableTypes.includes(_.type)).map(({ type, icon }) => {
-          const title = typeTitles[type];
+        {LIST_TYPES.map(({ type, icon }) => {
           const isActive = (type === currentType);
+          const isDisabled = !availableTypes.includes(type);
+          const title = (isDisabled ? `[${unavailablePrefix}] ` : '') + typeTitles[type];
+
+          const buttonClassNames = getElementClassNames([
+            TYPE_LINK,
+            isActive && ACTIVE_TYPE_LINK,
+            isDisabled && DISABLED_TYPE_LINK,
+          ]);
 
           const onClick = event => {
             discardEvent(event);
@@ -188,17 +199,18 @@ const ListTypeLinks =
           };
 
           return (
-            <div
+            <button
               key={type}
               title={title}
               onClick={onClick}
-              className={getElementClassNames([ TYPE_LINK, isActive && ACTIVE_TYPE_LINK ])}
+              disabled={isDisabled}
+              className={buttonClassNames}
             >
               <FontAwesomeIcon
                 icon={icon}
                 className={getElementClassNames(TYPE_LINK_ICON)}
               />
-            </div>
+            </button>
           );
         })}
       </div>
@@ -978,6 +990,7 @@ const FLAG_FILTER_CHECKBOX = 'flag_filter_checkbox'
 const TYPE_LINK_WRAPPER = 'type_link_wrapper';
 const TYPE_LINK = 'type_link';
 const ACTIVE_TYPE_LINK = 'active_type_link';
+const DISABLED_TYPE_LINK = 'disabled_type_link';
 const TYPE_LINK_ICON = 'type_link_icon';
 const SORT_LINK = 'sort_link';
 const SORT_TYPE_LABEL = 'sort_type_label';
@@ -1004,6 +1017,8 @@ const CLASS_NAMES = {
     // Copied from the closing button of the "Report" modal. Unwanted styles are reset below.
     [TYPE_LINK]: [ 'FrL-W' ],
     [ACTIVE_TYPE_LINK]: [ '_2__FI' ],
+    // Copied from the special letter buttons. Only the main class is used here.
+    [DISABLED_TYPE_LINK]: [ 'WOZnx' ],
     // Found by searching for the "notification" result color (applied when using the "Can't listen now" button).
     [SOLUTION_TOKEN_SEPARATOR]: [ '_2QmYK' ],
     // Found in the "app" stylesheet. Adds the page background color.
@@ -1054,7 +1069,9 @@ const STYLE_SHEETS = {
     },
     [TYPE_LINK]: {
       height: '2.25rem',
-      position: 'static',
+      left: 0,
+      position: 'relative',
+      top: 0,
       transform: 'none',
       width: '2.25rem',
       zIndex: '0',
@@ -1062,6 +1079,9 @@ const STYLE_SHEETS = {
     [ACTIVE_TYPE_LINK]: {
       borderColor: 'currentColor',
       cursor: 'default',
+    },
+    [DISABLED_TYPE_LINK]: {
+      cursor: 'not-allowed',
     },
     [SORT_LINK]: {
       cursor: 'pointer',
