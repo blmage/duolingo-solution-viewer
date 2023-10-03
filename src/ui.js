@@ -611,7 +611,11 @@ const challengeFooterMutationObserver = new MutationObserver(() => {
       try {
         const userAnswer = getUserAnswer();
 
-        const result = resultWrapper.classList.contains(CLASS_NAME_CORRECT_RESULT_WRAPPER)
+        const result = (
+          resultWrapper.classList.contains(CLASS_NAME_CORRECT_RESULT_WRAPPER)
+          // The "correct" class name is now added to the footer.
+          || !!resultWrapper.closest(`.${CLASS_NAME_CORRECT_RESULT_WRAPPER}`)
+        )
           ? RESULT_CORRECT
           : RESULT_INCORRECT;
 
@@ -772,7 +776,7 @@ const SELECTOR_LISTENING_CHALLENGE_WRAPPER = UI_LISTENING_CHALLENGE_TYPES
 const SELECTOR_RESULT_WRAPPER = '._1tuLI';
 
 /**
- * The class name which is applied to the result wrapper when the user has given a correct answer.
+ * The class name which is applied to the result wrapper or footer when the user has given a correct answer.
  * @type {string}
  */
 const CLASS_NAME_CORRECT_RESULT_WRAPPER = '_3e9O1';
