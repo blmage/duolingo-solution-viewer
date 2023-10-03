@@ -43,7 +43,7 @@ const CLASS_NAMES = {
   },
   [RESULT_INCORRECT]: {
     // Adds the "incorrect" color.
-    [WRAPPER]: [ '_1sqiF', '_3vF5k' ],
+    [WRAPPER]: [ '_1sqiF', '_3vF5k', '_3Qruy' ],
   },
 };
 
