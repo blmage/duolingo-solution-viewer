@@ -208,8 +208,8 @@ const compareTokenStringsCi = memoizeStringFunction(compareStringsCi);
 const simplifyTokenString = memoizeStringFunction((x, locale) => (
   x.toLocaleLowerCase(locale)
     .normalize('NFD')
-    .replace(/\p{M}/u, '')
-    .replace(/[^\p{L}\p{N}]/u, '')
+    .replace(/\p{M}/ug, '')
+    .replace(/[^\p{L}\p{N}]/ug, '')
     .normalize('NFC')
 ), true);
 
