@@ -266,17 +266,6 @@ const getUiChallengeSolutionList = challenge => {
     && (challenge.compactTranslations.length > 0)
   );
 
-  if ((locale === 'ja') && hasCompactTranslations) {
-    // Expanded solutions for Japanese often contain a lot of combinations using different syllabaries at the same time.
-    // This results in so much noise that it's better to only use the compact solutions.
-    return {
-      parsed: false,
-      locale,
-      metadata,
-      patterns: challenge.compactTranslations,
-    };
-  }
-
   const hasGraderGraph = (
     isObject(grader)
     && isArray(grader.vertices)
