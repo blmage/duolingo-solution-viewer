@@ -491,7 +491,6 @@ export const fromVertices = (vertices, locale, isWhitespaceDelimited) => {
     });
 
   // The token comparison cache could get quite big, so let's clear it.
-  // We can safely preserve the simplifier cache, though.
   compareTokenStrings.clearCache();
   compareTokenStringsCi.clearCache();
 
@@ -832,6 +831,9 @@ export const fromCompactTranslations = (translations, metadata, locale) => {
     solutions.push(getPatternSetSolution(patternSet, i));
   }
 
+    // The token comparison cache could get quite big, so let's clear it.
+    compareTokenStringsCi.clearCache();
+
   return solutions;
 };
 
@@ -921,7 +923,7 @@ const getPatternSolution = (pattern, solutionIx, locale) => {
 
     if (branch.firstChoice.length > 0) {
       isComplex = true;
-      appendTokenToResult(branch.firstChoice)
+      appendTokenToResult(branch.firstChoice.sort(compareTokenStringsCi))
     }
 
     if (branch.sharedTokens.length > 0) {
@@ -932,7 +934,7 @@ const getPatternSolution = (pattern, solutionIx, locale) => {
 
     if (branch.lastChoice.length > 0) {
       isComplex = true;
-      appendTokenToResult(branch.lastChoice);
+      appendTokenToResult(branch.lastChoice.sort(compareTokenStringsCi));
     }
 
     position = branchSet.tokenPosition;
