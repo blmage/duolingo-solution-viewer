@@ -1111,6 +1111,7 @@ export const getReaderFriendlySummaryTokens =
   (
     solution,
     {
+      emptyChoice = '␣',
       choiceSeparator = ' / ',
       choiceLeftDelimiter = '[',
       choiceRightDelimiter = ']',
@@ -1122,7 +1123,7 @@ export const getReaderFriendlySummaryTokens =
           ? token
           : [
             choiceLeftDelimiter,
-            ...token.flatMap([ it, choiceSeparator ]).slice(0, -1),
+            ...token.flatMap([ (it.length > 0) ? it : emptyChoice, choiceSeparator ]).slice(0, -1),
             choiceRightDelimiter,
           ]
       ))
