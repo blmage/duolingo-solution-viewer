@@ -112,12 +112,22 @@ const ListFlagFilters =
         <h3 className={getElementClassNames(TITLE)}>
           <span className={getElementClassNames(TITLE_TEXT)}>
             <Text id={flagFilterSet.labelKey}>{flagFilterSet.defaultLabel}</Text>
+
+            <Localizer>
+              <span
+                title={<Text id={flagFilterSet.hintKey}>{flagFilterSet.defaultHint}</Text>}
+                className={getElementClassNames(TITLE_HINT)}
+              >
+                <FontAwesomeIcon icon={[ 'fas', 'circle-question' ]} />
+              </span>
+            </Localizer>
           </span>
         </h3>
 
         <ul>
           {flagFilterSet.filters.map(filter => {
             const key = `flag-filter-${filter.flag}`;
+            const isChecked = (flagFilterMask & filter.flag) > 0;
 
             const onClick = event => {
               discardEvent(event);
@@ -127,15 +137,16 @@ const ListFlagFilters =
             return (
               <li key={key} className={getElementClassNames(FLAG_FILTER_OPTION)}>
                 <input
-                  key={key}
+                  key={`${key}-${isChecked ? 'checked' : 'unchecked'}`}
                   type="checkbox"
                   onClick={onClick}
-                  checked={(flagFilterMask & filter.flag) > 0}
+                  checked={isChecked}
                   className={getElementClassNames(FLAG_FILTER_CHECKBOX)}
                 />
 
                 <label onClick={onClick}>
                   <Text id={filter.labelKey}>{filter.defaultLabel}</Text>
+                  <span className={getElementClassNames(FLAG_FILTER_MATCH_COUNT)}>( {filter.matchCount} )</span>
                 </label>
               </li>
             );
@@ -646,9 +657,26 @@ const SolutionList =
         const set = Solution.LOCALE_FLAG_FILTER_SETS[locale];
 
         if (set) {
-          const applicableFilters = set.filters.filter(
-            ({ flag }) => solutions.some(isSolutionMatchingFlagFilterMask(_, flag))
-          );
+          const flagFilterMatchCounts = Object.fromEntries(set.filters.map([ it.flag, 0 ]));
+
+          for (const { flag } of set.filters) {
+            for (const solution of solutions) {
+              if (isSolutionMatchingFlagFilterMask(solution, flag)) {
+                flagFilterMatchCounts[flag]++;
+              }
+            }
+          }
+
+          const applicableFilters = [];
+
+          for (const filter of set.filters) {
+            if (flagFilterMatchCounts[filter.flag] > 0) {
+              applicableFilters.push({
+                ...filter,
+                matchCount: flagFilterMatchCounts[filter.flag],
+              });
+            }
+          }
 
           if (applicableFilters.length > 1) {
             const defaultFilters = applicableFilters.filter(it.default);
@@ -984,9 +1012,11 @@ export default SolutionList;
 
 const TITLE = 'title';
 const TITLE_TEXT = 'title_text';
+const TITLE_HINT = 'title_help';
 const TITLE_LINK_WRAPPER = 'title_link_wrapper';
 const FLAG_FILTER_OPTION = 'flag_filter_option'
 const FLAG_FILTER_CHECKBOX = 'flag_filter_checkbox'
+const FLAG_FILTER_MATCH_COUNT = 'flag_filter_match_count';
 const TYPE_LINK_WRAPPER = 'type_link_wrapper';
 const TYPE_LINK = 'type_link';
 const ACTIVE_TYPE_LINK = 'active_type_link';
@@ -1046,6 +1076,10 @@ const STYLE_SHEETS = {
         marginBottom: '0.5rem',
       },
     },
+    [TITLE_HINT]: {
+      marginLeft: '0.5rem',
+      verticalAlign: 'middle',
+    },
     [TITLE_LINK_WRAPPER]: {
       '@media (any-pointer: coarse)': {
         lineHeight: '2em',
@@ -1059,10 +1093,14 @@ const STYLE_SHEETS = {
       margin: '10px 0',
     },
     [FLAG_FILTER_CHECKBOX]: {
-      marginRight: '0.325em',
+      marginRight: '0.5rem',
       ':disabled': {
         cursor: 'not-allowed',
       },
+    },
+    [FLAG_FILTER_MATCH_COUNT]: {
+      fontSize: '0.8em',
+      marginLeft: '0.5rem',
     },
     [TYPE_LINK_WRAPPER]: {
       display: 'flex',

@@ -7,10 +7,12 @@ import {
   cartesianProduct,
   dedupeAdjacent,
   dedupeAdjacentBy,
+  dedupeBy,
   groupBy,
   hasObjectProperty,
   identity,
   isArray,
+  isEmptyObject,
   isObject,
   isString,
   max,
@@ -105,35 +107,42 @@ import { compareStrings, compareStringsCi, getStringWords, getWordBigramMap, nor
  * @property {string[]} lastChoice The possible tokens at the end of the branch (if there is a choice last).
  */
 
-export const SOLUTION_FLAG_ORIGINAL = 1 << 0;
-export const SOLUTION_FLAG_HIRAGANA = 1 << 1;
+export const SOLUTION_FLAG_HIRAGANA = 1 << 0;
+export const SOLUTION_FLAG_KANJI = 1 << 1;
 export const SOLUTION_FLAG_KATAKANA = 1 << 2;
+export const SOLUTION_FLAG_ROMAJI = 1 << 3;
 
 export const LOCALE_FLAG_FILTER_SETS = {
-  /*
   ja: {
     labelKey: 'syllabary',
     defaultLabel: 'Syllabary:',
+    hintKey: 'syllabary_filter_description',
+    defaultHint: 'Select one or more Japanese syllabaries to see only the corresponding solutions.',
     filters: [
-      {
-        flag: SOLUTION_FLAG_ORIGINAL,
-        labelKey: 'original',
-        defaultLabel: 'Original',
-        default: true,
-      },
       {
         flag: SOLUTION_FLAG_HIRAGANA,
         labelKey: 'hiragana',
         defaultLabel: 'Hiragana',
+        default: true,
+      },
+      {
+        flag: SOLUTION_FLAG_KANJI,
+        labelKey: 'kanji',
+        defaultLabel: 'Kanji',
+        default: true,
       },
       {
         flag: SOLUTION_FLAG_KATAKANA,
         labelKey: 'katakana',
         defaultLabel: 'Katakana',
       },
+      {
+        flag: SOLUTION_FLAG_ROMAJI,
+        labelKey: 'romaji',
+        defaultLabel: 'Romaji',
+      },
     ],
   },
-   */
 };
 
 /**
@@ -213,11 +222,41 @@ const simplifyTokenString = memoizeStringFunction((x, locale) => (
     .normalize('NFC')
 ), true);
 
+const JAPANESE_TOKEN_TYPE_FLAG = {
+  en: SOLUTION_FLAG_ROMAJI,
+  hiragana: SOLUTION_FLAG_HIRAGANA,
+  katakana: SOLUTION_FLAG_KATAKANA,
+  kanji: SOLUTION_FLAG_KANJI,
+};
+
+/**
+ * @type {Function}
+ * @param {string} sentence A Japanese sentence.
+ * @returns {number} A mask of the flags that are matched by the sentence.
+ */
+const getJapaneseSentenceFilterFlags = lift(
+  wanakana
+    .tokenize(_, { detailed: true })
+    .map(JAPANESE_TOKEN_TYPE_FLAG[it.type] ?? 0)
+    .reduce(lift(_ | _), 0)
+);
+
+/**
+ * A memoized version of {@see getJapaneseSentenceFilterFlags}.
+ * @type {Function}
+ * @param {string} token A Japanese token.
+ * @returns {number} A mask of the flags that are matched by the token.
+ */
+const getJapaneseTokenFilterFlags = memoizeStringFunction(getJapaneseSentenceFilterFlags, true);
+
 /**
  * @param {string[]} vertices A list of vertices taken from a solution graph, and corresponding to a single token.
  * @param {string} locale The locale of the vertices.
  * @param {boolean} isWhitespaceDelimited Whether tokens are whitespace-delimited.
  * @returns {string[]} The given list, from which duplicate / invalid / irrelevant vertices have been excluded.
+ * Additional information may be added to the list:
+ * - suffix: the punctuation that is common to all the vertices, if any.
+ * - flags: a mask of the flags from the locale's flag filters that are matched by the token.
  */
 const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
   let result = vertices;
@@ -346,6 +385,12 @@ const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
     }
   }
 
+  if ('ja' === locale) {
+    result.flags = result.map(getJapaneseTokenFilterFlags(_)).reduce(lift(_ | _), 0);
+  } else {
+    result.flags = 0;
+  }
+
   return result;
 };
 
@@ -398,6 +443,7 @@ const fromGroupedVertices = (groupedVertices, startIndex, locale, isWhitespaceDe
 
     const solutionBase = {
       reference: token[0] || '',
+      flags: token.flags,
       isComplex: token.length > 1,
     };
 
@@ -413,6 +459,7 @@ const fromGroupedVertices = (groupedVertices, startIndex, locale, isWhitespaceDe
         solutions.push({
           locale,
           reference: solutionBase.reference + subSolution.reference,
+          flags: solutionBase.flags | subSolution.flags,
           isComplex: solutionBase.isComplex || subSolution.isComplex,
           tokens: appendNextTokens(subSolution.tokens),
         });
@@ -501,69 +548,74 @@ export const fromVertices = (vertices, locale, isWhitespaceDelimited) => {
  * @param {string[]} sentences A list of sentences.
  * @param {object} metadata The metadata from the corresponding challenge.
  * @returns {{sentence: string, flags: number}[]}
- * The given list of sentences, complemented with variants based on the different Japanese syllabaries,
- * and flags indicating which syllabaries are used by each sentence.
+ * The given list of sentences, complemented with flags indicating which syllabaries are used by each sentence.
  */
 const applySyllabariesToJapaneseSentences = (sentences, metadata) => {
+  return sentences.map(sentence => ({
+    sentence,
+    flags: getJapaneseSentenceFilterFlags(sentence),
+  }));
+
+  // Applying replacements to Japanese sentences is currently disabled, because it is not reliable enough
+  // (Duolingo uses the "grader" graph to generate solutions, and it does not seem to include all of them).
+
   const syllabaries = {
-    kana: {
-      convert: wanakana.toKatakana,
-      replacements: {},
-      flags: SOLUTION_FLAG_KATAKANA,
-    },
     hiragana: {
-      convert: wanakana.toHiragana,
       replacements: {},
-      flags: SOLUTION_FLAG_HIRAGANA,
+      flag: SOLUTION_FLAG_HIRAGANA,
     },
+    kana: {
+      replacements: {},
+      flag: SOLUTION_FLAG_KATAKANA,
+    },
+    romaji: {
+      replacements: {},
+      flag: SOLUTION_FLAG_ROMAJI,
+    }
   };
 
   const converters = [ identity ];
 
-  if (isArray(metadata.token_transliterations)) {
-    for (const replacements of metadata.token_transliterations.flatMap(it?.tokens || [])) {
-      if (
-        isObject(replacements)
-        && isString(replacements.token)
-        && isArray(replacements.transliterations)
-      ) {
-        for (const replacement of replacements.transliterations) {
-          if (syllabaries[replacement?.type]) {
-            syllabaries[replacement.type].replacements[replacements.token] = replacement.text;
-          }
+  const transliterationSets = [
+    metadata.word_transliteration,
+    metadata.sentence_transliteration,
+    ...(isArray(metadata.token_transliterations) ? metadata.token_transliterations : []),
+    ...(isArray(metadata.wrong_token_transliterations) ? metadata.wrong_token_transliterations : []),
+    ...(isArray(metadata.option_transliterations) ? metadata.option_transliterations : []),
+    ...(isArray(metadata.other_option_transliterations) ? metadata.other_option_transliterations : []),
+  ].filter(isObject);
+
+  for (const replacements of transliterationSets.flatMap(it?.tokens || [])) {
+    if (
+      isObject(replacements)
+      && isString(replacements.token)
+      && isArray(replacements.transliterations)
+    ) {
+      for (const replacement of replacements.transliterations) {
+        if (syllabaries[replacement?.type]) {
+          syllabaries[replacement.type].replacements[replacements.token] = replacement.text;
         }
       }
     }
   }
 
-  for (const { convert, replacements, flags } of Object.values(syllabaries)) {
-    converters.push(({ sentence }) => {
-      const tokens = wanakana.tokenize(
-        sentence.replace(
+  for (const { replacements } of Object.values(syllabaries)) {
+    if (!isEmptyObject(replacements)) {
+      converters.push(lift(
+        it.replace(
           new RegExp(Object.keys(replacements).join('|'), 'giu'),
           lift(replacements[it] ?? it)
-        ),
-        { compact: true, detailed: true }
-      );
-
-      return {
-        flags,
-        sentence: tokens.map(({ type, value }) => ('ja' === type) ? convert(value) : value).join(''),
-      };
-    });
+        )
+      ));
+    }
   }
 
-  // Preserve original translations over converted ones.
-  const sentenceGroups = Object.values(
-    groupBy(
-      sentences.flatMap(original => converters.map(it(original))),
-      it.sentence
-    )
-  );
-
-  return sentenceGroups.map(group => ({
-    sentence: group[0].sentence,
-    flags: group.reduce(lift(_ | _.flags), 0),
+  return dedupeBy(
+    sentences.flatMap(sentence => converters.map(it(sentence))),
+    () => -1,
+  ).map(sentence => ({
+    sentence,
+    flags: getJapaneseSentenceFilterFlags(sentence),
   }));
 };
 
@@ -581,13 +633,18 @@ export const fromCompactTranslations = (translations, metadata, locale) => {
 
   const hasWhitespaces = hasLocaleWordBasedTokens(locale);
 
-  let preparedTranslations = translations.map({
-    flags: SOLUTION_FLAG_ORIGINAL,
-    sentence: it.normalize('NFC'),
-  });
+  let preparedTranslations;
 
   if ('ja' === locale) {
-    // preparedTranslations = applySyllabariesToJapaneseSentences(preparedTranslations, metadata); // todo
+    preparedTranslations = applySyllabariesToJapaneseSentences(
+      translations.map(it.normalize('NFC')),
+      metadata
+    );
+  } else {
+    preparedTranslations = translations.map({
+      sentence: it.normalize('NFC'),
+      flags: 0,
+    });
   }
 
   const splitTokens = !hasWhitespaces
@@ -850,10 +907,16 @@ export const fromSentences = (sentences, metadata, locale) => {
     .filter('' !== it)
     .map(normalizeString);
 
-  if (false && ('ja' === locale)) { // todo
-    preparedSentences = applySyllabariesToJapaneseSentences(preparedSentences, metadata);
+  if ('ja' === locale) {
+    preparedSentences = applySyllabariesToJapaneseSentences(
+      preparedSentences,
+      metadata
+    );
   } else {
-    preparedSentences = preparedSentences.map({ sentence: it });
+    preparedSentences = preparedSentences.map(sentence => ({
+      sentence,
+      flags: 0,
+    }));
   }
 
   return preparedSentences.map(({ sentence, flags }) => {

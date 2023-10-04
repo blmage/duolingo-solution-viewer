@@ -4,7 +4,7 @@ import { it } from 'one-liner.macro';
 import Cookies from 'js-cookie';
 import { config as faConfig, library } from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css'
-import { faCheck, faEquals, faQuestion, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faCircleQuestion, faEquals, faQuestion, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { faKey, faThumbtack } from '@fortawesome/pro-regular-svg-icons';
 import { faArrowFromLeft, faArrowToRight, faFileUser, faFilePlus } from '@fortawesome/pro-solid-svg-icons';
 import { sendActionRequestToContentScript } from 'duo-toolbox/extension/ipc';
@@ -48,6 +48,7 @@ library.add(
   faArrowFromLeft,
   faArrowToRight,
   faCheck,
+  faCircleQuestion,
   faEquals,
   faFilePlus,
   faFileUser,
