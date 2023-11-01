@@ -7,6 +7,7 @@
   "scripts": {
     "build": "rollup -c --environment production",
     "build-debug": "rollup -c --environment development",
+    "watch-debug": "rollup -c --environment development --watch",
     "lint": "eslint src",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
