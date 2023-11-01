@@ -85,7 +85,7 @@ const CLASS_NAMES = {
   [RESULT_INCORRECT]: {
     // Copied from the wrapper of the "Report" and "Discuss" icons and links when the result is incorrect.
     // Adds the "incorrect" color.
-    [BUTTON]: [ 'I5L6p', 'RnDo_' ],
+    [BUTTON]: [ 'I5L6p', 'RnDo_', '_3Qruy' ],
     // This class is now only defined in Darklingo++, and applies the same color as the other icons.
     [ICON]: [ '_1BszG' ],
   },

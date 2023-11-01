@@ -1050,8 +1050,11 @@ const CLASS_NAMES = {
     [ACTIVE_TYPE_LINK]: [ '_2__FI' ],
     // Found in the "app" stylesheet. Adds a light gray color.
     [INACTIVE_TYPE_LINK]: [ '_3cbXv' ],
-    // Copied from the special letter buttons. Only the main class is used here.
-    [DISABLED_TYPE_LINK]: [ 'WOZnx' ],
+    [DISABLED_TYPE_LINK]: [
+      // Copied from the special letter buttons. Only the main class is used here.
+      '_1N-oo',
+      '_33Jbm',
+    ],
     // Found by searching for the "notification" result color (applied when using the "Can't listen now" button).
     [SOLUTION_TOKEN_SEPARATOR]: [ '_2QmYK' ],
     // Found in the "app" stylesheet. Adds the page background color.

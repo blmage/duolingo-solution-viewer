@@ -168,10 +168,15 @@ const CLASS_NAMES = {
     [ITEM]: [ '_1OCDB' ],
     // Copied from the special letter buttons.
     [BUTTON]: [
-      'WOZnx',
-      '_275sd',
-      '_1ZefG',
+      '_1N-oo',
+      '_36Vd3',
+      '_16r-S',
       '_3f9XI',
+    ],
+    [DISABLED_BUTTON]: [
+      '_33Jbm',
+      // Copied by searching for a class that resets the bottom border, alongside the other button classes.
+      '_1_xfn',
     ],
   },
 };

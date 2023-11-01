@@ -83,7 +83,7 @@ const CLASS_NAMES = {
     // Adds the "correct" color.
     [WRAPPER]: [ '_1Nmv6', '_1D8II' ],
     // Adds the "incorrect" color.
-    [ADDED_TOKEN]: [ '_1sqiF', 'RnDo_' ],
+    [ADDED_TOKEN]: [ '_1sqiF', 'RnDo_', '_3Qruy' ],
   },
   [RESULT_INCORRECT]: {
     [WRAPPER]: [ '_1sqiF', '_3vF5k' ],
