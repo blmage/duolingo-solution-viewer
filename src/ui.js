@@ -494,12 +494,22 @@ const handleTranslationChallengeResult = async (result, userAnswer) => {
   }
 
   if (statementWrapper.matches(SELECTOR_CHALLENGE_STATEMENT_HINT_TOKEN)) {
-    const hintedWrapper = statementWrapper.parentElement.closest('ruby');
+    const hintedWrappers = [
+      statementWrapper.parentElement.closest('ruby'),
+      ...Array.from(statementWrapper.parentElement.querySelectorAll('ruby'))
+    ].filter(Boolean);
 
-    if (hintedWrapper) {
+    if (hintedWrappers.length > 0) {
       // Pronunciation hints are present in the statement.
-      statementWrapper = hintedWrapper.cloneNode(true);
-      Array.from(statementWrapper.getElementsByTagName('rt')).forEach(it.remove());
+      // Also, there may now be multiple <ruby> tags, and not all of them are complete.
+      statementWrapper = maxBy(
+        hintedWrappers.map(hintedWrapper => {
+          const cleanedWrapper = hintedWrapper.cloneNode(true);
+          Array.from(cleanedWrapper.getElementsByTagName('rt')).forEach(it.remove());
+          return cleanedWrapper;
+        }),
+        it.innerText.trim().length
+      );
     } else {
       statementWrapper = statementWrapper.parentNode;
     }
@@ -802,6 +812,7 @@ const SELECTOR_CHALLENGE_STATEMENT_HINT_POPOVER = '[data-test="hint-popover"]'; 
 const SELECTORS_CHALLENGE_STATEMENT = [
   '[data-test="hint-sentence"]',
   SELECTOR_CHALLENGE_STATEMENT_HINT_TOKEN,
+  '.g-kCu',
   '[data-test="challenge-header"]',
   '[data-test="challenge-translate-prompt"]',
 ];
