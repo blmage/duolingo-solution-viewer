@@ -420,18 +420,20 @@ const CLASS_NAMES = {
       'st_Fn',
       '_2ti2i',
       'sXpqy',
-      // Copied by searching for the same font size as the rest of the modal, with a gray color.
-      // Found in the "sessions" stylesheet.
-      '_3blqO',
+      'KqSeh',
+      '_3zGeZ',
+      '_394fY',
+      'RpiVp',
     ],
     // Copied by searching for the main (link) color without side-effects.
-    [SUGGESTION__ACTIVE]: [ '_2__FI' ],
+    [SUGGESTION__ACTIVE]: [ '_2__FI', '_27FUO' ],
   },
 };
 
 const STYLE_SHEETS = {
   [BASE]: StyleSheet.create({
     [WRAPPER]: {
+      color: 'rgb(var(--color-hare))',
       cursor: 'text',
       display: 'flex',
       flexWrap: 'wrap',

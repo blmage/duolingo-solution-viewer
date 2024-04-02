@@ -1044,10 +1044,10 @@ const PAGE_SIZE_OPTION = 'page_size_option';
 const CLASS_NAMES = {
   [CONTEXT_CHALLENGE]: {
     // Found in the "app" stylesheet. Adds the main link color.
-    [SORT_LINK]: [ '_2__FI' ],
+    [SORT_LINK]: [ '_2__FI', '_27FUO' ],
     // Copied from the closing button of the "Report" modal. Unwanted styles are reset below.
-    [TYPE_LINK]: [ 'FrL-W' ],
-    [ACTIVE_TYPE_LINK]: [ '_2__FI' ],
+    [TYPE_LINK]: [ 'FrL-W', 'eJbBB' ],
+    [ACTIVE_TYPE_LINK]: [ '_2__FI', '_27FUO' ],
     // Found in the "app" stylesheet. Adds a light gray color.
     [INACTIVE_TYPE_LINK]: [ '_3cbXv' ],
     [DISABLED_TYPE_LINK]: [
@@ -1055,13 +1055,13 @@ const CLASS_NAMES = {
       '_1N-oo',
       '_33Jbm',
     ],
-    // Found by searching for the "notification" result color (applied when using the "Can't listen now" button).
-    [SOLUTION_TOKEN_SEPARATOR]: [ '_2QmYK' ],
+    // Found by searching for the "notification" result color (applied when using the "Can't listen now" button eg).
+    [SOLUTION_TOKEN_SEPARATOR]: [ '_2QmYK', '_20psa' ],
     // Found in the "app" stylesheet. Adds the page background color.
-    [PAGINATION_WRAPPER]: [ '_3lUbm' ],
-    [PAGE_SIZE_LINK]: [ '_2__FI' ],
-    [PAGE_SIZE_SELECT_WRAPPER]: [ '_2__FI' ],
-    [PAGE_SIZE_SELECT]: [ '_2__FI' ],
+    [PAGINATION_WRAPPER]: [ '_3lUbm', '_1Nb-2' ],
+    [PAGE_SIZE_LINK]: [ '_2__FI', '_27FUO' ],
+    [PAGE_SIZE_SELECT_WRAPPER]: [ '_2__FI', '_27FUO' ],
+    [PAGE_SIZE_SELECT]: [ '_2__FI', '_27FUO' ],
   },
 };
 
@@ -1123,6 +1123,9 @@ const STYLE_SHEETS = {
     [ACTIVE_TYPE_LINK]: {
       borderColor: 'currentColor',
       cursor: 'default',
+    },
+    [INACTIVE_TYPE_LINK]: {
+      color: 'rgb(var(--color-hare))',
     },
     [DISABLED_TYPE_LINK]: {
       cursor: 'not-allowed',

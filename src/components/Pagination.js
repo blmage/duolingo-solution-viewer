@@ -163,15 +163,19 @@ const CLASS_NAMES = {
   [CONTEXT_CHALLENGE]: {
     // Copied from the global wrapper of the special letter buttons provided for some languages (such as French).
     // The class responsible for the null height is ignored here.
-    [WRAPPER]: [ 'gcfYU' ],
+    [WRAPPER]: [ 'gcfYU', '_1rTak' ],
     // Copied from the direct wrapper of each special letter button.
-    [ITEM]: [ '_1OCDB' ],
+    [ITEM]: [ '_1OCDB', '_3FVNQ' ],
     // Copied from the special letter buttons.
     [BUTTON]: [
       '_1N-oo',
       '_36Vd3',
       '_16r-S',
       '_3f9XI',
+      '_1N-oo',
+      '_36Vd3',
+      '_16r-S',
+      '_8oomW',
     ],
     [DISABLED_BUTTON]: [
       '_33Jbm',

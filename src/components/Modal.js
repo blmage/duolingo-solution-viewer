@@ -177,15 +177,15 @@ const CLASS_NAMES = {
   [BASE]: {
     // Copied from the "Report" modal overlay.
     // The class name responsible for the opacity must only be used below.
-    [OVERLAY]: [ '_8_UHb', 'xtPuL', '_1tTsl', '_36g-h', 'eMCPA', '_3JZ7B' ],
+    [OVERLAY]: [ '_8_UHb', 'xtPuL', '_1tTsl', '_36g-h', 'eMCPA', '_3JZ7B', 'wPvQK' ],
     // Copied from the global wrapper of the "Report" modal content.
     // The class name responsible for the opacity is also used below.
-    [WRAPPER]: [ '_1hEOp', '_13Rl7', '_3lUbm', 'xtPuL' ],
+    [WRAPPER]: [ '_1hEOp', '_13Rl7', '_3lUbm', 'xtPuL', '_3nIAG', '_1v4iu', '_1Nb-2', '_1nl4I' ],
     // Copied from the closing button of the "Report" modal.
-    [CLOSE_BUTTON]: [ 'FrL-W' ],
-    [SIZE_BUTTON]: [ 'FrL-W' ],
+    [CLOSE_BUTTON]: [ 'FrL-W', 'eJbBB' ],
+    [SIZE_BUTTON]: [ 'FrL-W', 'eJbBB' ],
     // Copied from the direct wrapper of the "Report" modal content.
-    [CONTENT]: [ '_2D1-v' ],
+    [CONTENT]: [ '_2D1-v', '_1nl4I' ],
   },
   [STATE_WILL_OPEN]: {
     // Found in the "app" stylesheet, or by debugging the modal animation.

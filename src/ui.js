@@ -12,7 +12,7 @@ import { MUTEX_HOTKEYS, PRIORITY_HIGH, requestMutex } from 'duo-toolbox/extensio
 import { isArray, isObject, maxBy, noop, sleep } from 'duo-toolbox/utils/functions';
 import { logError } from 'duo-toolbox/utils/logging';
 import { getUniqueElementId, isAnyInputFocused, querySelectors } from 'duo-toolbox/utils/ui';
-import { RESULT_CORRECT, RESULT_INCORRECT } from 'duo-toolbox/duo/challenges';
+import { RESULT_CORRECT, RESULT_INCORRECT, RESULT_NONE } from 'duo-toolbox/duo/challenges';
 
 import {
   DEFAULT_LOCALE,
@@ -621,14 +621,22 @@ const challengeFooterMutationObserver = new MutationObserver(() => {
     if (null !== resultWrapper) {
       try {
         const userAnswer = getUserAnswer();
+        let result;
 
-        const result = (
+        if (
           resultWrapper.classList.contains(CLASS_NAME_CORRECT_RESULT_WRAPPER)
-          // The "correct" class name is now added to the footer.
+          // The result class names are now added to the footer.
           || !!resultWrapper.closest(`.${CLASS_NAME_CORRECT_RESULT_WRAPPER}`)
-        )
-          ? RESULT_CORRECT
-          : RESULT_INCORRECT;
+        ) {
+          result = RESULT_CORRECT;
+        } else if (
+          resultWrapper.classList.contains(CLASS_NAME_INCORRECT_RESULT_WRAPPER)
+          || !!resultWrapper.closest(`.${CLASS_NAME_INCORRECT_RESULT_WRAPPER}`)
+        ) {
+          result = RESULT_INCORRECT;
+        } else {
+          result = RESULT_NONE;
+        }
 
         renderChallengeSolutionLoader(result);
 
@@ -636,11 +644,11 @@ const challengeFooterMutationObserver = new MutationObserver(() => {
           .then(
             wasHandled => wasHandled || handleTranslationChallengeResult(result, userAnswer)
           ).then(
-          wasHandled => wasHandled || renderChallengeSolutionLink(EMPTY_CHALLENGE, result, userAnswer)
-        ).catch(error => {
-          renderChallengeSolutionLink(EMPTY_CHALLENGE, result, userAnswer);
-          throw error;
-        });
+            wasHandled => wasHandled || renderChallengeSolutionLink(EMPTY_CHALLENGE, result, userAnswer)
+          ).catch(error => {
+            renderChallengeSolutionLink(EMPTY_CHALLENGE, result, userAnswer);
+            throw error;
+          });
       } catch (error) {
         logError(error, 'Could not handle the challenge result: ');
       }
@@ -784,13 +792,19 @@ const SELECTOR_LISTENING_CHALLENGE_WRAPPER = UI_LISTENING_CHALLENGE_TYPES
  * It is currently the previous sibling of the wrapper of the "Continue" button.
  * @type {string}
  */
-const SELECTOR_RESULT_WRAPPER = '._1tuLI';
+const SELECTOR_RESULT_WRAPPER = '._3Fp66';
 
 /**
  * The class name which is applied to the result wrapper or footer when the user has given a correct answer.
  * @type {string}
  */
-const CLASS_NAME_CORRECT_RESULT_WRAPPER = '_3e9O1';
+const CLASS_NAME_CORRECT_RESULT_WRAPPER = '_4bvK5';
+
+/**
+ * The class name which is applied to the result wrapper or footer when the user has given an incorrect answer.
+ * @type {string}
+ */
+const CLASS_NAME_INCORRECT_RESULT_WRAPPER = '_39m0_';
 
 /**
  * A CSS selector for the words in the current challenge statement.
@@ -813,6 +827,7 @@ const SELECTORS_CHALLENGE_STATEMENT = [
   '[data-test="hint-sentence"]',
   SELECTOR_CHALLENGE_STATEMENT_HINT_TOKEN,
   '.g-kCu',
+  '.hSdm1',
   '[data-test="challenge-header"]',
   '[data-test="challenge-translate-prompt"]',
 ];
@@ -849,7 +864,7 @@ const SELECTOR_BLANK_FILLING_ANSWER_EXTRANEOUS_TOKEN = '._2FKq, .caPDQ, ._2aMo5'
  * A CSS selector for the container of the answer tokens selected from the word bank.
  * @type {string}
  */
-const SELECTOR_ANSWER_SELECTED_TOKEN_CONTAINER = '.PcKtj';
+const SELECTOR_ANSWER_SELECTED_TOKEN_CONTAINER = '.PcKtj, ._20X2X';
 
 /**
  * A CSS selector for a answer token selected from the word bank.
@@ -861,7 +876,7 @@ const SELECTOR_ANSWER_SELECTED_TOKEN = '[data-test="challenge-tap-token"], [data
  * A CSS selector for the footer of the current challenge screen, holding the result and action elements.
  * @type {string}
  */
-const SELECTOR_CHALLENGE_FOOTER = '._2Fc1K';
+const SELECTOR_CHALLENGE_FOOTER = '.PAS1M';
 
 /**
  * A CSS selector for the solution wrapper of the current challenge screen, holding the answer key to the challenge.
@@ -873,7 +888,7 @@ const SELECTOR_CHALLENGE_SOLUTION_WRAPPER = '._2ez4I';
  * A CSS selector for the list of action links of the current challenge screen.
  * @type {string}
  */
-const SELECTOR_CHALLENGE_ACTION_LINK_LIST = '._3MD8I';
+const SELECTOR_CHALLENGE_ACTION_LINK_LIST = '._10y_e';
 
 /**
  * A CSS selector for the report (flag) icon of the challenge screen.
@@ -891,6 +906,13 @@ const SELECTOR_CHALLENGE_REPORT_ICON = [
   '._1Fs3P',
   '.Qgof6',
   '.anjNO',
+  // New.
+  '._2bq2Q',
+  '._2e3N3',
+  '._1nqyX',
+  '.Ei3D8',
+  '._34_WV',
+  '._2Gcbt',
 ].join(', ');
 
 /**
