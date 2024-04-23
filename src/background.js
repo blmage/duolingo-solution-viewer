@@ -252,7 +252,7 @@ const handleCurrentListeningChallengeRequest = async (senderId, data, sendResult
 
       // The Japanese solution graph is not reliable enough
       // (we should apply token transliterations to all solutions before checking for differences).
-      if (locale !== 'ja') {
+      if (false && (locale !== 'ja')) { // eslint-disable-line no-constant-condition
         if (solutions.list.some('score' in it)) {
           const bestScore = maxOf(solutions.list, it.score);
 

@@ -25,49 +25,11 @@ import {
 import { boundIndicesOf, getWordAt } from '../strings';
 import * as Solution from '../solutions';
 
-import {
-  BASE,
-  CONTEXT_CHALLENGE,
-  useLocalStorage,
-  useLocalStorageList,
-  useStyles,
-} from './index';
+import { BASE, CONTEXT_CHALLENGE, useLocalStorage, useLocalStorageList, useStyles } from './index';
 
 import Dropdown from './Dropdown';
 import FilterInput from './FilterInput';
 import Pagination from './Pagination';
-
-const SORT_TYPE_SIMILARITY = 'similarity';
-const SORT_TYPE_ALPHABETICAL = 'alphabetical';
-
-const SORT_TYPES = {
-  [SORT_TYPE_SIMILARITY]: {
-    labelId: 'similarity_sort',
-    defaultLabel: 'Similarity sort',
-    actionLabelId: 'sort_by_similarity',
-    defaultActionLabel: 'Sort by similarity',
-  },
-  [SORT_TYPE_ALPHABETICAL]: {
-    labelId: 'alphabetical_sort',
-    defaultLabel: 'Alphabetical sort',
-    actionLabelId: 'sort_alphabetically',
-    defaultActionLabel: 'Sort alphabetically',
-  },
-};
-
-/**
- * @param {boolean} isScoreAvailable Whether similarity scores are available on solutions.
- * @returns {string[]} The available sort types.
- */
-const getAvailableSortTypes = moize(isScoreAvailable => {
-  let sortTypes = Object.keys(SORT_TYPES);
-
-  if (!isScoreAvailable) {
-    sortTypes = sortTypes.filter(SORT_TYPE_SIMILARITY !== it);
-  }
-
-  return sortTypes;
-});
 
 const SORT_DIRECTION_ASC = 'asc';
 const SORT_DIRECTION_DESC = 'desc';
@@ -75,15 +37,59 @@ const SORT_DIRECTION_DESC = 'desc';
 const SORT_DIRECTIONS = {
   [SORT_DIRECTION_ASC]: {
     label: '↑',
-    actionLabelId: 'sort_ascending',
+    actionLabelKey: 'sort_ascending',
     defaultActionLabel: 'Sort in ascending order',
   },
   [SORT_DIRECTION_DESC]: {
     label: '↓',
-    actionLabelId: 'sort_descending',
+    actionLabelKey: 'sort_descending',
     defaultActionLabel: 'Sort in descending order',
   },
 };
+
+const SORT_TYPE_SIMILARITY = 'similarity';
+const SORT_TYPE_ALPHABETICAL = 'alphabetical';
+
+const SORT_TYPES = [
+  {
+    type: SORT_TYPE_SIMILARITY,
+    defaultDirection: SORT_DIRECTION_DESC,
+    labelKey: 'similarity_sort',
+    defaultLabel: 'Similarity sort',
+    actionLabelKey: 'sort_by_similarity',
+    defaultActionLabel: 'Sort by similarity',
+    icons: {
+      [SORT_DIRECTION_ASC]: [ 'fas', 'fa-sort-amount-up' ],
+      [SORT_DIRECTION_DESC]: [ 'fas', 'fa-sort-amount-down' ],
+    },
+  },
+  {
+    type: SORT_TYPE_ALPHABETICAL,
+    defaultDirection: SORT_DIRECTION_ASC,
+    labelKey: 'alphabetical_sort',
+    defaultLabel: 'Alphabetical sort',
+    actionLabelKey: 'sort_alphabetically',
+    defaultActionLabel: 'Sort alphabetically',
+    icons: {
+      [SORT_DIRECTION_ASC]: [ 'fas', 'fa-sort-alpha-up' ],
+      [SORT_DIRECTION_DESC]: [ 'fas', 'fa-sort-alpha-down' ],
+    },
+  },
+];
+
+/**
+ * @param {boolean} isScoreAvailable Whether similarity scores are available on solutions.
+ * @returns {string[]} The available sort types.
+ */
+const getAvailableSortTypes = moize(isScoreAvailable => {
+  let sortTypes = SORT_TYPES.map(it.type)
+
+  if (!isScoreAvailable) {
+    sortTypes = sortTypes.filter(SORT_TYPE_SIMILARITY !== it);
+  }
+
+  return sortTypes;
+});
 
 const PAGE_SIZE_ALL = 'all';
 const DEFAULT_PAGE_SIZE = 20;
@@ -192,16 +198,16 @@ const ListTypeLinks =
     ));
 
     return (
-      <div className={getElementClassNames(TYPE_LINK_WRAPPER)}>
+      <div className={getElementClassNames(LIST_ACTION_LINK_WRAPPER)}>
         {LIST_TYPES.map(({ type, icon }) => {
           const isActive = (type === currentType);
           const isDisabled = !availableTypes.includes(type);
           const title = (isDisabled ? `[${unavailablePrefix}] ` : '') + typeTitles[type];
 
           const buttonClassNames = getElementClassNames([
-            TYPE_LINK,
-            isDisabled && DISABLED_TYPE_LINK,
-            isActive ? ACTIVE_TYPE_LINK : INACTIVE_TYPE_LINK,
+            LIST_ACTION_LINK,
+            isDisabled && DISABLED_LIST_ACTION_LINK,
+            isActive ? ACTIVE_LIST_ACTION_LINK : INACTIVE_LIST_ACTION_LINK,
           ]);
 
           const onClick = event => {
@@ -219,7 +225,7 @@ const ListTypeLinks =
             >
               <FontAwesomeIcon
                 icon={icon}
-                className={getElementClassNames(TYPE_LINK_ICON)}
+                className={getElementClassNames(LIST_ACTION_LINK_ICON)}
               />
             </button>
           );
@@ -231,68 +237,97 @@ const ListTypeLinks =
 const ListSortLinks =
   ({
      context,
-     availableSortTypes,
-     currentSortType,
-     nextSortType,
-     sortDirection,
-     nextSortDirection,
-     onSortTypeToggle,
-     onSortDirectionToggle,
+     availableTypes,
+     currentType,
+     currentDirection,
+     nextDirection,
+     onTypeChange,
+     onDirectionToggle,
    }) => {
     const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
 
-    const {
-      sortTypeLabel,
-      nextSortTypeTitle,
-      nextSortDirectionTitle,
-    } = useText({
-      sortTypeLabel: (
-        <Text id={SORT_TYPES[currentSortType].labelId}>
-          {SORT_TYPES[currentSortType].defaultLabel}
-        </Text>
-      ),
-      nextSortTypeTitle: (
-        <Text id={SORT_TYPES[nextSortType].actionLabelId}>
-          {SORT_TYPES[nextSortType].defaultActionLabel}
-        </Text>
-      ),
-      nextSortDirectionTitle: (
-        <Text id={SORT_DIRECTIONS[nextSortDirection].actionLabelId}>
-          {SORT_DIRECTIONS[nextSortDirection].defaultActionLabel}
+    const { unavailablePrefix } = useText({
+      unavailablePrefix: <Text key="unavailable">Unavailable</Text>
+    });
+
+    const typeLabels = useText(Object.fromEntries(
+      SORT_TYPES.map([
+        it.type,
+        <Text key={it.labelKey} id={it.labelKey}>{it.defaultLabel}</Text>,
+      ])
+    ));
+
+    const typeActionLabels = useText(Object.fromEntries(
+      SORT_TYPES.map([
+        it.type,
+        <Text key={it.actionLabelKey} id={it.actionLabelKey}>{it.defaultActionLabel}</Text>,
+      ])
+    ));
+
+    const { nextDirectionActionLabel } = useText({
+      nextDirectionActionLabel: (
+        <Text key={SORT_DIRECTIONS[nextDirection].actionLabelKey}>
+          {SORT_DIRECTIONS[nextDirection].defaultActionLabel}
         </Text>
       ),
     });
 
     return (
-      <div className={getElementClassNames(TITLE_LINK_WRAPPER)}>
-        <Localizer>
-          {(1 === availableSortTypes.length)
-            ? ( // Single sort type
-              <span className={getElementClassNames([ SORT_TYPE_LABEL, SINGLE_SORT_TYPE_LABEL ])}>
-                {sortTypeLabel}
-              </span>
-            ) : ( // Multiple sort types
-              <a
-                title={nextSortTypeTitle}
-                onClick={onSortTypeToggle}
-                className={getElementClassNames(SORT_LINK)}
-              >
-                <span className={getElementClassNames(SORT_TYPE_LABEL)}>
-                  {sortTypeLabel}
-                </span>
-              </a>
-            )}
+      <div className={getElementClassNames(LIST_ACTION_LINK_WRAPPER)}>
+        {SORT_TYPES.map(({ type, icons, defaultDirection }) => {
+          const isActive = (type === currentType);
+          const isDisabled = !availableTypes.includes(type);
+          let icon;
+          let title;
 
-          <a
-            title={nextSortDirectionTitle}
-            onClick={onSortDirectionToggle}
-            className={getElementClassNames(SORT_LINK)}
-          >
-            <span className={getElementClassNames(SORT_DIRECTION_LABEL)}>
-              {SORT_DIRECTIONS[sortDirection].label}
-            </span>
-          </a>
-        </Localizer>
+          if (isActive) {
+            icon = icons[currentDirection];
+            title = `${typeLabels[type]} - ${nextDirectionActionLabel}`;
+          } else {
+            icon = icons[defaultDirection];
+
+            if (!isDisabled) {
+              title = typeActionLabels[type];
+            } else {
+              title = `[${unavailablePrefix}] ${typeActionLabels[type]}`;
+            }
+          }
+
+          const buttonClassNames = getElementClassNames([
+            LIST_ACTION_LINK,
+            isDisabled && DISABLED_LIST_ACTION_LINK,
+            isActive ? ACTIVE_LIST_ACTION_LINK : INACTIVE_LIST_ACTION_LINK,
+          ]);
+
+          const onClick = event => {
+            discardEvent(event);
+
+            if (isActive) {
+              onDirectionToggle();
+            } else {
+              onTypeChange(type);
+
+              if (currentDirection !== defaultDirection) {
+                onDirectionToggle();
+              }
+            }
+          };
+
+          return (
+            <button
+              key={type}
+              title={title}
+              onClick={onClick}
+              disabled={isDisabled}
+              className={buttonClassNames}
+            >
+              <FontAwesomeIcon
+                icon={icon}
+                className={getElementClassNames(LIST_ACTION_LINK_ICON)}
+              />
+            </button>
+          );
+        })}
       </div>
     );
   };
@@ -617,16 +652,7 @@ const SolutionList =
       }, [ solutions ]);
 
       const sortTypes = getAvailableSortTypes(isScoreAvailable);
-
-      const {
-        state: sortType,
-        nextState: nextSortType,
-        next: setNextSortType,
-      } = useLocalStorageList(
-        'sort-type',
-        sortTypes,
-        sortTypes[0]
-      );
+      const [ sortType, setSortType ] = useLocalStorage('sort-type', sortTypes[0]);
 
       const {
         state: sortDirection,
@@ -954,22 +980,21 @@ const SolutionList =
                   <Text id="correct_solutions">Correct solutions:</Text>
                 </span>
 
-                <ListSortLinks
-                  context={context}
-                  availableSortTypes={sortTypes}
-                  currentSortType={sortType}
-                  nextSortType={nextSortType}
-                  sortDirection={sortDirection}
-                  nextSortDirection={nextSortDirection}
-                  onSortTypeToggle={() => setNextSortType()}
-                  onSortDirectionToggle={() => setNextSortDirection()}
-                />
-
                 <ListTypeLinks
                   context={context}
                   currentType={type}
                   availableTypes={[ type, ...otherTypes ]}
                   onChange={onTypeChange}
+                />
+
+                <ListSortLinks
+                  context={context}
+                  availableTypes={sortTypes}
+                  currentType={sortType}
+                  currentDirection={sortDirection}
+                  nextDirection={nextSortDirection}
+                  onTypeChange={setSortType}
+                  onDirectionToggle={() => setNextSortDirection()}
                 />
               </h3>
 
@@ -1017,16 +1042,12 @@ const TITLE_LINK_WRAPPER = 'title_link_wrapper';
 const FLAG_FILTER_OPTION = 'flag_filter_option'
 const FLAG_FILTER_CHECKBOX = 'flag_filter_checkbox'
 const FLAG_FILTER_MATCH_COUNT = 'flag_filter_match_count';
-const TYPE_LINK_WRAPPER = 'type_link_wrapper';
-const TYPE_LINK = 'type_link';
-const ACTIVE_TYPE_LINK = 'active_type_link';
-const INACTIVE_TYPE_LINK = 'inactive_type_link';
-const DISABLED_TYPE_LINK = 'disabled_type_link';
-const TYPE_LINK_ICON = 'type_link_icon';
-const SORT_LINK = 'sort_link';
-const SORT_TYPE_LABEL = 'sort_type_label';
-const SORT_DIRECTION_LABEL = 'sort_direction_label';
-const SINGLE_SORT_TYPE_LABEL = 'single_sort_type_label';
+const LIST_ACTION_LINK_WRAPPER = 'list_action_link_wrapper';
+const LIST_ACTION_LINK = 'list_action_link';
+const ACTIVE_LIST_ACTION_LINK = 'active_list_action_link';
+const INACTIVE_LIST_ACTION_LINK = 'inactive_list_action_link';
+const DISABLED_LIST_ACTION_LINK = 'disabled_list_action_link';
+const LIST_ACTION_LINK_ICON = 'list_action_link_icon';
 const EMPTY_LIST = 'empty_list';
 const SOLUTION = 'solution';
 const SOLUTION_TOKEN_SEPARATOR = 'solution_token_separator';
@@ -1043,25 +1064,25 @@ const PAGE_SIZE_OPTION = 'page_size_option';
 
 const CLASS_NAMES = {
   [CONTEXT_CHALLENGE]: {
-    // Found in the "app" stylesheet. Adds the main link color.
-    [SORT_LINK]: [ '_2__FI', '_27FUO' ],
     // Copied from the closing button of the "Report" modal. Unwanted styles are reset below.
-    [TYPE_LINK]: [ 'FrL-W', 'eJbBB' ],
-    [ACTIVE_TYPE_LINK]: [ '_2__FI', '_27FUO' ],
+    [LIST_ACTION_LINK]: [ 'eJbBB', 'rXoiv' ],
+    [ACTIVE_LIST_ACTION_LINK]: [ '_27FUO', '_1PPA6' ],
     // Found in the "app" stylesheet. Adds a light gray color.
-    [INACTIVE_TYPE_LINK]: [ '_3cbXv' ],
-    [DISABLED_TYPE_LINK]: [
+    [INACTIVE_LIST_ACTION_LINK]: [ '_3cbXv' ],
+    [DISABLED_LIST_ACTION_LINK]: [
       // Copied from the special letter buttons. Only the main class is used here.
       '_1N-oo',
       '_33Jbm',
+      '_8AMBh',
+      '_20q0d',
     ],
     // Found by searching for the "notification" result color (applied when using the "Can't listen now" button eg).
-    [SOLUTION_TOKEN_SEPARATOR]: [ '_2QmYK', '_20psa' ],
+    [SOLUTION_TOKEN_SEPARATOR]: [ '_2QmYK', '_20psa', '_3wqVs', '_2n6ud' ],
     // Found in the "app" stylesheet. Adds the page background color.
-    [PAGINATION_WRAPPER]: [ '_3lUbm', '_1Nb-2' ],
-    [PAGE_SIZE_LINK]: [ '_2__FI', '_27FUO' ],
-    [PAGE_SIZE_SELECT_WRAPPER]: [ '_2__FI', '_27FUO' ],
-    [PAGE_SIZE_SELECT]: [ '_2__FI', '_27FUO' ],
+    [PAGINATION_WRAPPER]: [ '_1Nb-2', 'FohH5' ],
+    [PAGE_SIZE_LINK]: [ '_27FUO', '_1PPA6' ],
+    [PAGE_SIZE_SELECT_WRAPPER]: [ '_27FUO', '_1PPA6' ],
+    [PAGE_SIZE_SELECT]: [ '_27FUO', '_1PPA6' ],
   },
 };
 
@@ -1071,9 +1092,10 @@ const STYLE_SHEETS = {
       alignItems: 'center',
       display: 'flex',
       flexWrap: 'wrap',
-      justifyContent: 'space-between',
+      justifyContent: 'flex-end',
     },
     [TITLE_TEXT]: {
+      flex: 1,
       marginRight: '1rem',
       '@media (max-width: 699px)': {
         marginBottom: '0.5rem',
@@ -1105,13 +1127,14 @@ const STYLE_SHEETS = {
       fontSize: '0.8em',
       marginLeft: '0.5rem',
     },
-    [TYPE_LINK_WRAPPER]: {
+    [LIST_ACTION_LINK_WRAPPER]: {
       display: 'flex',
       gap: '0.5rem',
       justifyContent: 'space-between',
-      marginLeft: '0.5rem',
+      marginLeft: '1rem',
     },
-    [TYPE_LINK]: {
+    [LIST_ACTION_LINK]: {
+      cursor: 'pointer',
       height: '2.25rem',
       left: 0,
       position: 'relative',
@@ -1120,59 +1143,21 @@ const STYLE_SHEETS = {
       width: '2.25rem',
       zIndex: '0',
     },
-    [ACTIVE_TYPE_LINK]: {
+    [ACTIVE_LIST_ACTION_LINK]: {
       borderColor: 'currentColor',
-      cursor: 'default',
     },
-    [INACTIVE_TYPE_LINK]: {
+    [INACTIVE_LIST_ACTION_LINK]: {
       color: 'rgb(var(--color-hare))',
     },
-    [DISABLED_TYPE_LINK]: {
+    [DISABLED_LIST_ACTION_LINK]: {
       cursor: 'not-allowed',
     },
-    [SORT_LINK]: {
-      cursor: 'pointer',
-      marginRight: '0.5em',
-      userSelect: 'none',
-      whiteSpace: 'nowrap',
-      '@media (any-pointer: coarse)': {
-        display: 'inline-block',
-        padding: '0.125em 1em',
-        position: 'relative',
-        ':active': {
-          transform: 'translate3d(0, 2px, 0)',
-          ':before': {
-            borderWidth: '2px',
-          },
-        },
-        ':before': {
-          borderColor: 'currentColor',
-          borderRadius: '12px',
-          borderStyle: 'solid',
-          borderWidth: '2px 2px 4px',
-          bottom: 0,
-          content: '""',
-          display: 'block',
-          left: 0,
-          position: 'absolute',
-          right: 0,
-          top: 0,
-        },
-      },
-    },
-    [SORT_TYPE_LABEL]: {
-      userSelect: 'none',
-    },
-    [SORT_DIRECTION_LABEL]: {
-      fontSize: '1.2em',
-      fontWeight: '900',
-    },
-    [SINGLE_SORT_TYPE_LABEL]: {
-      fontWeight: 'normal',
-      marginRight: '0.5em',
+    [EMPTY_LIST]: {
+      fontStyle: 'italic',
+      margin: '1em 0 0',
     },
     [SOLUTION]: {
-      padding: '0.4em 0.5em 0.3em',
+      padding: '0.5em 0.5em 0.35em',
       ':nth-child(odd)': {
         background: 'rgba(0, 0, 0, 0.125)',
       },
@@ -1258,12 +1243,6 @@ const STYLE_SHEETS = {
     },
   }),
   [CONTEXT_CHALLENGE]: StyleSheet.create({
-    [SORT_LINK]: {
-      fontSize: '0.75em',
-    },
-    [SINGLE_SORT_TYPE_LABEL]: {
-      fontSize: '0.75em',
-    },
     [PAGINATION_WRAPPER]: {
       bottom: '0',
       padding: '0.1em 0 0 !important',

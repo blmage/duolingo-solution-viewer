@@ -33,17 +33,17 @@ const VALUE = 'value';
 const CLASS_NAMES = {
   [BASE]: {
     // Copied from the direct wrapper of the "Correct solution" title and the corresponding value.
-    [WRAPPER]: [ '_2ez4I', 'K5mc9' ],
+    [WRAPPER]: [ 'K5mc9', '_1D3fo' ],
     // Copied from the solution value.
-    [VALUE]: [ '_1UqAr', 'Dl5qy' ],
+    [VALUE]: [ '_1UqAr', 'Dl5qy', '_2jz5U' ],
   },
   [RESULT_CORRECT]: {
     // Adds the "correct" color
-    [WRAPPER]: [ '_1Nmv6', '_1D8II', '_2BYam' ],
+    [WRAPPER]: [ '_1D8II', '_2BYam', 'WXwlk', '_6RzgV' ],
   },
   [RESULT_INCORRECT]: {
     // Adds the "incorrect" color.
-    [WRAPPER]: [ '_1sqiF', '_3vF5k', '_3Qruy', '_2WmG1' ],
+    [WRAPPER]: [ '_3Qruy', '_2WmG1', 'o-3Ru', '_3wqVs' ],
   },
 };
 

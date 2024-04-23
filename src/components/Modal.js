@@ -141,23 +141,25 @@ const Modal =
     return (
       <IntlProvider scope="modal">
         <div onClick={onRequestClose} className={getElementClassNames(OVERLAY)}>
-          <div role="dialog" tabIndex="-1" onClick={discardEvent} className={getElementClassNames(WRAPPER)}>
-            <div onClick={onRequestClose} className={getElementClassNames(CLOSE_BUTTON)}>
-              <Localizer>
-                <img
-                  src={closeIconUrl}
-                  alt={<Text id="close">Close</Text>}
-                  title={<Text id="close">Close</Text>}
-                />
-              </Localizer>
-            </div>
+          <div role="dialog" tabIndex="-1" onClick={onRequestClose} className={getElementClassNames(POSITIONER)}>
+            <div onClick={discardEvent} className={getElementClassNames(WRAPPER)}>
+              <div onClick={onRequestClose} className={getElementClassNames(CLOSE_BUTTON)}>
+                <Localizer>
+                  <img
+                    src={closeIconUrl}
+                    alt={<Text id="close">Close</Text>}
+                    title={<Text id="close">Close</Text>}
+                  />
+                </Localizer>
+              </div>
 
-            <div title={modalSizeTitle} onClick={setNextModalSize} className={getElementClassNames(SIZE_BUTTON)}>
-              {MODAL_SIZES[nextModalSize].actionLabel}
-            </div>
+              <div title={modalSizeTitle} onClick={setNextModalSize} className={getElementClassNames(SIZE_BUTTON)}>
+                {MODAL_SIZES[nextModalSize].actionLabel}
+              </div>
 
-            <div ref={contentWrapper} tabIndex="0" className={getElementClassNames(CONTENT)}>
-              {children}
+              <div ref={contentWrapper} tabIndex="0" className={getElementClassNames(CONTENT)}>
+                {children}
+              </div>
             </div>
           </div>
         </div>
@@ -168,43 +170,43 @@ const Modal =
 export default Modal;
 
 const OVERLAY = 'overlay';
+const POSITIONER = 'positioner';
 const WRAPPER = 'wrapper';
+const CONTENT = 'content';
 const CLOSE_BUTTON = 'close_button';
 const SIZE_BUTTON = 'size_button';
-const CONTENT = 'content';
 
 const CLASS_NAMES = {
   [BASE]: {
-    // Copied from the "Report" modal overlay.
-    // The class name responsible for the opacity must only be used below.
-    [OVERLAY]: [ '_8_UHb', 'xtPuL', '_1tTsl', '_36g-h', 'eMCPA', '_3JZ7B', 'wPvQK' ],
+    // Copied from the "Report" modal backdrop.
+    // The class name responsible for the opacity must not be included here.
+    [OVERLAY]: [ 'Xx0pm', 'mTWq_', '_1Fnem', '_1qKkd' ],
     // Copied from the global wrapper of the "Report" modal content.
-    // The class name responsible for the opacity is also used below.
-    [WRAPPER]: [ '_1hEOp', '_13Rl7', '_3lUbm', 'xtPuL', '_3nIAG', '_1v4iu', '_1Nb-2', '_1nl4I' ],
+    // The class name responsible for the opacitymust not be included here.
+    [POSITIONER]: [ '_3Mzt6', '_1qKkd' ],
     // Copied from the closing button of the "Report" modal.
-    [CLOSE_BUTTON]: [ 'FrL-W', 'eJbBB' ],
-    [SIZE_BUTTON]: [ 'FrL-W', 'eJbBB' ],
+    [CLOSE_BUTTON]: [ 'eJbBB', 'rXoiv' ],
+    [SIZE_BUTTON]: [ 'eJbBB', 'rXoiv' ],
     // Copied from the direct wrapper of the "Report" modal content.
-    [CONTENT]: [ '_2D1-v', '_1nl4I' ],
+    [WRAPPER]: [ '_1yFTM', '_3fFQQ', 'FohH5', '_2pgzh' ],
   },
   [STATE_WILL_OPEN]: {
-    // Found in the "app" stylesheet, or by debugging the modal animation.
     // Applies full transparency and disable pointer events.
-    [OVERLAY]: [ '_1edTR' ],
-    [WRAPPER]: [ '_1edTR' ],
+    // Found in the same file as, and near, the "full opacity" class.
+    [OVERLAY]: [ 'a6uTv' ],
+    [POSITIONER]: [ 'a6uTv' ],
   },
   [STATE_OPENING]: {
-    // Found in the "app" stylesheet, or by debugging the modal animation.
-    // Applies full opacity.
-    [OVERLAY]: [ '_18W4a', ],
-    [WRAPPER]: [ '_1edTR' ],
+    // Applies full opacity. Found on the original modal components.
+    [OVERLAY]: [ '_1TRqy', ],
+    [POSITIONER]: [ 'a6uTv' ],
   },
   [STATE_OPENED]: {
-    [OVERLAY]: [ '_18W4a' ],
-    [WRAPPER]: [ '_18W4a' ],
+    [OVERLAY]: [ '_1TRqy' ],
+    [POSITIONER]: [ '_1TRqy' ],
   },
   [STATE_CLOSING]: {
-    [OVERLAY]: [ '_1edTR' ],
+    [OVERLAY]: [ 'a6uTv' ],
   },
 };
 
@@ -214,7 +216,7 @@ const STYLE_SHEETS = {
       position: 'fixed !important',
       transitionDuration: '300ms',
     },
-    [WRAPPER]: {
+    [POSITIONER]: {
       maxHeight: 'calc(95vh - 30px)',
       maxWidth: 'calc(95vw - 30px)',
       transitionDuration: '300ms',
@@ -223,11 +225,19 @@ const STYLE_SHEETS = {
         maxWidth: '95vw',
       },
     },
-    [CONTENT]: {
-      maxHeight: 'calc(95vh - 90px)',
-      overflowY: 'auto',
-      paddingRight: '0.5em',
+    [WRAPPER]: {
+      maxHeight: 'calc(100vh - 90px)',
+      padding: '30px',
       position: 'relative',
+    },
+    [CONTENT]: {
+      height: '100%',
+      margin: 0,
+      maxHeight: 'calc(100vh - 150px)',
+      overflowY: 'auto',
+      paddingRight: '10px',
+      position: 'relative',
+      width: '100%',
     },
     [SIZE_BUTTON]: {
       border: 0,
@@ -243,26 +253,28 @@ const STYLE_SHEETS = {
     },
   }),
   [MODAL_SIZE_FIT_TO_CONTENT]: StyleSheet.create({
+    [WRAPPER]: {
+      maxWidth: '100%',
+    },
     [CONTENT]: {
       maxWidth: '100%',
     },
   }),
   [MODAL_SIZE_MAXIMIZED]: StyleSheet.create({
-    [WRAPPER]: {
+    [POSITIONER]: {
       height: 'calc(95vh - 30px)',
+      margin: '0 auto',
       maxHeight: 'none',
       maxWidth: 'none',
       width: 'calc(95vw - 30px)',
-      '@media (max-width: 699px)': {
-        height: '95vh',
-        width: '95vw',
-      },
+    },
+    [WRAPPER]: {
+      height: '100%',
+      maxWidth: '100%',
+      width: '100%',
     },
     [CONTENT]: {
       maxWidth: '100%',
-      '@media (max-width: 699px)': {
-        maxHeight: '100%',
-      },
     },
   }),
 };

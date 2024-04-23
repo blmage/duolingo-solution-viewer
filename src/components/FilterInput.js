@@ -426,7 +426,7 @@ const CLASS_NAMES = {
       'RpiVp',
     ],
     // Copied by searching for the main (link) color without side-effects.
-    [SUGGESTION__ACTIVE]: [ '_2__FI', '_27FUO' ],
+    [SUGGESTION__ACTIVE]: [ '_27FUO', '_1PPA6' ],
   },
 };
 
@@ -491,6 +491,9 @@ const STYLE_SHEETS = {
       padding: '10px 2px',
       '::placeholder': {
         color: 'inherit',
+      },
+      ':focus': {
+        color: 'rgb(var(--color-black-text))',
       },
     },
     [SUGGESTIONS]: {

@@ -147,16 +147,17 @@ const CLASS_NAMES = {
     [BUTTON]: [
       // Copied from the special letter buttons provided for some languages (such as French).
       // The class responsible for the small and square dimensions is ignored here.
-      'WOZnx',
-      '_275sd',
-      '_1ZefG',
       '_1N-oo',
       '_36Vd3',
       '_16r-S',
+      '_8oomW',
+      '_8AMBh',
+      '_2vfJy',
+      '_3Qy5R',
     ],
     // Found in the "app" stylesheet. Adds the main link color.
     // Use a class located after the one responsible for the color and background of the button.
-    [COMMIT_BUTTON]: [ '_2__FI', '_27FUO' ],
+    [COMMIT_BUTTON]: [ '_27FUO', '_1PPA6' ],
   },
 };
 

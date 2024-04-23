@@ -4,7 +4,19 @@ import { it } from 'one-liner.macro';
 import Cookies from 'js-cookie';
 import { config as faConfig, library } from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css'
-import { faCheck, faCircleQuestion, faEquals, faQuestion, faTimes } from '@fortawesome/free-solid-svg-icons';
+
+import {
+  faCheck,
+  faCircleQuestion,
+  faEquals,
+  faQuestion,
+  faSortAlphaDown,
+  faSortAlphaUp,
+  faSortAmountDown,
+  faSortAmountUp,
+  faTimes,
+} from '@fortawesome/free-solid-svg-icons';
+
 import { faKey, faThumbtack } from '@fortawesome/pro-regular-svg-icons';
 import { faArrowFromLeft, faArrowToRight, faFileUser, faFilePlus } from '@fortawesome/pro-solid-svg-icons';
 import { sendActionRequestToContentScript } from 'duo-toolbox/extension/ipc';
@@ -54,6 +66,10 @@ library.add(
   faFileUser,
   faKey,
   faQuestion,
+  faSortAlphaDown,
+  faSortAlphaUp,
+  faSortAmountDown,
+  faSortAmountUp,
   faThumbtack,
   faTimes
 );
@@ -792,19 +808,19 @@ const SELECTOR_LISTENING_CHALLENGE_WRAPPER = UI_LISTENING_CHALLENGE_TYPES
  * It is currently the previous sibling of the wrapper of the "Continue" button.
  * @type {string}
  */
-const SELECTOR_RESULT_WRAPPER = '._3Fp66';
+const SELECTOR_RESULT_WRAPPER = '._3Fp66, ._8wIx-';
 
 /**
  * The class name which is applied to the result wrapper or footer when the user has given a correct answer.
  * @type {string}
  */
-const CLASS_NAME_CORRECT_RESULT_WRAPPER = '_4bvK5';
+const CLASS_NAME_CORRECT_RESULT_WRAPPER = '_3yMvO';
 
 /**
  * The class name which is applied to the result wrapper or footer when the user has given an incorrect answer.
  * @type {string}
  */
-const CLASS_NAME_INCORRECT_RESULT_WRAPPER = '_39m0_';
+const CLASS_NAME_INCORRECT_RESULT_WRAPPER = '_2cfV0';
 
 /**
  * A CSS selector for the words in the current challenge statement.
@@ -837,7 +853,7 @@ const SELECTORS_CHALLENGE_STATEMENT = [
  * In case it might help, the ClosestSolution component targets the same value.
  * @type {string}
  */
-const SELECTOR_CHALLENGE_SOLUTION_TRANSLATION = '._2ez4I:last-child ._1UqAr';
+const SELECTOR_CHALLENGE_SOLUTION_TRANSLATION = '._1D3fo:last-child .WXwlk:last-child';
 
 /**
  * A CSS selector for the different kinds of answer inputs that are not based on the word bank.
@@ -864,7 +880,7 @@ const SELECTOR_BLANK_FILLING_ANSWER_EXTRANEOUS_TOKEN = '._2FKq, .caPDQ, ._2aMo5'
  * A CSS selector for the container of the answer tokens selected from the word bank.
  * @type {string}
  */
-const SELECTOR_ANSWER_SELECTED_TOKEN_CONTAINER = '.PcKtj, ._20X2X';
+const SELECTOR_ANSWER_SELECTED_TOKEN_CONTAINER = '.PcKtj, ._20X2X, ._2-F7v';
 
 /**
  * A CSS selector for a answer token selected from the word bank.
@@ -876,13 +892,13 @@ const SELECTOR_ANSWER_SELECTED_TOKEN = '[data-test="challenge-tap-token"], [data
  * A CSS selector for the footer of the current challenge screen, holding the result and action elements.
  * @type {string}
  */
-const SELECTOR_CHALLENGE_FOOTER = '.PAS1M';
+const SELECTOR_CHALLENGE_FOOTER = '._2HXQ9, [id="session/PlayerFooter"]';
 
 /**
  * A CSS selector for the solution wrapper of the current challenge screen, holding the answer key to the challenge.
  * @type {string}
  */
-const SELECTOR_CHALLENGE_SOLUTION_WRAPPER = '._2ez4I';
+const SELECTOR_CHALLENGE_SOLUTION_WRAPPER = '._1D3fo:last-child';
 
 /**
  * A CSS selector for the list of action links of the current challenge screen.

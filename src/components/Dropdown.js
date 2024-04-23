@@ -128,13 +128,22 @@ const ITEM = 'item';
 const ITEM_ICON = 'item_icon';
 
 const CLASS_NAMES = {
-  // Copied from the "More" / "..." menu in both cases.
+  // Copied from the courses menu.
   [CONTEXT_CHALLENGE]: {
-    [WRAPPER]: [ '_2O14B', '_2XlFZ', '_1v2Gj' ],
-    [ARROW]: [ 'ite_X' ],
-    [ARROW_ICON]: [ '_3p5e9' ],
-    [ITEMS]: [ '_1KUxv' ],
-    [ITEM_WRAPPER]: [ '_3kz3Z', '_3jIW4' ],
+    [WRAPPER]: [ '_3h1gx', '_3YDLx', '_2RQAD' ],
+    [CONTENT]: [ '_2K46L', '_1HyVW' ],
+    [ARROW]: [ '_3XA9c' ],
+    [ARROW_ICON]: [ '_2uOX8' ],
+    [ITEMS]: [ '_2xkqZ' ],
+    [ITEM_WRAPPER]: [
+      // Copied from the "My Courses" item (adds a bottom border).
+      '_2aQWq',
+      // Copied from any course item.
+      '_3Ws0y',
+      '_3Qy5R',
+      '_2q_uT',
+      '_20KM-',
+    ]
   },
 };
 
@@ -148,14 +157,22 @@ const STYLE_SHEETS = {
       visibility: 'hidden',
       zIndex: '1000',
     },
-    [ITEM_WRAPPER]: {
-      fontWeight: 'normal',
+    [ITEMS]: {
       padding: 0,
+    },
+    [ITEM_WRAPPER]: {
+      color: 'rgb(var(--color-black-text))',
+      fontSize: '1em',
+      fontWeight: 'normal',
+      padding: '10px',
       textTransform: 'none',
+      width: '100%',
+      ':last-child': {
+        borderBottom: 'none',
+      },
     },
     [ITEM]: {
-      padding: '10px',
-      width: '100%',
+      paddingRight: '5px',
     },
     [ITEM_ICON]: {
       marginRight: '10px',

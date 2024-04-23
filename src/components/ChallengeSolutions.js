@@ -136,12 +136,12 @@ const CLASS_NAMES = {
   [CONTEXT_CHALLENGE]: {
     [REFERENCE_WRAPPER__PINNED]: [
       // Found in the "app" stylesheet. Adds the page background color.
-      '_3lUbm', '_1Nb-2',
-      // Copied by searching for the main (link) color without side-effects.
-      '_2__FI', '_27FUO',
+      'FohH5',
+      // Copied by searching for the main (link) color without side effects.
+      '_1PPA6',
     ],
     // Copied from the closing button of the "Report" modal.
-    [PIN_BUTTON]: [ 'FrL-W', 'eJbBB' ],
+    [PIN_BUTTON]: [ 'eJbBB', 'rXoiv' ],
   },
 };
 
