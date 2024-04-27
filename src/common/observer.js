@@ -15,8 +15,6 @@ onPracticeChallengesLoaded(
   sendEventNotificationToContentScript(UI_EVENT_TYPE_SESSION_LOADED, _)
 );
 
-// todo replace this with UI_EVENT_TYPE_TTS_SENTENCE_PLAYED
-
 onSoundPlaybackRequested(
   sendEventNotificationToContentScript(UI_EVENT_TYPE_SOUND_PLAYED, _?.url)
 );

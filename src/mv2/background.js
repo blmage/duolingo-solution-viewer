@@ -2,14 +2,14 @@ import { _, it, lift } from 'one-liner.macro';
 import { onActionRequest, onUiEvent } from 'duo-toolbox/extension/ipc';
 import { dedupeBy, isArray, isObject, isString, maxOf, minBy, minOf, sumOf } from 'duo-toolbox/utils/functions';
 import { RESULT_CORRECT } from 'duo-toolbox/duo/challenges';
-import { normalizeString } from './strings';
+import { normalizeString } from '../common/strings';
 
 import {
   CHALLENGE_TYPE_LISTENING,
   CHALLENGE_TYPE_NAMING,
   CHALLENGE_TYPE_TRANSLATION,
   SOLUTION_LIST_TYPE_COMPACT,
-} from './constants';
+} from '../common/constants';
 
 import {
   ACTION_TYPE_GET_CHALLENGE_BY_KEY,
@@ -18,10 +18,10 @@ import {
   ACTION_TYPE_UPDATE_CURRENT_CHALLENGE_USER_REFERENCE,
   UI_EVENT_TYPE_SESSION_LOADED,
   UI_EVENT_TYPE_SOUND_PLAYED,
-} from './ipc';
+} from '../common/ipc';
 
-import * as Challenge from './challenges';
-import * as Solution from './solutions';
+import * as Challenge from '../common/challenges';
+import * as Solution from '../common/solutions';
 
 /**
  * @param {object} sender The sender of a message.
