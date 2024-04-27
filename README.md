@@ -1,5 +1,5 @@
 <h1>
-  <img align="center" width="48" height="48" src="https://raw.githubusercontent.com/blmage/duolingo-solution-viewer/master/dist/icons/icon_48.png" />
+  <img align="center" width="48" height="48" src="https://raw.githubusercontent.com/blmage/duolingo-solution-viewer/master/dist/mv3/icons/icon_48.png" />
   Duolingo Solution Viewer
 </h1>
 
