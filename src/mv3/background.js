@@ -61,6 +61,11 @@ const PARSED_COMPLEX_SOLUTION_LIST_CACHE_SIZE = 4;
  */
 const parsedComplexSolutionListCache = [];
 
+/**
+ * @param {string} sessionId A session ID.
+ * @param {Function} callback A callback to update the session data.
+ * @returns {Promise<void>} A promise for the result of the action.
+ */
 const updateSession = async (sessionId, callback) => {
   await database.transaction('rw', [ database.sessions ], async () => {
     const session = await database.sessions.get(sessionId);
@@ -96,6 +101,12 @@ const updateSession = async (sessionId, callback) => {
   });
 };
 
+/**
+ * Remove all practice sessions that have not been updated since a given timestamp.
+ * @param {number[]} excludedIds The IDs of the sessions that should not be removed.
+ * @param {number} lastUpdatedBefore The timestamp before which the sessions should be removed.
+ * @returns {Promise<void>} A promise for the result of the action.
+ */
 const cleanSessions = async (excludedIds = [], lastUpdatedBefore = Number.MAX_SAFE_INTEGER) => {
   await database
     .sessions
@@ -105,7 +116,10 @@ const cleanSessions = async (excludedIds = [], lastUpdatedBefore = Number.MAX_SA
     .delete();
 };
 
-// todo cache ?!
+/**
+ * @param {string} sessionId A session ID.
+ * @returns {Promise<Challenge[]>} A promise for the challenges of the given session.
+ */
 const getSessionChallenges = async sessionId => {
   const session = await database.sessions.get(sessionId);
 
@@ -168,12 +182,22 @@ const registerUiChallenges = async (sessionId, uiChallenges, fromLanguage, toLan
   );
 };
 
+/**
+ * @param {string} sessionId A session ID.
+ * @returns {Promise<Challenge|null>} A promise for the last listening challenge of the given session, if any.
+ */
 const getSessionLastListeningChallenge = async sessionId => {
   const session = await database.sessions.get(sessionId);
 
   return session?.lastListeningChallenge || null;
 };
 
+/**
+ * Registers the last listening challenge of an ongoing practice session.
+ * @param {string} sessionId A session ID.
+ * @param {Challenge} challenge A challenge.
+ * @returns {Promise<void>} A promise for the result of the action.
+ */
 const setSessionLastListeningChallenge = async (sessionId, challenge) => {
   await updateSession(
     sessionId,
