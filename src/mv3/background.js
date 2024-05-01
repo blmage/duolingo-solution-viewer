@@ -112,7 +112,7 @@ const cleanSessions = async (excludedIds = [], lastUpdatedBefore = Number.MAX_SA
     .sessions
     .where('lastUpdatedAt')
     .below(lastUpdatedBefore)
-    .and(!excludedIds.includes(it.sessionId))
+    .and(!excludedIds.includes(_.sessionId))
     .delete();
 };
 
