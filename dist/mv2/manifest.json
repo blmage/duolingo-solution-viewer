@@ -1,6 +1,6 @@
 {
   "name": "Duolingo Solution Viewer",
-  "version": "4.18.0",
+  "version": "4.18.2",
   "description": "Provides access to the lists of solutions for Duolingo's translation / listening challenges, and restores the correction of typos.",
   "background": {
     "scripts": [ "src/background.js" ],
