@@ -1069,13 +1069,6 @@ const CLASS_NAMES = {
     [ACTIVE_LIST_ACTION_LINK]: [ '_27FUO', '_1PPA6' ],
     // Found in the "app" stylesheet. Adds a light gray color.
     [INACTIVE_LIST_ACTION_LINK]: [ '_3cbXv' ],
-    [DISABLED_LIST_ACTION_LINK]: [
-      // Copied from the special letter buttons. Only the main class is used here.
-      '_1N-oo',
-      '_33Jbm',
-      '_8AMBh',
-      '_20q0d',
-    ],
     // Found by searching for the "notification" result color (applied when using the "Can't listen now" button eg).
     [SOLUTION_TOKEN_SEPARATOR]: [ '_2QmYK', '_20psa', '_3wqVs', '_2n6ud' ],
     // Found in the "app" stylesheet. Adds the page background color.

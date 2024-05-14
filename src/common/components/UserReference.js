@@ -145,19 +145,19 @@ const CLASS_NAMES = {
       'RpiVp',
     ],
     [BUTTON]: [
-      // Copied from the special letter buttons provided for some languages (such as French).
-      // The class responsible for the small and square dimensions is ignored here.
-      '_1N-oo',
-      '_36Vd3',
-      '_16r-S',
-      '_8oomW',
-      '_8AMBh',
-      '_2vfJy',
-      '_3Qy5R',
+      // Copied from the "Continue" button from the practice sessions.
+      // The class responsible for the colors is ignored here.
+      '_1x5JY',
+      '_1M9iF',
+      '_36g4N',
+      '_2YF0P',
+      '_3DbUj',
+      '_38g3s',
     ],
-    // Found in the "app" stylesheet. Adds the main link color.
-    // Use a class located after the one responsible for the color and background of the button.
-    [COMMIT_BUTTON]: [ '_27FUO', '_1PPA6' ],
+    // Copied from the "Continue" button when the given answer is correct.
+    [COMMIT_BUTTON]: [ '_2oGJR' ],
+    // Copied from the "Continue" button when the given answer is incorrect.
+    [ROLLBACK_BUTTON]: [ '_3S8jJ' ],
   },
 };
 
@@ -177,11 +177,6 @@ const STYLE_SHEETS = {
     },
     [EDIT_FIELD]: {
       marginBottom: '10px',
-    },
-    [BUTTON]: {
-      ':before': {
-        '--__internal__border-color': 'currentColor',
-      },
     },
     [BUTTON_SPACER]: {
       marginLeft: '10px',

@@ -178,12 +178,12 @@ const SIZE_BUTTON = 'size_button';
 
 const CLASS_NAMES = {
   [BASE]: {
-    // Copied from the "Report" modal backdrop.
+    // Copied from the modal backdrop ('*[data-test="drawer-backdrop"'] at the moment).
     // The class name responsible for the opacity must not be included here.
-    [OVERLAY]: [ 'Xx0pm', 'mTWq_', '_1Fnem', '_1qKkd' ],
+    [OVERLAY]: [ '_3wtIn', 'Vm8CO', '_1Fnem', '_3ovH6' ],
     // Copied from the global wrapper of the "Report" modal content.
-    // The class name responsible for the opacitymust not be included here.
-    [POSITIONER]: [ '_3Mzt6', '_1qKkd' ],
+    // The class name responsible for the opacity must not be included here.
+    [POSITIONER]: [ '_3Mzt6', '_3ovH6' ],
     // Copied from the closing button of the "Report" modal.
     [CLOSE_BUTTON]: [ 'eJbBB', 'rXoiv' ],
     [SIZE_BUTTON]: [ 'eJbBB', 'rXoiv' ],
@@ -193,20 +193,20 @@ const CLASS_NAMES = {
   [STATE_WILL_OPEN]: {
     // Applies full transparency and disable pointer events.
     // Found in the same file as, and near, the "full opacity" class.
-    [OVERLAY]: [ 'a6uTv' ],
-    [POSITIONER]: [ 'a6uTv' ],
+    [OVERLAY]: [ '_1Kpo_' ],
+    [POSITIONER]: [ '_1Kpo_' ],
   },
   [STATE_OPENING]: {
     // Applies full opacity. Found on the original modal components.
-    [OVERLAY]: [ '_1TRqy', ],
-    [POSITIONER]: [ 'a6uTv' ],
+    [OVERLAY]: [ '_1SiVm', ],
+    [POSITIONER]: [ '_1Kpo_' ],
   },
   [STATE_OPENED]: {
-    [OVERLAY]: [ '_1TRqy' ],
-    [POSITIONER]: [ '_1TRqy' ],
+    [OVERLAY]: [ '_1SiVm' ],
+    [POSITIONER]: [ '_1SiVm' ],
   },
   [STATE_CLOSING]: {
-    [OVERLAY]: [ 'a6uTv' ],
+    [OVERLAY]: [ '_1Kpo_' ],
   },
 };
 

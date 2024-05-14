@@ -870,13 +870,13 @@ const SELECTOR_ANSWER_INPUT = [
  * A CSS selector for the container of the full answer for fill-in-the-blank challenges.
  * @type {string}
  */
-const SELECTOR_BLANK_FILLING_FULL_ANSWER = '._2FKqf';
+const SELECTOR_BLANK_FILLING_FULL_ANSWER = '._2FKqf, ._2mrQw';
 
 /**
  * A CSS selector for the extraneous tokens that can be found in answers to fill-in-the-blank challenges.
  * @type {string}
  */
-const SELECTOR_BLANK_FILLING_ANSWER_EXTRANEOUS_TOKEN = '._2FKq, .caPDQ, ._2aMo5';
+const SELECTOR_BLANK_FILLING_ANSWER_EXTRANEOUS_TOKEN = '._2aMo5, ._2pNyl, [data-test="challenge-text-input"]';
 
 /**
  * A CSS selector for the container of the answer tokens selected from the word bank.

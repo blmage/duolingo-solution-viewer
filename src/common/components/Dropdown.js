@@ -128,22 +128,24 @@ const ITEM = 'item';
 const ITEM_ICON = 'item_icon';
 
 const CLASS_NAMES = {
-  // Copied from the courses menu.
+  // Copied from the "courses" menu.
   [CONTEXT_CHALLENGE]: {
-    [WRAPPER]: [ '_3h1gx', '_3YDLx', '_2RQAD' ],
-    [CONTENT]: [ '_2K46L', '_1HyVW' ],
-    [ARROW]: [ '_3XA9c' ],
-    [ARROW_ICON]: [ '_2uOX8' ],
-    [ITEMS]: [ '_2xkqZ' ],
+    [WRAPPER]: [ '_1UOaB', '_2ifIT', '_3ApTJ' ],
+    [CONTENT]: [ '_1DLP9', '_1sDll' ],
+    [ARROW]: [ 'Vpm8Y' ],
+    [ARROW_ICON]: [ '_1IAp5' ],
+    [ITEMS]: [ '_2Xp7p' ],
     [ITEM_WRAPPER]: [
       // Copied from the "My Courses" item (adds a bottom border).
-      '_2aQWq',
-      // Copied from any course item.
-      '_3Ws0y',
-      '_3Qy5R',
-      '_2q_uT',
-      '_20KM-',
-    ]
+      '_2CU3K',
+      // Copied from any item from the "More" menu.
+      '_3vGNs',
+      '_2YF0P',
+      '_2np5u',
+      'yb-vp',
+    ],
+    // Copied by searching for the main (link) color without side-effects.
+    [ITEM_ICON]: [ '_27FUO', '_1PPA6' ],
   },
 };
 
@@ -159,6 +161,7 @@ const STYLE_SHEETS = {
     },
     [ITEMS]: {
       padding: 0,
+      width: 'auto',
     },
     [ITEM_WRAPPER]: {
       color: 'rgb(var(--color-black-text))',
