@@ -319,6 +319,7 @@ const renderChallengeSolutionListModal = (challenge, result, userAnswer, opened)
       }
 
       const onAfterOpen = () => {
+        acquireHotkeysMutex();
         isSolutionListModalToggling = false;
         isSolutionListModalDisplayed = true;
         opened ? resolve() : reject();
