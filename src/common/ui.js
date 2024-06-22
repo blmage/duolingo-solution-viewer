@@ -844,9 +844,8 @@ const SELECTORS_CHALLENGE_STATEMENT = [
   '[data-test="hint-sentence"]',
   SELECTOR_CHALLENGE_STATEMENT_HINT_TOKEN,
   // Important: this should not be omitted in case of UI updates, as hints are not always available.
-  '.g-kCu',
-  '.hSdm1',
   '._2kEEj',
+  '._5HFLU',
   '[data-test="challenge-translate-prompt"]',
   '[data-test="challenge-header"]',
 ];
