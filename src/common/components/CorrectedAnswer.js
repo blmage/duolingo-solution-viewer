@@ -75,18 +75,18 @@ const REMOVED_TOKEN = 'removed_token';
 const CLASS_NAMES = {
   [BASE]: {
     // Copied from the direct wrapper of the "Meaning" title and the corresponding value.
-    [WRAPPER]: [ '_2ez4I', 'K5mc9' ],
+    [WRAPPER]: [ '_2ez4I', 'K5mc9', '_1D3fo' ],
     // Copied from the solution translation.
-    [VALUE]: [ '_1UqAr', '_77VI1' ],
+    [VALUE]: [ '_1UqAr', '_77VI1', '_2jz5U', 'WXwlk' ],
   },
   [RESULT_CORRECT]: {
     // Adds the "correct" color.
-    [WRAPPER]: [ '_1Nmv6', '_1D8II', '_2BYam' ],
+    [WRAPPER]: [ '_1D8II', '_2BYam', 'WXwlk', '_6RzgV' ],
     // Adds the "incorrect" color.
-    [ADDED_TOKEN]: [ '_1sqiF', 'RnDo_', '_3Qruy', '_2WmG1' ],
+    [WRAPPER]: [ '_3Qruy', '_2WmG1', 'o-3Ru', '_3wqVs' ],
   },
   [RESULT_INCORRECT]: {
-    [WRAPPER]: [ '_1sqiF', '_3vF5k', '_2WmG1' ],
+    [WRAPPER]: [ '_3Qruy', '_2WmG1', 'o-3Ru', '_3wqVs' ],
   },
 };
 
