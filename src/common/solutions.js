@@ -249,6 +249,53 @@ const getJapaneseSentenceFilterFlags = lift(
  */
 const getJapaneseTokenFilterFlags = memoizeStringFunction(getJapaneseSentenceFilterFlags, true);
 
+const LOCALE_UNSORTED_WORDS_CLEANUP_FUNCTIONS = {
+  // German
+  de: words => {
+    // Filter out copies to which an invalid umlaut has been added.
+    // We make use of the fact that all valid words containing an umlaut can be found together with a simplified copy.
+    const umlauts = [ 'ä', 'ö', 'ü' ];
+    const simplified = [ 'ae', 'oe', 'ue' ];
+
+    for (let i = 0; i <= umlauts.length; i++) {
+      if (
+        words.includes(it.includes(umlauts[i]))
+        && !words.includes(it.includes[simplified[i]])
+      ) {
+        words = words.filter(it.includes(umlauts[i]));
+      }
+    }
+
+    return words;
+  },
+  // English
+  en: lift(
+    // Filter out copies containing "&" as an incorrectly contracted variant of "and" within English words.
+    _.filter(value => (
+      (value.length === 1)
+      || !value.includes('&')
+      || !/(^|[^&\s])&([^&\s]|$)/.test(value))
+    )
+  ),
+  // French
+  fr: lift(
+    // Filter out copies containing "ù" instead of "u" (the only French word with the letter "ù" is "où").
+    _.filter(value => (
+      (value === 'où')
+      || (value === 'Où')
+      || !value.includes('ù')
+    ))
+  ),
+};
+
+const LOCALE_SORTED_WORDS_CLEANUP_FUNCTIONS = {
+  // Welsh
+  cy: words => (
+    // Filter out copies that incorrectly replace "di" with "dy" or "ti".
+    dedupeBy(words, identity, lift(_.replaceAll(/(di|dy|ti)/gi, 'di')))
+  ),
+};
+
 /**
  * @param {string[]} vertices A list of vertices taken from a solution graph, and corresponding to a single token.
  * @param {string} locale The locale of the vertices.
@@ -273,34 +320,8 @@ const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
     result = result.filter(!/[^\s]\s+[^\s]/.test(_));
   }
 
-  if ('en' === locale) {
-    // Filter out copies containing "&" as an incorrectly contracted variant of "and" within English words.
-    result = result.filter(value => (
-      (value.length === 1)
-      || !value.includes('&')
-      || !/(^|[^&\s])&([^&\s]|$)/.test(value))
-    );
-  } else if ('fr' === locale) {
-    // Filter out copies containing "ù" instead of "u" (the only French word with the letter "ù" is "où").
-    result = result.filter(value => (
-      (value === 'où')
-      || (value === 'Où')
-      || !value.includes('ù')
-    ));
-  } else if ('de' === locale) {
-    // Filter out copies to which an invalid umlaut has been added.
-    // We make use of the fact that all valid words containing an umlaut can be found together with a simplified copy.
-    const umlauts = [ 'ä', 'ö', 'ü' ];
-    const simplified = [ 'ae', 'oe', 'ue' ];
-
-    for (let i = 0; i <= umlauts.length; i++) {
-      if (
-        result.includes(it.includes(umlauts[i]))
-        && !result.includes(it.includes[simplified[i]])
-      ) {
-        result = result.filter(it.includes(umlauts[i]));
-      }
-    }
+  if (LOCALE_UNSORTED_WORDS_CLEANUP_FUNCTIONS[locale]) {
+    result = LOCALE_UNSORTED_WORDS_CLEANUP_FUNCTIONS[locale](result);
   }
 
   // Filter out copies containing a "combining dot above" after a lowercase "i".
@@ -322,6 +343,10 @@ const cleanTokenVertices = (vertices, locale, isWhitespaceDelimited) => {
   if (result.length > 1) {
     // Filter out exact copies.
     result = dedupeAdjacent(result.sort(compareTokenStringsCi(_, _, locale)));
+  }
+
+  if ((result.length > 1) && LOCALE_SORTED_WORDS_CLEANUP_FUNCTIONS[locale]) {
+    result = LOCALE_SORTED_WORDS_CLEANUP_FUNCTIONS[locale](result);
   }
 
   if (result.length > 1) {
@@ -888,8 +913,8 @@ export const fromCompactTranslations = (translations, metadata, locale) => {
     solutions.push(getPatternSetSolution(patternSet, i));
   }
 
-    // The token comparison cache could get quite big, so let's clear it.
-    compareTokenStringsCi.clearCache();
+  // The token comparison cache could get quite big, so let's clear it.
+  compareTokenStringsCi.clearCache();
 
   return solutions;
 };
