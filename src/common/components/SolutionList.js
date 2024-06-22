@@ -980,13 +980,6 @@ const SolutionList =
                   <Text id="correct_solutions">Correct solutions:</Text>
                 </span>
 
-                <ListTypeLinks
-                  context={context}
-                  currentType={type}
-                  availableTypes={[ type, ...otherTypes ]}
-                  onChange={onTypeChange}
-                />
-
                 <ListSortLinks
                   context={context}
                   availableTypes={sortTypes}
