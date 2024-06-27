@@ -173,7 +173,7 @@ const ListSortLinks =
     const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
 
     const { unavailablePrefix } = useText({
-      unavailablePrefix: <Text key="unavailable">Unavailable</Text>
+      unavailablePrefix: <Text id="unavailable">Unavailable</Text>
     });
 
     const typeLabels = useText(Object.fromEntries(
