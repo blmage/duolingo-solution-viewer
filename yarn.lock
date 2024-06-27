@@ -1899,9 +1899,9 @@ doctrine@^3.0.0:
   dependencies:
     esutils "^2.0.2"
 
-"duo-toolbox@git+https://github.com/blmage/duo-toolbox.git#semver:^3.8.0":
-  version "3.8.0"
-  resolved "git+https://github.com/blmage/duo-toolbox.git#9d131732ddce3439ed0022e0d09c511aee311cfe"
+"duo-toolbox@git+https://github.com/blmage/duo-toolbox.git#semver:^3.9.0":
+  version "3.9.0"
+  resolved "git+https://github.com/blmage/duo-toolbox.git#25305c44f307baa047edb731e52f69f79f242d80"
   dependencies:
     cxproduct "^2.1.4"
 

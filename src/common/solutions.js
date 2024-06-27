@@ -1138,6 +1138,7 @@ export const getCollapsedTokens = solution => {
 /**
  * @param {Solution} solution A solution.
  * @param {object} choiceTokens The set of tokens to use for formatting choices.
+ * @param {*} choiceTokens.emptyChoice The token to use for empty choices.
  * @param {*} choiceTokens.choiceSeparator The separator to use between each choice in a set of choices.
  * @param {*} choiceTokens.choiceLeftDelimiter The delimiter to use at the start of each set of choices.
  * @param {*} choiceTokens.choiceRightDelimiter The delimiter to use at the end of each set of choices.
@@ -1164,6 +1165,18 @@ export const getReaderFriendlySummaryTokens =
           ]
       ))
   );
+
+/**
+ * @param {Solution} solution A solution.
+ * @returns {string[]} All the sentences that can be generated from the given solution.
+ */
+export const getUnfoldedSentences = lift(cartesianProduct(_.tokens).map(it.join('')));
+
+/**
+ * @param {Solution} solution A solution.
+ * @returns {number} The number of sentences that can be generated from the given solution.
+ */
+export const getUnfoldedSentenceCount = it.tokens.reduce(lift(_ * _.length), 1);
 
 /**
  * @param {Solution[]} solutions A list of solutions.

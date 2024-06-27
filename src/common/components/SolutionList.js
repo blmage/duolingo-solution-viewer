@@ -1,14 +1,20 @@
 import { Fragment, h } from 'preact';
 import { forwardRef } from 'preact/compat';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { useStateRef } from 'preact-use';
+import { useClickAway, useStateRef } from 'preact-use';
 import { IntlProvider, Localizer, Text, useText } from 'preact-i18n';
 import { StyleSheet } from 'aphrodite';
 import { _, _1, _2, it, lift } from 'one-liner.macro';
 import moize from 'moize';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { identity, invertComparison, noop } from 'duo-toolbox/utils/functions';
-import { discardEvent, getFixedElementPositioningParent, scrollElementIntoParentView } from 'duo-toolbox/utils/ui';
+import { capitalize, cartesianProduct, identity, invertComparison, noop } from 'duo-toolbox/utils/functions';
+
+import {
+  discardEvent,
+  getFixedElementPositioningParent,
+  scrollElementIntoParentView,
+  triggerContentDownload,
+} from 'duo-toolbox/utils/ui';
 
 import {
   STRING_MATCH_MODE_GLOBAL,
@@ -254,6 +260,128 @@ const ListSortLinks =
             </button>
           );
         })}
+      </div>
+    );
+  };
+
+const EXPORT_SCOPE_ALL = 'all';
+const EXPORT_SCOPE_FILTERED = 'filtered';
+const EXPORT_SCOPE_CURRENT_PAGE = 'current_page';
+const EXPORT_SCOPES = [ EXPORT_SCOPE_ALL, EXPORT_SCOPE_FILTERED, EXPORT_SCOPE_CURRENT_PAGE ];
+
+const EXPORT_SCOPE_ICONS = {
+  [EXPORT_SCOPE_ALL]: [ 'far', 'copy' ],
+  [EXPORT_SCOPE_FILTERED]: [ 'far', 'file-search' ],
+  [EXPORT_SCOPE_CURRENT_PAGE]: [ 'far', 'file' ],
+};
+
+const EXPORT_TYPE_FOLDED = 'folded';
+const EXPORT_TYPE_UNFOLDED = 'unfolded';
+const EXPORT_TYPES = [ EXPORT_TYPE_FOLDED, EXPORT_TYPE_UNFOLDED ];
+
+const EXPORT_OPTIONS = cartesianProduct([ EXPORT_SCOPES, EXPORT_TYPES ])
+  .map(([ scope, type ]) => ({
+    value: { scope, type },
+    icon: EXPORT_SCOPE_ICONS[scope],
+    labelId: `export_${scope}_${type}`,
+    defaultLabel: `${capitalize(scope.replace('_', ' '))} (${type})`,
+  }));
+
+const EXPORT_SIZE_ALERT_THRESHOLD = 10000;
+
+const ListExportLinks =
+  ({
+     context,
+     allSolutions,
+     filteredSolutions,
+     currentPageSolutions,
+   }) => {
+    const menu = useRef();
+    const wrapper = useRef();
+    const [ isMenuDisplayed, setIsMenuDisplayed ] = useState(false);
+
+    const { baseFilename, exportTitle, largeExportAlert } = useText({
+      baseFilename: (
+        <Text id="export_base_filename">solutions</Text>
+      ),
+      exportTitle: (
+        <Text id="export">Export solutions</Text>
+      ),
+      largeExportAlert: (
+        <Text id="large_export_alert">
+          This will export a large number of rows and may take a long time or fail. Are you sure you want to proceed?
+        </Text>
+      )
+    });
+
+    const onCloseMenu = () => setIsMenuDisplayed(false);
+
+    const onToggleMenu = event => {
+      discardEvent(event);
+      setIsMenuDisplayed(!isMenuDisplayed);
+    };
+
+    const onSelect = ({ scope, type }) => {
+      onCloseMenu();
+
+      const solutions = ({
+        [EXPORT_SCOPE_ALL]: allSolutions,
+        [EXPORT_SCOPE_FILTERED]: filteredSolutions,
+        [EXPORT_SCOPE_CURRENT_PAGE]: currentPageSolutions,
+      })[scope] ?? [];
+
+      const isLargeExport = (
+        (solutions.length > EXPORT_SIZE_ALERT_THRESHOLD)
+        || (
+          (EXPORT_TYPE_UNFOLDED === type)
+          && (solutions.reduce((n, x) => (n + Solution.getUnfoldedSentenceCount(x)), 0) > EXPORT_SIZE_ALERT_THRESHOLD)
+        )
+      );
+
+      if (isLargeExport && !confirm(largeExportAlert)) {
+        return;
+      }
+
+      const result = (EXPORT_TYPE_FOLDED === type)
+        ? solutions.map(lift(Solution.getReaderFriendlySummary(_)))
+        : solutions.flatMap(lift(Solution.getUnfoldedSentences(_)));
+
+      triggerContentDownload(
+        result.map(`"${it}"`).join('\n'),
+        'application/csv',
+        `${baseFilename}.csv`
+      );
+    };
+
+    useClickAway([ wrapper, menu ], onCloseMenu);
+
+    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
+
+    return (
+      <div ref={wrapper} className={getElementClassNames(LIST_ACTION_LINK_WRAPPER)}>
+        <div
+          title={exportTitle}
+          onClick={onToggleMenu}
+          className={getElementClassNames([ LIST_ACTION_LINK, INACTIVE_LIST_ACTION_LINK ])}
+        >
+          <FontAwesomeIcon
+            icon="fa-file-csv"
+            className={getElementClassNames(LIST_ACTION_LINK_ICON)}
+          />
+
+          {isMenuDisplayed && (
+            <div>
+              <Dropdown
+                ref={menu}
+                context={context}
+                options={EXPORT_OPTIONS}
+                getOptionKey={({ value }) => value}
+                onSelect={onSelect}
+                onClose={onCloseMenu}
+              />
+            </div>
+          )}
+        </div>
       </div>
     );
   };
@@ -665,6 +793,12 @@ const SolutionList =
 
       const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
 
+      const pageSolutions = useMemo(() => (
+        (PAGE_SIZE_ALL === pageSize)
+          ? filteredSolutions
+          : filteredSolutions.slice((page - 1) * pageSize, page * pageSize)
+      ), [ page, pageSize, filteredSolutions ]);
+
       const solutionItems = useMemo(() => {
         const baseItemKey = `${page}-${pageSize}`;
         const renderTokenSeparator = lift(<span className={getElementClassNames(SOLUTION_TOKEN_SEPARATOR)}>{_}</span>);
@@ -682,12 +816,8 @@ const SolutionList =
           </li>
         );
 
-        const pageSolutions = (PAGE_SIZE_ALL === pageSize)
-          ? filteredSolutions
-          : filteredSolutions.slice((page - 1) * pageSize, page * pageSize);
-
         return pageSolutions.map(renderSolutionItem);
-      }, [ page, pageSize, filteredSolutions, getElementClassNames ]);
+      }, [ page, pageSize, pageSolutions, getElementClassNames ]);
 
       // Handle events.
 
@@ -912,6 +1042,13 @@ const SolutionList =
                   onTypeChange={setSortType}
                   onDirectionToggle={() => setNextSortDirection()}
                 />
+
+                <ListExportLinks
+                  context={context}
+                  allSolutions={sortedSolutions}
+                  filteredSolutions={filteredSolutions}
+                  currentPageSolutions={pageSolutions}
+                />
               </h3>
 
               {(0 === filteredSolutions.length)
@@ -1041,6 +1178,7 @@ const STYLE_SHEETS = {
       gap: '0.5rem',
       justifyContent: 'space-between',
       marginLeft: '1rem',
+      userSelect: 'none',
     },
     [LIST_ACTION_LINK]: {
       cursor: 'pointer',

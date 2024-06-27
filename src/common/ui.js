@@ -9,6 +9,7 @@ import {
   faCheck,
   faCircleQuestion,
   faEquals,
+  faFileCsv,
   faQuestion,
   faSortAlphaDown,
   faSortAlphaUp,
@@ -17,8 +18,8 @@ import {
   faTimes,
 } from '@fortawesome/free-solid-svg-icons';
 
-import { faKey, faThumbtack } from '@fortawesome/pro-regular-svg-icons';
-import { faArrowFromLeft, faArrowToRight, faFileUser, faFilePlus } from '@fortawesome/pro-solid-svg-icons';
+import { faCopy, faFile, faFileSearch, faKey, faThumbtack } from '@fortawesome/pro-regular-svg-icons';
+import { faArrowFromLeft, faArrowToRight, } from '@fortawesome/pro-solid-svg-icons';
 import { sendActionRequestToContentScript } from 'duo-toolbox/extension/ipc';
 import { MUTEX_HOTKEYS, PRIORITY_HIGH, requestMutex } from 'duo-toolbox/extension/ui';
 import { isArray, isObject, maxBy, noop, sleep } from 'duo-toolbox/utils/functions';
@@ -60,10 +61,12 @@ library.add(
   faArrowFromLeft,
   faArrowToRight,
   faCheck,
+  faCopy,
   faCircleQuestion,
   faEquals,
-  faFilePlus,
-  faFileUser,
+  faFile,
+  faFileCsv,
+  faFileSearch,
   faKey,
   faQuestion,
   faSortAlphaDown,
