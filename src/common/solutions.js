@@ -250,6 +250,22 @@ const getJapaneseSentenceFilterFlags = lift(
 const getJapaneseTokenFilterFlags = memoizeStringFunction(getJapaneseSentenceFilterFlags, true);
 
 const LOCALE_UNSORTED_WORDS_CLEANUP_FUNCTIONS = {
+  // Welsh
+  cy: words => (
+    // Filter out copies that incorrectly replace "di" with "dy" or "ti", or vice-versa.
+    // We take advantage here of the apparent fact that the valid variations always come first.
+    dedupeBy(words, identity, word => {
+      let mapped = word.replaceAll(/(di|dy|ti)/gi, 'di');
+
+      if (mapped !== word) {
+        // Punctuation may be removed in simplified variations.
+        // These cases would not be caught later, because the base sentences would still be different.
+        mapped= mapped.replaceAll(/[^\p{L}\p{N}]+/gu, '');
+      }
+
+      return mapped;
+    })
+  ),
   // German
   de: words => {
     // Filter out copies to which an invalid umlaut has been added.
@@ -289,11 +305,6 @@ const LOCALE_UNSORTED_WORDS_CLEANUP_FUNCTIONS = {
 };
 
 const LOCALE_SORTED_WORDS_CLEANUP_FUNCTIONS = {
-  // Welsh
-  cy: words => (
-    // Filter out copies that incorrectly replace "di" with "dy" or "ti".
-    dedupeBy(words, identity, lift(_.replaceAll(/(di|dy|ti)/gi, 'di')))
-  ),
 };
 
 /**
