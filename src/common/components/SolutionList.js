@@ -11,8 +11,6 @@ import { identity, invertComparison, noop } from 'duo-toolbox/utils/functions';
 import { discardEvent, getFixedElementPositioningParent, scrollElementIntoParentView } from 'duo-toolbox/utils/ui';
 
 import {
-  SOLUTION_LIST_TYPE_COMPACT,
-  SOLUTION_LIST_TYPE_EXPANDED,
   STRING_MATCH_MODE_GLOBAL,
   STRING_MATCH_MODE_WORDS,
   STRING_MATCH_TYPE_ANYWHERE,
@@ -159,78 +157,6 @@ const ListFlagFilters =
           })}
         </ul>
       </Fragment>
-    );
-  };
-
-const LIST_TYPES = [
-  {
-    type: SOLUTION_LIST_TYPE_COMPACT,
-    icon: [ 'fas', 'file-user' ],
-    titleKey: 'compact_list_description',
-    defaultTitle: 'View the list of solutions as written by the course contributors. Less exhaustive, but more readable.',
-  },
-  {
-    type: SOLUTION_LIST_TYPE_EXPANDED,
-    icon: [ 'fas', 'file-plus' ],
-    titleKey: 'expanded_list_description',
-    defaultTitle: 'View the expanded list of solutions, including all automatically generated variants. More exhaustive, but less readable.',
-  },
-];
-
-const ListTypeLinks =
-  ({
-     context,
-     currentType,
-     availableTypes,
-     onChange,
-   }) => {
-    const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
-
-    const { unavailablePrefix } = useText({
-      unavailablePrefix: <Text key="unavailable">Unavailable</Text>
-    });
-
-    const typeTitles = useText(Object.fromEntries(
-      LIST_TYPES.map([
-        it.type,
-        <Text key={it.titleKey} id={it.titleKey}>{it.defaultTitle}</Text>,
-      ])
-    ));
-
-    return (
-      <div className={getElementClassNames(LIST_ACTION_LINK_WRAPPER)}>
-        {LIST_TYPES.map(({ type, icon }) => {
-          const isActive = (type === currentType);
-          const isDisabled = !availableTypes.includes(type);
-          const title = (isDisabled ? `[${unavailablePrefix}] ` : '') + typeTitles[type];
-
-          const buttonClassNames = getElementClassNames([
-            LIST_ACTION_LINK,
-            isDisabled && DISABLED_LIST_ACTION_LINK,
-            isActive ? ACTIVE_LIST_ACTION_LINK : INACTIVE_LIST_ACTION_LINK,
-          ]);
-
-          const onClick = event => {
-            discardEvent(event);
-            !isActive && onChange(type);
-          };
-
-          return (
-            <button
-              key={type}
-              title={title}
-              onClick={onClick}
-              disabled={isDisabled}
-              className={buttonClassNames}
-            >
-              <FontAwesomeIcon
-                icon={icon}
-                className={getElementClassNames(LIST_ACTION_LINK_ICON)}
-              />
-            </button>
-          );
-        })}
-      </div>
     );
   };
 
@@ -635,11 +561,8 @@ const SolutionList =
     (
       {
         context = CONTEXT_CHALLENGE,
-        type = SOLUTION_LIST_TYPE_COMPACT,
-        otherTypes = [],
         solutions = [],
         matchingData = {},
-        onTypeChange = noop,
         onPageChange = noop,
         scrollOffsetGetter = (() => 0),
       },
@@ -743,7 +666,7 @@ const SolutionList =
       const getElementClassNames = useStyles(CLASS_NAMES, STYLE_SHEETS, [ context ]);
 
       const solutionItems = useMemo(() => {
-        const baseItemKey = `${type}-${page}-${pageSize}`;
+        const baseItemKey = `${page}-${pageSize}`;
         const renderTokenSeparator = lift(<span className={getElementClassNames(SOLUTION_TOKEN_SEPARATOR)}>{_}</span>);
 
         const renderSolutionItem = (solution, index) => (
@@ -764,7 +687,7 @@ const SolutionList =
           : filteredSolutions.slice((page - 1) * pageSize, page * pageSize);
 
         return pageSolutions.map(renderSolutionItem);
-      }, [ type, page, pageSize, filteredSolutions, getElementClassNames ]);
+      }, [ page, pageSize, filteredSolutions, getElementClassNames ]);
 
       // Handle events.
 
