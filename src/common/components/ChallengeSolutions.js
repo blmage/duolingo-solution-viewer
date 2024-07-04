@@ -107,6 +107,7 @@ const ChallengeSolutions =
           <SolutionList
             ref={listWrapper}
             context={context}
+            statement={statement}
             type={type}
             otherTypes={otherTypes}
             solutions={solutions}

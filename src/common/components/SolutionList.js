@@ -292,6 +292,7 @@ const EXPORT_SIZE_ALERT_THRESHOLD = 10000;
 const ListExportLinks =
   ({
      context,
+     baseFilename,
      allSolutions,
      filteredSolutions,
      currentPageSolutions,
@@ -300,8 +301,8 @@ const ListExportLinks =
     const wrapper = useRef();
     const [ isMenuDisplayed, setIsMenuDisplayed ] = useState(false);
 
-    const { baseFilename, exportTitle, largeExportAlert } = useText({
-      baseFilename: (
+    const { defaultBaseFilename, exportTitle, largeExportAlert } = useText({
+      defaultBaseFilename: (
         <Text id="export_base_filename">solutions</Text>
       ),
       exportTitle: (
@@ -349,7 +350,7 @@ const ListExportLinks =
       triggerContentDownload(
         result.map(`"${it}"`).join('\n'),
         'application/csv',
-        `${baseFilename}.csv`
+        `${baseFilename || defaultBaseFilename}.csv`
       );
     };
 
@@ -689,6 +690,7 @@ const SolutionList =
     (
       {
         context = CONTEXT_CHALLENGE,
+        statement,
         solutions = [],
         matchingData = {},
         onPageChange = noop,
@@ -716,6 +718,13 @@ const SolutionList =
       );
 
       const isFilterWordBased = !!matchingData.words;
+
+      const baseExportFilename = useMemo(() => (
+        statement
+          .toLocaleLowerCase(locale)
+          .replace(/[^\p{L}\p{N}]+/ug, '_')
+          .replaceAll(/(^_+)|(_+$)/g, '')
+      ), [ statement, locale ]);
 
       // Sort the solutions.
 
@@ -1045,6 +1054,7 @@ const SolutionList =
 
                 <ListExportLinks
                   context={context}
+                  baseFilename={baseExportFilename}
                   allSolutions={sortedSolutions}
                   filteredSolutions={filteredSolutions}
                   currentPageSolutions={pageSolutions}
