@@ -140,8 +140,8 @@ const Modal =
 
     return (
       <IntlProvider scope="modal">
-        <div onClick={onRequestClose} className={getElementClassNames(OVERLAY)}>
-          <div role="dialog" tabIndex="-1" onClick={onRequestClose} className={getElementClassNames(POSITIONER)}>
+        <div onClick={onRequestClose} className={getElementClassNames(OVERLAY)} style="opacity:0;">
+          <div role="dialog" tabIndex="-1" onClick={onRequestClose} className={getElementClassNames(POSITIONER)} style="opacity:0;">
             <div onClick={discardEvent} className={getElementClassNames(WRAPPER)}>
               <div onClick={onRequestClose} className={getElementClassNames(CLOSE_BUTTON)}>
                 <Localizer>
@@ -179,10 +179,10 @@ const SIZE_BUTTON = 'size_button';
 const CLASS_NAMES = {
   [BASE]: {
     // Copied from the modal backdrop ('*[data-test="drawer-backdrop"'] at the moment).
-    // The class name responsible for the opacity must not be included here.
+    // The class name responsible for the opacity, if any, must not be included here.
     [OVERLAY]: [ '_3wtIn', 'Vm8CO', '_1Fnem', '_3ovH6' ],
     // Copied from the global wrapper of the "Report" modal content.
-    // The class name responsible for the opacity must not be included here.
+    // The class name responsible for the opacity, if any, must not be included here.
     [POSITIONER]: [ '_3Mzt6', '_3ovH6' ],
     // Copied from the closing button of the "Report" modal.
     [CLOSE_BUTTON]: [ 'eJbBB', 'rXoiv' ],
@@ -190,35 +190,19 @@ const CLASS_NAMES = {
     // Copied from the direct wrapper of the "Report" modal content.
     [WRAPPER]: [ '_1yFTM', '_3fFQQ', 'FohH5', '_2pgzh' ],
   },
-  [STATE_WILL_OPEN]: {
-    // Applies full transparency and disable pointer events.
-    // Found in the same file as, and near, the "full opacity" class.
-    [OVERLAY]: [ '_1Kpo_' ],
-    [POSITIONER]: [ '_1Kpo_' ],
-  },
-  [STATE_OPENING]: {
-    // Applies full opacity. Found on the original modal components.
-    [OVERLAY]: [ '_1SiVm', ],
-    [POSITIONER]: [ '_1Kpo_' ],
-  },
-  [STATE_OPENED]: {
-    [OVERLAY]: [ '_1SiVm' ],
-    [POSITIONER]: [ '_1SiVm' ],
-  },
-  [STATE_CLOSING]: {
-    [OVERLAY]: [ '_1Kpo_' ],
-  },
 };
 
 const STYLE_SHEETS = {
   [BASE]: StyleSheet.create({
     [OVERLAY]: {
+      opacity: 0,
       position: 'fixed !important',
       transitionDuration: '300ms',
     },
     [POSITIONER]: {
       maxHeight: 'calc(95vh - 30px)',
       maxWidth: 'calc(95vw - 30px)',
+      opacity: 0,
       transitionDuration: '300ms',
       '@media (max-width: 699px)': {
         maxHeight: '95vh',
@@ -275,6 +259,53 @@ const STYLE_SHEETS = {
     },
     [CONTENT]: {
       maxWidth: '100%',
+    },
+  }),
+  [STATE_WILL_OPEN]: StyleSheet.create({
+    [OVERLAY]: {
+      opacity: 0,
+      pointerEvents: 'none',
+    },
+    [POSITIONER]: {
+      opacity: 0,
+      pointerEvents: 'none',
+    },
+  }),
+  [STATE_OPENING]: StyleSheet.create({
+    [OVERLAY]: {
+      opacity: 1,
+    },
+    [POSITIONER]: {
+      opacity: 0,
+      pointerEvents: 'none',
+    },
+  }),
+  [STATE_OPENED]: StyleSheet.create({
+    [OVERLAY]: {
+      opacity: 1,
+    },
+    [POSITIONER]: {
+      opacity: 1,
+    },
+  }),
+  [STATE_CLOSING]: StyleSheet.create({
+    [OVERLAY]: {
+      opacity: 0,
+      pointerEvents: 'none',
+    },
+    [POSITIONER]: {
+      opacity: 0,
+      pointerEvents: 'none',
+    }
+  }),
+  [STATE_CLOSED]: StyleSheet.create({
+    [OVERLAY]: {
+      opacity: 0,
+      pointerEvents: 'none',
+    },
+    [POSITIONER]: {
+      opacity: 0,
+      pointerEvents: 'none',
     },
   }),
 };
