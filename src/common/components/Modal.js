@@ -178,9 +178,9 @@ const SIZE_BUTTON = 'size_button';
 
 const CLASS_NAMES = {
   [BASE]: {
-    // Copied from the modal backdrop ('*[data-test="drawer-backdrop"'] at the moment).
+    // Copied from the modal backdrop ('*[data-test="drawer-backdrop"]' at the moment).
     // The class name responsible for the opacity, if any, must not be included here.
-    [OVERLAY]: [ '_3wtIn', 'Vm8CO', '_1Fnem', '_3ovH6' ],
+    [OVERLAY]: [ '_3wtIn', 'Vm8CO', '_3ovH6', '_1Fnem', '_1ATOC' ],
     // Copied from the global wrapper of the "Report" modal content.
     // The class name responsible for the opacity, if any, must not be included here.
     [POSITIONER]: [ '_3Mzt6', '_3ovH6' ],

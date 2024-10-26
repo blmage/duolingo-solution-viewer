@@ -153,6 +153,12 @@ const CLASS_NAMES = {
       '_2YF0P',
       '_3DbUj',
       '_38g3s',
+      // -----
+      '_1rcV8',
+      '_1VYyp',
+      '_1ursp',
+      '_7jW2t',
+      '_2VWgj',
     ],
     // Copied from the "Continue" button when the given answer is correct.
     [COMMIT_BUTTON]: [ '_2oGJR' ],

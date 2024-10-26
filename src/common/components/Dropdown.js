@@ -130,19 +130,24 @@ const ITEM_ICON = 'item_icon';
 const CLASS_NAMES = {
   // Copied from the "courses" menu.
   [CONTEXT_CHALLENGE]: {
-    [WRAPPER]: [ '_1UOaB', '_2ifIT', '_3ApTJ' ],
-    [CONTENT]: [ '_1DLP9', '_1sDll' ],
-    [ARROW]: [ 'Vpm8Y' ],
-    [ARROW_ICON]: [ '_1IAp5' ],
-    [ITEMS]: [ '_2Xp7p' ],
+    [WRAPPER]: [ '_1UOaB', '_2ifIT', '_3ApTJ', '_3zpnU', '_3OfAS', '_1o3g5' ],
+    [CONTENT]: [ '_1DLP9', '_1sDll', '_36bu_', '_2xxCs' ],
+    [ARROW]: [ 'Vpm8Y', '_3T97b' ],
+    [ARROW_ICON]: [ '_1IAp5', '_1TMn5' ],
+    [ITEMS]: [ '_2Xp7p', '_3BhSk' ],
     [ITEM_WRAPPER]: [
       // Copied from the "My Courses" item (adds a bottom border).
       '_2CU3K',
+      '_34_P_',
       // Copied from any item from the "More" menu.
       '_3vGNs',
       '_2YF0P',
       '_2np5u',
       'yb-vp',
+      '_1gEmM',
+      '_7jW2t',
+      '_3QrGV',
+      'GHXZL',
     ],
     // Copied by searching for the main (link) color without side-effects.
     [ITEM_ICON]: [ '_27FUO', '_1PPA6' ],
