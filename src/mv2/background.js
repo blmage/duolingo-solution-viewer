@@ -206,7 +206,11 @@ const handleCurrentListeningChallengeRequest = async (senderId, data, sendResult
 
     if (isString(data.solutionTranslation) && ('' !== data.solutionTranslation)) {
       const solutionTranslation = normalizeString(data.solutionTranslation);
-      predicate = solutionTranslation === it.solutionTranslation;
+
+      predicate = challenge => (
+        solutionTranslation.startsWith(challenge.solutionTranslation)
+        || solutionTranslation.endsWith(challenge.solutionTranslation)
+      );
     }
 
     challenges = findSessionChallengesOfType(senderId, CHALLENGE_TYPE_LISTENING, predicate);
