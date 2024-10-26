@@ -1170,7 +1170,14 @@ export const getReaderFriendlySummaryTokens =
  * @param {Solution} solution A solution.
  * @returns {string[]} All the sentences that can be generated from the given solution.
  */
-export const getUnfoldedSentences = lift(cartesianProduct(_.tokens).map(it.join('')));
+export const getUnfoldedSentences = lift(
+  cartesianProduct(_.tokens)
+    .map(
+      it.join('')
+        .trim()
+        .replaceAll(/(\s)\1+/g, '$1')
+    )
+);
 
 /**
  * @param {Solution} solution A solution.
