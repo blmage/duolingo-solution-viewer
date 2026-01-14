@@ -20,7 +20,7 @@
     "@fortawesome/react-fontawesome": "^0.2.0",
     "aphrodite": "^2.4.0",
     "dexie": "^4.0.1",
-    "diff": "^4.0.2",
+    "diff": "^8.0.3",
     "duo-toolbox": "git+https://github.com/blmage/duo-toolbox.git#semver:^3.9.0",
     "js-cookie": "^2.2.1",
     "match-sorter": "^5.0.0",
