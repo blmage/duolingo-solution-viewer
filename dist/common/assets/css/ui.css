@@ -802,3 +802,10 @@ svg:not(:root).svg-inline--fa,svg:not(:host).svg-inline--fa {
 .fad.fa-inverse,.fa-duotone.fa-inverse {
   color: var(--fa-inverse, #fff);
 }
+
+/* Challenge action link list is no longer intended for multiple links by default */
+
+._2yBiG {
+  display: flex !important;
+  gap: 1rem !important;
+}
