@@ -48,6 +48,7 @@ const SOURCE_PLUGINS = {
   'common/ui': [
     css({
       output: 'dist/common/assets/css/ui.css',
+      classWhitelist: [ '_2yBiG' ],
     })
   ],
 };

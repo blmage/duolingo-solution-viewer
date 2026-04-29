@@ -67,6 +67,7 @@ const CLASS_NAMES = {
     // Copied from the "Report" and "Discuss" buttons.
     // The class name responsible for the result color is ignored here.
     [BUTTON]: [
+      '_2jCpE',
       '_3CCt9',
       '_3HsTU',
       '_2kfEr',
@@ -82,31 +83,31 @@ const CLASS_NAMES = {
       '_1AgKJ'
     ],
     // Copied from the direct wrappers of the "Report" and "Discuss" icons and links.
-    [BUTTON_CONTENT]: [ '_1-Ukw', '_24Rh2' ],
+    [BUTTON_CONTENT]: [ '_3qh60', '_1-Ukw', '_24Rh2' ],
     // Copied from the "Report" and "Discuss" icons.
     // The class name responsible for the background image is ignored here.
-    [ICON]: [ 'sf9Rc', '_29maR', '_3jt-c' ],
+    [ICON]: [ '_2caIK', 'sf9Rc', '_29maR', '_3jt-c' ],
     // Copied from the "Report" and "Discuss" titles.
-    [TITLE]: [ '_28V9T', '_3yAjN', '_1qfbO', '_2Rt1l' ]
+    [TITLE]: ['_2_snL', '_2Rt1l',  '_28V9T', '_3yAjN', '_1qfbO', '_2Rt1l' ]
   },
   [RESULT_CORRECT]: {
     // Copied from the wrapper of the "Report" and "Discuss" icons and links when the result is correct.
     // Adds the "correct" color.
-    [BUTTON]: [ '_1xOpZ', 'jTP0E', '_1pDd6' ],
+    [BUTTON]: [ '_1642c', '_1xOpZ', 'jTP0E', '_1pDd6' ],
     // This class is now only defined in Darklingo++, and applies the same color as the other icons.
     [ICON]: [ '_3NwXb' ],
   },
   [RESULT_INCORRECT]: {
     // Copied from the wrapper of the "Report" and "Discuss" icons and links when the result is incorrect.
     // Adds the "incorrect" color.
-    [BUTTON]: [ 'I5L6p', 'RnDo_', '_3Qruy', '_6RzgV' ],
+    [BUTTON]: [ '_3Q4Uw', 'I5L6p', 'RnDo_', '_3Qruy', '_6RzgV' ],
     // This class is now only defined in Darklingo++, and applies the same color as the other icons.
     [ICON]: [ '_1BszG' ],
   },
   [RESULT_NONE]: {
-    // Copied from the wrapper of the "Report" and "Discuss" icons and links when the challenge is skipepd.
-    // Adds the "skipped" color.
-    [BUTTON]: [ '_3wqVs', '_2JTJI', 'bafGS', '_2LoNU', 'VzbUl', '_1saKQ', '_1AgKJ' ],
+    // Copied from the wrapper of the "Report" and "Discuss" icons and links when the challenge is skipped.
+    // Adds the "skipped" color = "incorrect" color now (as of April, 2026).
+    [BUTTON]: [ '_3Q4Uw', '_3wqVs', '_2JTJI', 'bafGS', '_2LoNU', 'VzbUl', '_1saKQ', '_1AgKJ' ],
   }
 };
 

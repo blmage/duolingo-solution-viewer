@@ -1,0 +1,5 @@
+/* Challenge action link list is no longer intended for multiple links by default */
+._2yBiG {
+    display: flex !important;
+    gap: 1rem !important;
+}

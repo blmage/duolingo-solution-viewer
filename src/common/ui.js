@@ -52,6 +52,7 @@ import ClosestSolution from './components/ClosestSolution';
 import CorrectedAnswer from './components/CorrectedAnswer';
 import Modal from './components/Modal';
 import SolutionLink from './components/SolutionLink';
+import './css/ui.css';
 
 // When using the default behavior, FA styles are not always properly added to the pages, resulting in huge icons.
 faConfig.autoAddCss = false;
@@ -909,7 +910,7 @@ const SELECTOR_CHALLENGE_SOLUTION_WRAPPER = '._1D3fo:last-child';
  * A CSS selector for the list of action links of the current challenge screen.
  * @type {string}
  */
-const SELECTOR_CHALLENGE_ACTION_LINK_LIST = '._10y_e';
+const SELECTOR_CHALLENGE_ACTION_LINK_LIST = '._2yBiG, ._10y_e';
 
 /**
  * A CSS selector for the report (flag) icon of the challenge screen.
@@ -918,22 +919,19 @@ const SELECTOR_CHALLENGE_ACTION_LINK_LIST = '._10y_e';
  * @type {string}
  */
 const SELECTOR_CHALLENGE_REPORT_ICON = [
-  '._3tFbb',
-  '._1SnxH',
-  '._3f4n6',
-  '._1Fs3P',
-  '._2P8t_',
-  '._12_iP',
-  '._1Fs3P',
-  '.Qgof6',
-  '.anjNO',
-  // New.
   '._2bq2Q',
   '._2e3N3',
   '._1nqyX',
   '.Ei3D8',
   '._34_WV',
   '._2Gcbt',
+  // New.
+  '._26G6u',
+  '.Htiq_',
+  '.o8H6C',
+  '._2M-GA',
+  '._3p075',
+  '._2ehBx',
 ].join(', ');
 
 /**
